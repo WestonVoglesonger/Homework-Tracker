@@ -71,13 +71,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Button>
               </div>
             ) : (
-              <Button 
-                size="sm" 
-                onClick={() => signIn()}
-                className="w-full"
-              >
-                Sign in
-              </Button>
+              <div className="flex gap-2">
+                <Link href={"/auth/signin" as any} className="flex-1">
+                  <Button size="sm" className="w-full">Sign in</Button>
+                </Link>
+                <Link href={"/auth/register" as any} className="flex-1">
+                  <Button size="sm" variant="outline" className="w-full">Register</Button>
+                </Link>
+              </div>
             )}
           </div>
         </aside>
