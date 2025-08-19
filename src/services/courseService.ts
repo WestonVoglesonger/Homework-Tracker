@@ -27,6 +27,37 @@ export async function create(
   return course;
 }
 
+export async function upsert(
+  userId: string,
+  input: { name: string; code?: string; term?: string; color?: string; source?: string; canvasId?: string | null }
+) {
+  if (!input.canvasId) {
+    return create(userId, input);
+  }
+  const course = await prisma.course.upsert({
+    where: {
+      userId_canvasId: { userId, canvasId: input.canvasId },
+    },
+    update: {
+      name: input.name,
+      code: input.code,
+      term: input.term,
+      color: input.color,
+      source: input.source ?? "manual",
+    },
+    create: {
+      userId,
+      name: input.name,
+      code: input.code,
+      term: input.term,
+      color: input.color,
+      source: input.source ?? "manual",
+      canvasId: input.canvasId,
+    },
+  });
+  return course;
+}
+
 export async function update(
   userId: string,
   id: string,
@@ -44,6 +75,6 @@ export async function remove(userId: string, id: string) {
   return { ok: true } as const;
 }
 
-export const courseService = { list, create, update, remove };
+export const courseService = { list, create, upsert, update, remove };
 
 
