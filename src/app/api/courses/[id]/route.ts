@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../lib/auth";
-import { updateCourseSchema } from "../../../../lib/validators";
-import { courseService } from "../../../../services/courseService";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const { getServerSession } = await import("next-auth");
+  const { getAuth } = await import("../../../../lib/auth");
+  const { authOptions } = await getAuth();
+  const { updateCourseSchema } = await import("../../../../lib/validators");
+  const { courseService } = await import("../../../../services/courseService");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const json = await req.json();
@@ -25,6 +30,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { getServerSession } = await import("next-auth");
+  const { getAuth } = await import("../../../../lib/auth");
+  const { authOptions } = await getAuth();
+  const { courseService } = await import("../../../../services/courseService");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await courseService.remove(session.user.id, params.id);
