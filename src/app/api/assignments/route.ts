@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../../lib/auth";
-import { createAssignmentSchema, listAssignmentsQuerySchema } from "../../../lib/validators";
-import { assignmentService } from "../../../services/assignmentService";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("../../../lib/auth");
+  const { listAssignmentsQuerySchema } = await import("../../../lib/validators");
+  const { assignmentService } = await import("../../../services/assignmentService");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { searchParams } = new URL(req.url);
@@ -37,6 +41,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("../../../lib/auth");
+  const { createAssignmentSchema } = await import("../../../lib/validators");
+  const { assignmentService } = await import("../../../services/assignmentService");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const json = await req.json();
@@ -44,10 +53,10 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   const created = await assignmentService.create(session.user.id, {
     ...parsed.data,
-    source: json?.source === "canvas" ? "canvas" : "manual",
-    canvasId: json?.canvasId ?? undefined,
-    description: json?.description ?? undefined,
-    canvasUrl: json?.canvasUrl ?? undefined,
+    source: (json as any)?.source === "canvas" ? "canvas" : "manual",
+    canvasId: (json as any)?.canvasId ?? undefined,
+    description: (json as any)?.description ?? undefined,
+    canvasUrl: (json as any)?.canvasUrl ?? undefined,
   });
   return NextResponse.json({
     id: created.id,
