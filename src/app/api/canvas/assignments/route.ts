@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../db/client";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../lib/auth";
-import { canvasService } from "../../../../services/canvasService";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const { prisma } = await import("../../../../db/client");
+  const { getServerSession } = await import("next-auth");
+  const { getAuth } = await import("../../../../lib/auth");
+  const { authOptions } = await getAuth();
+  const { canvasService } = await import("../../../../services/canvasService");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { searchParams } = new URL(req.url);

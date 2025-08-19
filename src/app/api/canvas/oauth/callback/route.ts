@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../../lib/auth";
-import { canvasTokenService } from "../../../../../services/canvasService";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const base = process.env.CANVAS_BASE_URL || "";
-  const clientId = process.env.CANVAS_CLIENT_ID || "";
-  const clientSecret = process.env.CANVAS_CLIENT_SECRET || "";
-  const redirect = process.env.CANVAS_REDIRECT_URL || "";
+  const { getServerSession } = await import("next-auth");
+  const { getAuth } = await import("../../../../../lib/auth");
+  const { authOptions } = await getAuth();
+  const { canvasTokenService } = await import("../../../../../services/canvasService");
+
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   if (!code) return NextResponse.json({ error: "Missing code" }, { status: 400 });
