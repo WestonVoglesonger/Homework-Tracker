@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../lib/auth";
-import { updateAssignmentSchema } from "../../../../lib/validators";
-import { assignmentService } from "../../../../services/assignmentService";
-import prisma from "../../../../db/client";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("../../../../lib/auth");
+  const { updateAssignmentSchema } = await import("../../../../lib/validators");
+  const { assignmentService } = await import("../../../../services/assignmentService");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const json = await req.json();
@@ -32,6 +35,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("../../../../lib/auth");
+  const { assignmentService } = await import("../../../../services/assignmentService");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await assignmentService.remove(session.user.id, params.id);
@@ -39,6 +46,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("../../../../lib/auth");
+  const { prisma } = await import("../../../../db/client");
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const assignment = await prisma.assignment.findFirst({
