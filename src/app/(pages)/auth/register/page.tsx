@@ -20,8 +20,15 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to register");
+      const bodyText = await res.text();
+      let data: any = null;
+      try {
+        data = bodyText ? JSON.parse(bodyText) : null;
+      } catch {
+        // Non-JSON error response from server (e.g., runtime error stack)
+        if (!res.ok) throw new Error(bodyText?.slice(0, 200) || "Failed to register");
+      }
+      if (!res.ok) throw new Error(data?.error || "Failed to register");
       router.push("/");
     } catch (err: any) {
       setError(err.message || "Failed to register");
