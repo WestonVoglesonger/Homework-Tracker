@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../db/client";
-import { canvasService } from "../../../../services/canvasService";
-import { courseService } from "../../../../services/courseService";
-import { assignmentService } from "../../../../services/assignmentService";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   // Verify this is an authorized request (e.g., from a cron job)
@@ -14,6 +13,11 @@ export async function POST(req: NextRequest) {
   }
   
   try {
+    const { default: prisma } = await import("../../../../db/client");
+    const { canvasService } = await import("../../../../services/canvasService");
+    const { courseService } = await import("../../../../services/courseService");
+    const { assignmentService } = await import("../../../../services/assignmentService");
+
     // Get all users with Canvas connections
     const canvasAccounts = await prisma.account.findMany({
       where: { 
