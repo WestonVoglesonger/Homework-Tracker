@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const { getServerSession } = await import("next-auth");
-  const { authOptions } = await import("../../../../lib/auth");
+  const { getAuth } = await import("../../../../lib/auth");
+  const { authOptions } = await getAuth();
   const { updateAssignmentSchema } = await import("../../../../lib/validators");
   const { assignmentService } = await import("../../../../services/assignmentService");
 
@@ -36,7 +37,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const { getServerSession } = await import("next-auth");
-  const { authOptions } = await import("../../../../lib/auth");
+  const { getAuth } = await import("../../../../lib/auth");
+  const { authOptions } = await getAuth();
   const { assignmentService } = await import("../../../../services/assignmentService");
 
   const session = await getServerSession(authOptions);
@@ -47,7 +49,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const { getServerSession } = await import("next-auth");
-  const { authOptions } = await import("../../../../lib/auth");
+  const { getAuth } = await import("../../../../lib/auth");
+  const { authOptions } = await getAuth();
   const { prisma } = await import("../../../../db/client");
 
   const session = await getServerSession(authOptions);

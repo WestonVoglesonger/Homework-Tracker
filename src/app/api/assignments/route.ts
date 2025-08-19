@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const { getServerSession } = await import("next-auth");
-  const { authOptions } = await import("../../../lib/auth");
+  const { getAuth } = await import("../../../lib/auth");
+  const { authOptions } = await getAuth();
   const { listAssignmentsQuerySchema } = await import("../../../lib/validators");
   const { assignmentService } = await import("../../../services/assignmentService");
 
@@ -42,7 +43,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const { getServerSession } = await import("next-auth");
-  const { authOptions } = await import("../../../lib/auth");
+  const { getAuth } = await import("../../../lib/auth");
+  const { authOptions } = await getAuth();
   const { createAssignmentSchema } = await import("../../../lib/validators");
   const { assignmentService } = await import("../../../services/assignmentService");
 
