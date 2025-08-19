@@ -1,0 +1,12 @@
+{
+  "/(pages)/dashboard/page": "app/(pages)/dashboard/page.js",
+  "/(pages)/settings/page": "app/(pages)/settings/page.js",
+  "/(pages)/calendar/page": "app/(pages)/calendar/page.js",
+  "/(pages)/courses/page": "app/(pages)/courses/page.js",
+  "/api/assignments/route": "app/api/assignments/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/(pages)/assignments/[id]/page": "app/(pages)/assignments/[id]/page.js",
+  "/api/canvas/courses/route": "app/api/canvas/courses/route.js",
+  "/api/assignments/[id]/route": "app/api/assignments/[id]/route.js",
+  "/api/courses/route": "app/api/courses/route.js"
+}
