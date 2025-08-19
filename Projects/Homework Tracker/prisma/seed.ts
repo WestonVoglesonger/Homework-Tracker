@@ -11,7 +11,7 @@ async function main() {
   });
 
   const course = await prisma.course.upsert({
-    where: { canvasId: "seed-course" },
+    where: { userId_canvasId: { userId: user.id, canvasId: "seed-course" } },
     update: {},
     create: {
       userId: user.id,
@@ -27,7 +27,7 @@ async function main() {
   const titles = ["Homework 1", "Quiz 1", "Project 1"];
   for (const [i, title] of titles.entries()) {
     await prisma.assignment.upsert({
-      where: { canvasId: `seed-assignment-${i}` },
+      where: { userId_canvasId: { userId: user.id, canvasId: `seed-assignment-${i}` } },
       update: {},
       create: {
         userId: user.id,
