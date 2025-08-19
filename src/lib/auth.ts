@@ -35,11 +35,12 @@ export async function getAuth() {
           ]
         : []),
     ],
-    session: { strategy: "database" },
+    session: { strategy: "jwt" },
     callbacks: {
-      async session({ session, user }) {
+      async session({ session, token, user }) {
         if (session.user) {
-          session.user.id = user.id as string;
+          const id = (user as any)?.id || token?.sub || (token as any)?.id;
+          if (id) session.user.id = id as string;
         }
         return session;
       },
