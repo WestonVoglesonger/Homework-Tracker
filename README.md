@@ -40,6 +40,22 @@ pnpm dev
 - `pnpm prisma migrate dev` migrate db
 - `pnpm run db:seed` seed sample data
 
+## Vercel Cron for Canvas Sync
+
+1. Set environment variable in Vercel:
+   - `CRON_SECRET` = a strong random string (used to authorize the cron request)
+
+2. Ensure `vercel.json` contains:
+   ```json
+   {
+     "crons": [
+       { "path": "/api/canvas/sync", "schedule": "0 * * * *" }
+     ]
+   }
+   ```
+
+Vercel will POST to `/api/canvas/sync` hourly with your project token; the route validates `Authorization: Bearer ${CRON_SECRET}`.
+
 ## Dev Container
 
 This project includes a devcontainer with Postgres for local development.
