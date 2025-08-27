@@ -1,25 +1,16 @@
 "use client";
-import { AssignmentDTO } from "../../interfaces/assignment";
-import { useUpdateAssignment } from "../../hooks/useAssignments";
-import { formatDate } from "../../lib/date";
-import { Button } from "../ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { AssignmentDTO } from "@/interfaces/assignment";
+import { useUpdateAssignment } from "@hooks/useAssignments";
+import { formatDate } from "@/lib/date";
+import { Button } from "@components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+import { StatusPill, statusMeta } from "@components/ui/status";
 import Link from "next/link";
 
 export function AssignmentRow({ a }: { a: AssignmentDTO }) {
   const update = useUpdateAssignment();
   
-  const statusColors = {
-    TODO: "text-purple-600 dark:text-purple-400",
-    IN_PROGRESS: "text-blue-600 dark:text-blue-400",
-    DONE: "text-green-600 dark:text-green-400"
-  };
-
-  const statusLabels = {
-    TODO: "To Do",
-    IN_PROGRESS: "In Progress",
-    DONE: "Done"
-  };
+  // centralized in StatusPill
 
   return (
     <div className="group relative p-4 rounded-lg bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md transition-all duration-200">
@@ -58,27 +49,25 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
           </div>
         </div>
         
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Select
             value={a.status}
             onValueChange={(value) => update.mutate({ id: a.id, patch: { status: value as any } })}
           >
-            <SelectTrigger className="w-36 h-9 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <SelectTrigger className="h-8 w-auto px-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
               <SelectValue>
-                <span className={`font-medium ${statusColors[a.status]}`}>
-                  {statusLabels[a.status]}
-                </span>
+                <StatusPill status={a.status as any} size="sm" />
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="TODO">
-                <span className={statusColors.TODO}>To Do</span>
+              <SelectItem value="NOT_SUBMITTED">
+                <span className="inline-flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${statusMeta.NOT_SUBMITTED.dot}`} />Not submitted</span>
               </SelectItem>
-              <SelectItem value="IN_PROGRESS">
-                <span className={statusColors.IN_PROGRESS}>In Progress</span>
+              <SelectItem value="SUBMITTED">
+                <span className="inline-flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${statusMeta.SUBMITTED.dot}`} />Submitted, waiting for grade</span>
               </SelectItem>
-              <SelectItem value="DONE">
-                <span className={statusColors.DONE}>Done</span>
+              <SelectItem value="GRADED">
+                <span className="inline-flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${statusMeta.GRADED.dot}`} />Submitted and graded</span>
               </SelectItem>
             </SelectContent>
           </Select>

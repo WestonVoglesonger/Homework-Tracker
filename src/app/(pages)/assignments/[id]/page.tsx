@@ -1,14 +1,15 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import AppShell from "../../../../components/layout/AppShell";
+import AppShell from "@components/layout/AppShell";
 import { useQuery } from "@tanstack/react-query";
-import { AssignmentDTO } from "../../../../interfaces/assignment";
-import { Button } from "../../../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
-import { Skeleton } from "../../../../components/ui/skeleton";
-import { formatDate } from "../../../../lib/date";
-import { useUpdateAssignment, useDeleteAssignment } from "../../../../hooks/useAssignments";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
+import { AssignmentDTO } from "@/interfaces/assignment";
+import { Button } from "@components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
+import { Skeleton } from "@components/ui/skeleton";
+import { formatDate } from "@/lib/date";
+import { useUpdateAssignment, useDeleteAssignment } from "@/app/hooks/useAssignments";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+import { StatusPill, statusMeta } from "@components/ui/status";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -44,15 +45,15 @@ export default function AssignmentDetailPage() {
   };
   
   const statusColors = {
-    TODO: "status-todo",
-    IN_PROGRESS: "status-in-progress",
-    DONE: "status-done"
+    NOT_SUBMITTED: "status-todo",
+    SUBMITTED: "status-in-progress",
+    GRADED: "status-done"
   };
   
   const statusLabels = {
-    TODO: "To Do",
-    IN_PROGRESS: "In Progress",
-    DONE: "Done"
+    NOT_SUBMITTED: "Not submitted",
+    SUBMITTED: "Submitted, waiting for grade",
+    GRADED: "Submitted and graded"
   };
 
   return (
@@ -107,26 +108,17 @@ export default function AssignmentDetailPage() {
                 <CardContent>
                   <Select
                     value={assignment.status}
-                    onValueChange={(value) => 
-                      updateAssignment.mutate({ 
-                        id, 
-                        patch: { status: value as any } 
-                      })
-                    }
+                    onValueChange={(value) => updateAssignment.mutate({ id, patch: { status: value as any } })}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue>
-                        <span className={statusColors[assignment.status]}>
-                          {statusLabels[assignment.status]}
-                        </span>
+                        <StatusPill status={assignment.status as any} />
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(statusLabels).map(([value, label]) => (
+                      {Object.keys(statusMeta).map((value) => (
                         <SelectItem key={value} value={value}>
-                          <span className={statusColors[value as keyof typeof statusColors]}>
-                            {label}
-                          </span>
+                          <StatusPill status={value as any} />
                         </SelectItem>
                       ))}
                     </SelectContent>

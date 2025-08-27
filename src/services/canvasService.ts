@@ -9,14 +9,19 @@ export async function fetchCanvas<T>(
   accessToken: string,
   query?: Record<string, string | number | boolean | undefined>
 ): Promise<T> {
-  const url = new URL(`/api/v1${path}`, CANVAS_BASE_URL);
+  const base = process.env.CANVAS_BASE_URL || "";
+  if (!base) {
+    throw new Error("Canvas not configured (missing CANVAS_BASE_URL)");
+  }
+  const token = accessToken?.startsWith("v1:") ? decryptText(accessToken) : accessToken;
+  const url = new URL(`/api/v1${path}`, base);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined) url.searchParams.set(k, String(v));
     }
   }
   const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   if (!res.ok) {
@@ -48,7 +53,7 @@ export function mapCanvasAssignmentToDTO(a: CanvasAssignment, courseId?: string)
     type: "OTHER" as const,
     dueAt: a.due_at ?? undefined,
     estimatedHours: undefined,
-    status: "TODO" as const,
+    status: "NOT_SUBMITTED" as const,
     priority: 0,
     notes: undefined,
     source: "canvas" as const,
@@ -74,9 +79,27 @@ export async function listCanvasAssignments(accessToken: string, courseId: strin
   return items.map((a) => mapCanvasAssignmentToDTO(a, courseId));
 }
 
+export type CanvasSubmission = {
+  id: number;
+  assignment_id: number;
+  user_id: number;
+  workflow_state: string; // "submitted", "graded", etc.
+  submitted_at?: string | null;
+  graded_at?: string | null;
+};
+
+export async function getSubmissionForSelf(accessToken: string, courseId: string, assignmentId: string) {
+  const submission = await fetchCanvas<CanvasSubmission>(
+    `/courses/${courseId}/assignments/${assignmentId}/submissions/self`,
+    accessToken
+  );
+  return submission;
+}
+
 export const canvasService = {
   listCanvasCourses,
   listCanvasAssignments,
+  getSubmissionForSelf,
 };
 
 export async function getAccessTokenForUser(userId: string) {

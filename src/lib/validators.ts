@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const assignmentStatusEnum = z.enum(["TODO", "IN_PROGRESS", "DONE"]);
+export const assignmentStatusEnum = z.enum(["NOT_SUBMITTED", "SUBMITTED", "GRADED"]);
 export const assignmentTypeEnum = z.enum(["HOMEWORK", "QUIZ", "EXAM", "PROJECT", "OTHER"]);
 
 export const createCourseSchema = z.object({

@@ -1,4 +1,4 @@
-export type AssignmentStatus = "TODO" | "IN_PROGRESS" | "DONE";
+export type AssignmentStatus = "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
 export type AssignmentType = "HOMEWORK" | "QUIZ" | "EXAM" | "PROJECT" | "OTHER";
 
 export interface AssignmentDTO {

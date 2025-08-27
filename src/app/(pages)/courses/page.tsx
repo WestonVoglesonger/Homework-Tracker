@@ -1,15 +1,13 @@
 "use client";
-import AppShell from "../../../components/layout/AppShell";
-import { useCourses } from "../../../hooks/useCourses";
-import { CourseCard } from "../../../components/courses/CourseCard";
-import { useCreateCourse } from "../../../hooks/useCourses";
+import AppShell from "@components/layout/AppShell";
+import { useCourses, useCreateCourse } from "@/app/hooks/useCourses";
+import { CourseCard } from "@components/courses/CourseCard";
 import { useState } from "react";
-import { Input } from "../../../components/ui/input";
-import { Button } from "../../../components/ui/button";
-import { useEnsureCanvasCoursesPrefetched } from "../../../hooks/useCanvasImport";
-import EmptyState from "../../../components/common/EmptyState";
+import { Input } from "@components/ui/input";
+import { Button } from "@components/ui/button";
+import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
 import Link from "next/link";
-import { Skeleton } from "../../../components/ui/skeleton";
+import { Skeleton } from "@components/ui/skeleton";
 
 export default function CoursesPage() {
   useEnsureCanvasCoursesPrefetched();

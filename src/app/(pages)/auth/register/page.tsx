@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Spinner } from "@components/ui/spinner";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function RegisterPage() {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded p-2" required />
         </div>
         <button type="submit" disabled={loading} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
-          {loading ? "Creating..." : "Create account"}
+          {loading ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Creating…</span>) : "Create account"}
         </button>
       </form>
     </div>

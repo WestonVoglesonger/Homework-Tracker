@@ -45,13 +45,26 @@ export async function POST(req: NextRequest) {
         
         for (const canvasCourse of canvasCourses) {
           try {
-            // Upsert course
-            await courseService.upsert(account.userId, {
-              name: canvasCourse.name,
-              code: canvasCourse.code,
-              term: canvasCourse.term,
-              source: "canvas",
-              canvasId: canvasCourse.canvasId!
+            // Only sync assignments for courses the user has already imported locally.
+            // If the local course doesn't exist, skip it (don't auto-import new courses).
+            const localCourse = await prisma.course.findUnique({
+              where: {
+                userId_canvasId: {
+                  userId: account.userId,
+                  canvasId: canvasCourse.canvasId!
+                }
+              }
+            });
+            if (!localCourse) continue;
+            
+            // Optionally refresh basic course metadata
+            await prisma.course.update({
+              where: { id: localCourse.id },
+              data: {
+                name: canvasCourse.name,
+                code: canvasCourse.code,
+                term: canvasCourse.term,
+              },
             });
             results.courses++;
             
@@ -61,19 +74,7 @@ export async function POST(req: NextRequest) {
               canvasCourse.canvasId!
             );
             
-            // Get the local course ID
-            const localCourse = await prisma.course.findUnique({
-              where: {
-                userId_canvasId: {
-                  userId: account.userId,
-                  canvasId: canvasCourse.canvasId!
-                }
-              }
-            });
-            
-            if (!localCourse) continue;
-            
-            // Upsert assignments
+            // Upsert assignments and update status based on submission
             for (const canvasAssignment of canvasAssignments) {
               try {
                 // Check if assignment already exists
@@ -86,6 +87,20 @@ export async function POST(req: NextRequest) {
                   }
                 });
                 
+                // Check submission state for this assignment
+                try {
+                  const submission = await canvasService.getSubmissionForSelf(
+                    account.access_token,
+                    canvasCourse.canvasId!,
+                    canvasAssignment.canvasId!
+                  );
+                  const wf = submission?.workflow_state;
+                  const newStatus = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : undefined;
+                  if (existing && newStatus && existing.status !== newStatus) {
+                    await prisma.assignment.update({ where: { id: existing.id }, data: { status: newStatus } });
+                  }
+                } catch {}
+
                 if (existing) {
                   // Update existing assignment (but don't override status or notes)
                   await prisma.assignment.update({

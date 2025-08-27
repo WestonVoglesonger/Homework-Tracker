@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useCanvasImport } from "../../hooks/useCanvasImport";
-import { CourseDTO } from "../../interfaces/course";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useCanvasImport } from "@hooks/useCanvasImport";
+import { CourseDTO } from "@/interfaces/course";
+import { Button } from "@components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { toast } from "sonner";
 
 export default function CanvasImportPanel() {
@@ -38,7 +38,6 @@ export default function CanvasImportPanel() {
     
     if (successCount > 0) {
       toast.success(`Imported ${successCount} course${successCount > 1 ? 's' : ''} with ${assignmentCount} assignment${assignmentCount !== 1 ? 's' : ''}`);
-      // Refresh the course list
       const refreshed = await listCanvasCourses();
       setCourses(refreshed);
       setSelectedCourses({});

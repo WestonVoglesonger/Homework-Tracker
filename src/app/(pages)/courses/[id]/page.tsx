@@ -1,12 +1,12 @@
 "use client";
-import AppShell from "../../../../components/layout/AppShell";
-import { useAssignments } from "../../../../hooks/useAssignments";
-import { AssignmentRow } from "../../../../components/assignments/AssignmentRow";
-import AssignmentForm from "../../../../components/assignments/AssignmentForm";
+import AppShell from "@components/layout/AppShell";
+import { useAssignments } from "@/app/hooks/useAssignments";
+import { AssignmentRow } from "@components/assignments/AssignmentRow";
+import AssignmentForm from "@components/assignments/AssignmentForm";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
-import EmptyState from "../../../../components/common/EmptyState";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
+import EmptyState from "@components/common/EmptyState";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
 import { useMemo, useState } from "react";
 
 export default function CourseDetailPage() {

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { getSignInErrorMessage } from "@/lib/authErrors";
 import Link from "next/link";
+import { Spinner } from "@components/ui/spinner";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -37,7 +38,7 @@ export default function SignInPage() {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded p-2" required />
         </div>
         <button type="submit" disabled={loading} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Signing in…</span>) : "Sign in"}
         </button>
         <div className="text-sm text-center">
           No account? <Link href={"/auth/register" as any} className="text-blue-600">Register</Link>

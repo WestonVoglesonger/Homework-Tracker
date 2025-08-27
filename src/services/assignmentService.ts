@@ -2,7 +2,7 @@ import prisma from "../db/client";
 import DOMPurify from "isomorphic-dompurify";
 
 interface ListFilters {
-  status?: "TODO" | "IN_PROGRESS" | "DONE";
+  status?: "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
   from?: string;
   to?: string;
 }
@@ -67,7 +67,7 @@ export async function update(
     type: "HOMEWORK" | "QUIZ" | "EXAM" | "PROJECT" | "OTHER";
     dueAt?: string;
     estimatedHours?: number;
-    status: "TODO" | "IN_PROGRESS" | "DONE";
+    status: "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
     priority: number;
     notes?: string;
   }>
@@ -94,6 +94,11 @@ export async function remove(userId: string, id: string) {
   return { ok: true } as const;
 }
 
-export const assignmentService = { list, create, update, remove };
+export async function getById(userId: string, id: string) {
+  const assignment = await prisma.assignment.findFirst({ where: { id, userId } });
+  return assignment;
+}
+
+export const assignmentService = { list, create, update, remove, getById };
 
 

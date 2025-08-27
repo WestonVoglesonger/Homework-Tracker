@@ -1,12 +1,10 @@
 "use client";
-import AppShell from "../../../components/layout/AppShell";
-import { useAssignments } from "../../../hooks/useAssignments";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import AppShell from "@components/layout/AppShell";
+import { useAssignments } from "@/app/hooks/useAssignments";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { format, addDays, startOfDay, isSameDay, parseISO, isToday, isPast } from "date-fns";
-import { AssignmentRow } from "../../../components/assignments/AssignmentRow";
-import EmptyState from "../../../components/common/EmptyState";
-import { useEnsureCanvasCoursesPrefetched } from "../../../hooks/useCanvasImport";
-import { Skeleton } from "../../../components/ui/skeleton";
+import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
+import { Skeleton } from "@components/ui/skeleton";
 
 export default function CalendarPage() {
   useEnsureCanvasCoursesPrefetched();

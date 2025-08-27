@@ -1,8 +1,8 @@
 "use client";
 import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { CourseDTO } from "../interfaces/course";
-import { AssignmentDTO } from "../interfaces/assignment";
+import { CourseDTO } from "@/interfaces/course";
+import { AssignmentDTO } from "@/interfaces/assignment";
 
 async function getJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -64,7 +64,7 @@ export function useCanvasImport() {
     },
   });
 
-  // Keep the old one for backward compatibility but discourage its use
+  // Optional: deprecated bulk import kept for compatibility
   const importSelected = useMutation({
     mutationFn: async (items: { courses: Partial<CourseDTO>[]; assignments: Partial<AssignmentDTO>[] }) => {
       const created: { courses: CourseDTO[]; assignments: AssignmentDTO[] } = { courses: [], assignments: [] };
@@ -88,15 +88,14 @@ export function useCanvasImport() {
       }
       
       for (const a of items.assignments) {
-        // Map the Canvas course ID to local course ID
         const localCourseId = a.courseId && canvasToLocalCourseMap.get(a.courseId);
-        if (!localCourseId) continue; // Skip if we can't find the course
+        if (!localCourseId) continue;
         
         const res = await fetch("/api/assignments", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            courseId: localCourseId, // Use the mapped local course ID
+            courseId: localCourseId,
             title: a.title,
             type: a.type,
             dueAt: a.dueAt,
@@ -116,7 +115,6 @@ export function useCanvasImport() {
   return { startOAuth, listCanvasCourses, listCanvasAssignments, importSelected, importCourseWithAssignments };
 }
 
-// Optional: call this on any page to prefetch Canvas courses if connected
 export function useEnsureCanvasCoursesPrefetched() {
   useEffect(() => {
     fetch("/api/canvas/courses").catch(() => {});
