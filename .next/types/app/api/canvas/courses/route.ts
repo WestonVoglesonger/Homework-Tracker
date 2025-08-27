@@ -1,4 +1,4 @@
-// File: /Users/westonvoglesonger/Projects/Homework Tracker/src/app/api/canvas/courses/route.ts
+// File: /workspaces/Homework-Tracker/src/app/api/canvas/courses/route.ts
 import * as entry from '../../../../../../src/app/api/canvas/courses/route.js'
 import type { NextRequest } from 'next/server.js'
 

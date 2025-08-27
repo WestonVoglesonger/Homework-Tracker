@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: homework_dev
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  app:
+    image: mcr.microsoft.com/devcontainers/javascript-node:20
+    command: sleep infinity
+    volumes:
+      - ..:/workspaces/Homework-Tracker:cached
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_PRISMA_URL=postgresql://postgres:postgres@db:5432/homework_dev
+      - POSTGRES_URL_NON_POOLING=postgresql://postgres:postgres@db:5432/homework_dev
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=dev-local-secret
+    ports:
+      - 3000:3000
+      - 5555:5555 # Prisma Studio
+volumes:
+  db-data:

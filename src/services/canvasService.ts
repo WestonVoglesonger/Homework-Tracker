@@ -1,5 +1,6 @@
 import { CanvasAssignment, CanvasCourse } from "../interfaces/canvas";
 import prisma from "../db/client";
+import { encryptText, decryptText } from "../lib/crypto";
 
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "";
 
@@ -80,7 +81,8 @@ export const canvasService = {
 
 export async function getAccessTokenForUser(userId: string) {
   const account = await prisma.account.findFirst({ where: { userId, provider: "canvas" } });
-  return account?.access_token ?? null;
+  const stored = account?.access_token ?? null;
+  return stored ? decryptText(stored) : null;
 }
 
 export async function exchangeCodeForToken(code: string) {
@@ -111,15 +113,15 @@ export async function upsertCanvasAccount(userId: string, tokenJson: { access_to
       provider: "canvas",
       type: "oauth",
       providerAccountId: userId,
-      access_token: tokenJson.access_token,
-      refresh_token: tokenJson.refresh_token,
+      access_token: encryptText(tokenJson.access_token),
+      refresh_token: tokenJson.refresh_token ? encryptText(tokenJson.refresh_token) : undefined,
       token_type: tokenJson.token_type,
       scope: tokenJson.scope,
       expires_at: tokenJson.expires_in ? Math.floor(Date.now() / 1000) + tokenJson.expires_in : null,
     },
     update: {
-      access_token: tokenJson.access_token,
-      refresh_token: tokenJson.refresh_token,
+      access_token: encryptText(tokenJson.access_token),
+      refresh_token: tokenJson.refresh_token ? encryptText(tokenJson.refresh_token) : undefined,
       token_type: tokenJson.token_type,
       scope: tokenJson.scope,
       expires_at: tokenJson.expires_in ? Math.floor(Date.now() / 1000) + tokenJson.expires_in : null,

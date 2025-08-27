@@ -1,4 +1,4 @@
-// File: /Users/westonvoglesonger/Projects/Homework Tracker/src/app/(pages)/dashboard/page.tsx
+// File: /workspaces/Homework-Tracker/src/app/(pages)/dashboard/page.tsx
 import * as entry from '../../../../../src/app/(pages)/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

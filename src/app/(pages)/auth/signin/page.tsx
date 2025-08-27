@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { getSignInErrorMessage } from "@/lib/authErrors";
 import Link from "next/link";
 
 export default function SignInPage() {
@@ -13,8 +14,12 @@ export default function SignInPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const res = await signIn("credentials", { email, password, redirect: true, callbackUrl: "/dashboard" });
-    if (res?.error) setError(res.error);
+    const res = await signIn("credentials", { email, password, redirect: false });
+    if (res?.error) {
+      setError(getSignInErrorMessage(res.error));
+    } else if (res?.ok) {
+      window.location.href = "/dashboard";
+    }
     setLoading(false);
   }
 

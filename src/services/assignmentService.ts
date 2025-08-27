@@ -1,4 +1,5 @@
 import prisma from "../db/client";
+import DOMPurify from "isomorphic-dompurify";
 
 interface ListFilters {
   status?: "TODO" | "IN_PROGRESS" | "DONE";
@@ -43,7 +44,7 @@ export async function create(
       userId,
       courseId: input.courseId,
       title: input.title,
-      description: input.description,
+      description: input.description ? DOMPurify.sanitize(input.description, { USE_PROFILES: { html: true } }) : undefined,
       type: input.type ?? "OTHER",
       dueAt: input.dueAt ? new Date(input.dueAt) : undefined,
       estimatedHours: input.estimatedHours,
@@ -78,6 +79,10 @@ export async function update(
     data: {
       ...patch,
       dueAt: patch.dueAt ? new Date(patch.dueAt) : undefined,
+      ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+      ...(patch as any).description !== undefined
+        ? { description: (patch as any).description ? DOMPurify.sanitize((patch as any).description, { USE_PROFILES: { html: true } }) : null }
+        : {},
     },
   });
   return record;

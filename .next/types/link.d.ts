@@ -30,24 +30,27 @@ declare namespace __next_route_internal_types__ {
 
   type StaticRoutes = 
     | `/`
-    | `/calendar`
-    | `/courses`
-    | `/settings`
-    | `/dashboard`
     | `/api/assignments`
     | `/api/canvas/assignments`
     | `/api/canvas/courses`
     | `/api/canvas/oauth/callback`
     | `/api/canvas/oauth/start`
-    | `/api/canvas/token`
     | `/api/canvas/sync`
+    | `/api/canvas/token`
+    | `/api/register`
     | `/api/courses`
+    | `/auth/register`
+    | `/auth/signin`
+    | `/calendar`
+    | `/dashboard`
+    | `/courses`
+    | `/settings`
   type DynamicRoutes<T extends string = string> = 
-    | `/assignments/${SafeSlug<T>}`
-    | `/courses/${SafeSlug<T>}`
     | `/api/assignments/${SafeSlug<T>}`
     | `/api/auth/${CatchAllSlug<T>}`
     | `/api/courses/${SafeSlug<T>}`
+    | `/assignments/${SafeSlug<T>}`
+    | `/courses/${SafeSlug<T>}`
 
   type RouteImpl<T> = 
     | StaticRoutes

@@ -1,0 +1,25 @@
+{
+  "name": "Homework Tracker",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/Homework-Tracker",
+  "forwardPorts": [3000, 5432, 5555],
+  "containerEnv": {
+    "POSTGRES_PRISMA_URL": "postgresql://postgres:postgres@db:5432/homework_dev",
+    "POSTGRES_URL_NON_POOLING": "postgresql://postgres:postgres@db:5432/homework_dev",
+    "NEXTAUTH_URL": "http://localhost:3000",
+    "NEXTAUTH_SECRET": "dev-local-secret"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Prisma.prisma",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "postCreateCommand": "npm ci"
+}

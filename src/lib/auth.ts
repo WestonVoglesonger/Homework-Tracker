@@ -7,6 +7,7 @@ export async function getAuth() {
   const { default: prisma } = await import("../db/client");
 
   const authOptions: NextAuthOptions = {
+    secret: process.env.NEXTAUTH_SECRET,
     adapter: PrismaAdapter(prisma),
     providers: [
       CredentialsProvider({
@@ -16,13 +17,19 @@ export async function getAuth() {
           password: { label: "Password", type: "password" },
         },
         async authorize(credentials) {
-          if (!credentials?.email || !credentials?.password) return null;
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error("MissingCredentials");
+          }
           const { prisma: directPrisma } = await import("../db/client");
           const user = await directPrisma.user.findUnique({ where: { email: credentials.email } }) as any;
-          if (!user?.passwordHash) return null;
+          if (!user?.passwordHash) {
+            throw new Error("UserNotFound");
+          }
           const { compare } = await import("bcryptjs");
           const ok = await compare(credentials.password, user.passwordHash);
-          if (!ok) return null;
+          if (!ok) {
+            throw new Error("InvalidPassword");
+          }
           return { id: user.id, email: user.email || undefined, name: user.name || undefined } as any;
         },
       }),
@@ -45,7 +52,7 @@ export async function getAuth() {
         return session;
       },
     },
-    pages: { signIn: "/auth/signin" },
+    pages: { signIn: "/auth/signin", error: "/auth/signin" },
   };
 
   const handler = NextAuth(authOptions);
