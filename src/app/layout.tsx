@@ -11,11 +11,7 @@ export const metadata: Metadata = {
     default: "DueNorth",
     template: "%s • DueNorth",
   },
-  icons: {
-    icon: "/DueNorth-logo.png",
-    shortcut: "/DueNorth-logo.png",
-    apple: "/DueNorth-logo.png",
-  },
+  icons: {},
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
