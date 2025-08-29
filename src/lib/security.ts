@@ -24,13 +24,17 @@ export function isValidOrigin(req: Request): boolean {
   try {
     const ob = new URL(origin);
     const bb = new URL(base);
-    // Exact host + protocol match
-    if (ob.host === bb.host && ob.protocol === bb.protocol) return true;
-    // Allow common local loopback variants when protocols match and ports match
+    // Allow exact host match to configured NEXTAUTH_URL
+    if (ob.host === bb.host) return true;
+
+    // Also allow matches to the incoming Host / X-Forwarded-Host header (handles preview/prod domains)
+    const host = ((req.headers as any).get?.("x-forwarded-host") as string | null) || ((req.headers as any).get?.("host") as string | null);
+    if (host && ob.host === host) return true;
+
+    // Allow common local loopback variants when ports match
     const isLoopback = (h: string) => h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0";
-    if (ob.protocol === bb.protocol && ob.port === bb.port && isLoopback(ob.hostname) && isLoopback(bb.hostname)) {
-      return true;
-    }
+    if (ob.port === bb.port && isLoopback(ob.hostname) && isLoopback(bb.hostname)) return true;
+
     return false;
   } catch {
     return false;
