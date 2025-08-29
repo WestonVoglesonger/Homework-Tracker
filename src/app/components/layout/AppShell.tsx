@@ -26,8 +26,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="min-h-screen grid grid-cols-[280px_1fr]">
         <aside className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 space-y-6">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            DueNorth
+          <div className="flex items-center gap-3 text-2xl font-bold text-gray-900 dark:text-white">
+            <img src="/DueNorth-logo.png" alt="DueNorth logo" className="w-8 h-8 rounded" />
+            <span>DueNorth</span>
           </div>
           <nav className="flex flex-col gap-2">
             <Link 
