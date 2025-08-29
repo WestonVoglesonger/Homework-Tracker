@@ -6,7 +6,7 @@ export default function IndexPage() {
     <main className="min-h-screen grid place-items-center bg-white dark:bg-gray-950">
       <div className="text-center space-y-8">
         <div className="flex items-center justify-center gap-3">
-          <img src="/DueNorth-logo.png" alt="DueNorth logo" className="w-12 h-12" />
+          <img src="/DueNorth-logo.png" alt="DueNorth logo" className="w-20 h-20" />
         </div>
         <h1 className="text-6xl font-extrabold tracking-tight">Welcome to DueNorth</h1>
         <div className="flex items-center justify-center gap-4">
