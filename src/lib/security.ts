@@ -32,7 +32,7 @@ export function isValidOrigin(req: Request): boolean {
     if (host && ob.host === host) return true;
 
     // Allow common local loopback variants when ports match
-    const isLoopback = (h: string) => h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0";
+    const isLoopback: (h: string) => boolean = (h) => ["localhost", "127.0.0.1", "0.0.0.0"].includes(h);
     if (ob.port === bb.port && isLoopback(ob.hostname) && isLoopback(bb.hostname)) return true;
 
     return false;
