@@ -17,7 +17,7 @@ export function AssignmentForm({ courseId, onCreated }: { courseId?: string; onC
 
   return (
     <form
-      className="space-y-3"
+      className="space-y-4"
       onSubmit={async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -30,13 +30,13 @@ export function AssignmentForm({ courseId, onCreated }: { courseId?: string; onC
     >
       <div className="grid gap-2">
         <Label>Title</Label>
-        <Input placeholder="e.g., Homework 1" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <Input placeholder="e.g., Homework 1" value={title} onChange={(e) => setTitle(e.target.value)} className="h-12 text-base px-4" />
       </div>
-      <div className="grid grid-cols-2 gap-2 items-end">
-        <div className="grid gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-end">
+        <div className="grid gap-2 min-w-0 md:w-[200px]">
           <Label>Type</Label>
           <Select value={type} onValueChange={setType}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full h-10 text-sm px-3 overflow-hidden text-ellipsis">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
@@ -48,14 +48,21 @@ export function AssignmentForm({ courseId, onCreated }: { courseId?: string; onC
             </SelectContent>
           </Select>
         </div>
-        <div className="grid gap-2">
-          <Label>Due</Label>
-          <Input type="datetime-local" className="[&::-webkit-calendar-picker-indicator]:opacity-70" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+        <div className="grid gap-2 min-w-0">
+          <Label>Due (optional)</Label>
+          <Input
+            type="datetime-local"
+            className="w-full h-10 min-w-0 text-sm px-3 [&::-webkit-calendar-picker-indicator]:opacity-70"
+            value={dueAt}
+            onChange={(e) => setDueAt(e.target.value)}
+          />
         </div>
       </div>
-      <Button type="submit" disabled={!title || submitting}>
-        {submitting ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Adding…</span>) : "Add"}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={!title || submitting} className="px-5">
+          {submitting ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Adding…</span>) : "Add"}
+        </Button>
+      </div>
     </form>
   );
 }

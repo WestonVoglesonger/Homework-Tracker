@@ -38,8 +38,8 @@ export default function CourseDetailPage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Course</h1>
       </div>
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="md:col-span-2">
+      <div className="grid md:grid-cols-[55%_45%] gap-6">
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
               <CardTitle>Assignments</CardTitle>
@@ -69,7 +69,7 @@ export default function CourseDetailPage() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="md:sticky md:top-6 h-fit">
           <CardHeader>
             <CardTitle>Add assignment</CardTitle>
           </CardHeader>
