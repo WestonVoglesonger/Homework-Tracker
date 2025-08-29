@@ -4,9 +4,12 @@ import { ReactNode, useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "../ui/button";
 import { Spinner } from "@components/ui/spinner";
+import { useAdmin } from "@/app/hooks/useAdmin";
+import { setupGlobalErrorHandler } from "@/lib/errorLogger";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
+  const { isAdmin } = useAdmin();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Ping Canvas on any page load (if connected) so calls aren't limited to Settings
@@ -15,6 +18,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       fetch("/api/canvas/courses").catch(() => {});
     }
   }, [status]);
+
+  // Setup global error handling
+  useEffect(() => {
+    setupGlobalErrorHandler();
+  }, []);
 
   if (status === "loading") {
     return (
@@ -49,6 +57,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link href="/courses" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Courses</Link>
               <Link href="/calendar" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Calendar</Link>
               <Link href="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Settings</Link>
+              {isAdmin && (
+                <Link href="/admin" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Admin Panel</Link>
+              )}
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                 {status === "authenticated" ? (
                   <button
@@ -106,6 +117,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="w-2 h-2 rounded-full bg-orange-500" />
               Settings
             </Link>
+            {isAdmin && (
+              <Link 
+                href="/admin" 
+                className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+              >
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                Admin Panel
+              </Link>
+            )}
           </nav>
           
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">

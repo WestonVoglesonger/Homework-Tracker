@@ -1,44 +1,188 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import DOMPurify from "isomorphic-dompurify";
 
-let ratelimiter: Ratelimit | null = null;
+// Initialize rate limiter
 function getLimiter() {
-  if (!ratelimiter && process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-    const redis = new Redis({ url: process.env.UPSTASH_REDIS_REST_URL, token: process.env.UPSTASH_REDIS_REST_TOKEN });
-    ratelimiter = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "60 s") });
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
   }
-  return ratelimiter;
+  
+  const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+  
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, "10 s"),
+  });
 }
 
 export async function rateLimit(key: string): Promise<boolean> {
   const limiter = getLimiter();
-  if (!limiter) return true; // no-op if not configured
-  const res = await limiter.limit(key);
-  return res.success;
+  if (!limiter) return true; // Allow if rate limiting is not configured
+  
+  const { success } = await limiter.limit(key);
+  return success;
 }
 
-export function isValidOrigin(req: Request): boolean {
-  const origin = (req.headers as any).get?.("origin") as string | null;
-  const base = process.env.NEXTAUTH_URL || "http://localhost:3000";
-  if (!origin) return true; // allow same-origin fetch without Origin header
-  try {
-    const ob = new URL(origin);
-    const bb = new URL(base);
-    // Allow exact host match to configured NEXTAUTH_URL
-    if (ob.host === bb.host) return true;
-
-    // Also allow matches to the incoming Host / X-Forwarded-Host header (handles preview/prod domains)
-    const host = ((req.headers as any).get?.("x-forwarded-host") as string | null) || ((req.headers as any).get?.("host") as string | null);
-    if (host && ob.host === host) return true;
-
-    // Allow common local loopback variants when ports match
-    const isLoopback: (h: string) => boolean = (h) => ["localhost", "127.0.0.1", "0.0.0.0"].includes(h);
-    if (ob.port === bb.port && isLoopback(ob.hostname) && isLoopback(bb.hostname)) return true;
-
-    return false;
-  } catch {
-    return false;
+// Admin-specific rate limiting (stricter)
+export async function adminRateLimit(key: string): Promise<boolean> {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return true;
   }
+  
+  const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+  
+  const adminLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "60 s"), // 5 requests per minute
+  });
+  
+  const { success } = await adminLimiter.limit(`admin:${key}`);
+  return success;
 }
 
+// Input sanitization functions
+export function sanitizeHtml(input: string): string {
+  return DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: ["b", "i", "em", "strong", "p", "br", "ul", "ol", "li"],
+    ALLOWED_ATTR: [],
+  });
+}
 
+export function sanitizeString(input: string): string {
+  // Remove potentially dangerous characters
+  return input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "")
+    .replace(/javascript:/gi, "")
+    .replace(/on\w+\s*=/gi, "")
+    .trim();
+}
+
+export function sanitizeObject(obj: any): any {
+  if (typeof obj === "string") {
+    return sanitizeString(obj);
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeObject);
+  }
+  
+  if (obj && typeof obj === "object") {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      sanitized[sanitizeString(key)] = sanitizeObject(value);
+    }
+    return sanitized;
+  }
+  
+  return obj;
+}
+
+// CSRF protection helpers
+export function generateCSRFToken(): string {
+  const array = new Uint8Array(32);
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    crypto.getRandomValues(array);
+  } else {
+    // Fallback for environments without crypto.getRandomValues
+    for (let i = 0; i < array.length; i++) {
+      array[i] = Math.floor(Math.random() * 256);
+    }
+  }
+  return Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function validateCSRFToken(token: string, sessionToken: string): boolean {
+  // Simple CSRF validation - in production, use a more robust implementation
+  return token === sessionToken && token.length === 64;
+}
+
+// Origin validation
+export function isValidOrigin(req: Request): boolean {
+  const origin = req.headers.get("origin");
+  const host = req.headers.get("host");
+  
+  if (!origin || !host) return false;
+  
+  const allowedOrigins = [
+    `https://${host}`,
+    `http://${host}`,
+    process.env.NEXTAUTH_URL,
+  ].filter(Boolean);
+  
+  return allowedOrigins.some(allowed => origin === allowed);
+}
+
+// SQL injection prevention helpers
+export function sanitizeSQLParam(param: string): string {
+  // Basic SQL injection prevention
+  return param
+    .replace(/'/g, "''")
+    .replace(/;/g, "")
+    .replace(/--/g, "")
+    .replace(/\/\*/g, "")
+    .replace(/\*\//g, "");
+}
+
+// Password strength validation
+export function isStrongPassword(password: string): {
+  isValid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+  
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push("Password must contain at least one special character");
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+}
+
+// Content Security Policy headers
+export function getCSPHeaders(): Record<string, string> {
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+
+  return {
+    "Content-Security-Policy": csp,
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  };
+}
