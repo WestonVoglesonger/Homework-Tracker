@@ -9,6 +9,13 @@ export async function list(userId: string) {
   return courses;
 }
 
+export async function findByUserCanvasId(userId: string, canvasId: string) {
+  const course = await prisma.course.findUnique({
+    where: { userId_canvasId: { userId, canvasId } },
+  });
+  return course;
+}
+
 export async function create(
   userId: string,
   input: { name: string; code?: string; term?: string; color?: string; source?: string; canvasId?: string | null }
@@ -75,6 +82,6 @@ export async function remove(userId: string, id: string) {
   return { ok: true } as const;
 }
 
-export const courseService = { list, create, upsert, update, remove };
+export const courseService = { list, create, upsert, update, remove, findByUserCanvasId };
 
 

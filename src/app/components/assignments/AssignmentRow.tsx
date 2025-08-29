@@ -1,6 +1,6 @@
 "use client";
 import { AssignmentDTO } from "@/interfaces/assignment";
-import { useUpdateAssignment } from "@hooks/useAssignments";
+import { useUpdateAssignment } from "@/app/hooks/useAssignments";
 import { formatDate } from "@/lib/date";
 import { Button } from "@components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";

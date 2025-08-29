@@ -3,6 +3,7 @@ import AppShell from "@components/layout/AppShell";
 import { useAssignments } from "@/app/hooks/useAssignments";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { StatusPill } from "@components/ui/status";
+import { normalizeStatus } from "@/lib/status";
 import { AssignmentRow } from "@components/assignments/AssignmentRow";
 import EmptyState from "@components/common/EmptyState";
 import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
@@ -14,12 +15,20 @@ export default function DashboardPage() {
   const nowTs = Date.now();
   const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
   const cutoffTs = nowTs + twoWeeksMs;
-  const overdue = (assignments || []).filter((a) => a.dueAt && Date.parse(a.dueAt) < nowTs && a.status === "NOT_SUBMITTED");
+  const overdue = (assignments || []).filter((a) => {
+    if (!a.dueAt) return false;
+    const ts = Date.parse(a.dueAt);
+    const st = normalizeStatus(a.status);
+    // Treat SUBMITTED but ungraded as not overdue; only NOT_SUBMITTED counts as overdue
+    return ts < nowTs && st === "NOT_SUBMITTED";
+  });
   const upcoming = (assignments || [])
     .filter((a) => {
       if (!a.dueAt) return false;
       const ts = Date.parse(a.dueAt);
-      return ts >= nowTs && ts < cutoffTs;
+      // Only show items that have not been submitted yet
+      const st = normalizeStatus(a.status);
+      return ts >= nowTs && ts < cutoffTs && st === "NOT_SUBMITTED";
     })
     .sort((a, b) => Date.parse(a.dueAt as string) - Date.parse(b.dueAt as string));
   const groups = { overdue, upcoming } as Record<string, any[]>;

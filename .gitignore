@@ -1,1 +1,8 @@
 node_modules
+.next
+.next/
+out
+.vercel
+coverage
+*.log
+pnpm-debug.log*

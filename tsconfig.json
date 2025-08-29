@@ -28,7 +28,9 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/app/components/*"],
+      "@hooks/*": ["src/app/hooks/*"]
     }
   },
   "include": [
@@ -39,6 +41,7 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "vitest.config.ts"
   ]
 }

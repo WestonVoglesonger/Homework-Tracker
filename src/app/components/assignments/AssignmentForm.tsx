@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useCreateAssignment } from "@hooks/useAssignments";
+import { useCreateAssignment } from "@/app/hooks/useAssignments";
 import { assignmentTypeEnum } from "@/lib/validators";
 import { Input } from "@components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";

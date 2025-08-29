@@ -24,7 +24,14 @@ export function isValidOrigin(req: Request): boolean {
   try {
     const ob = new URL(origin);
     const bb = new URL(base);
-    return ob.host === bb.host && ob.protocol === bb.protocol;
+    // Exact host + protocol match
+    if (ob.host === bb.host && ob.protocol === bb.protocol) return true;
+    // Allow common local loopback variants when protocols match and ports match
+    const isLoopback = (h: string) => h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0";
+    if (ob.protocol === bb.protocol && ob.port === bb.port && isLoopback(ob.hostname) && isLoopback(bb.hostname)) {
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }

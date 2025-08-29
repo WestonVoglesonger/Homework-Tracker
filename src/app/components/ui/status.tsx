@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-export type AppStatus = "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
+import { normalizeStatus, AppStatus } from "@/lib/status";
 
 export const statusMeta: Record<AppStatus, { short: string; long: string; dot: string; pill: string }> = {
   NOT_SUBMITTED: {
@@ -24,16 +24,6 @@ export const statusMeta: Record<AppStatus, { short: string; long: string; dot: s
   },
 };
 
-function normalizeStatus(status?: string | null): AppStatus {
-  if (!status) return "NOT_SUBMITTED";
-  // Legacy support
-  if (status === "DONE") return "GRADED";
-  if (status === "IN_PROGRESS") return "SUBMITTED";
-  if (status === "TODO") return "NOT_SUBMITTED";
-  // Current values
-  if (status === "GRADED" || status === "SUBMITTED" || status === "NOT_SUBMITTED") return status;
-  return "NOT_SUBMITTED";
-}
 
 export function StatusPill({ status, size = "md", variant = "pill" }: { status: string; size?: "sm" | "md"; variant?: "pill" | "dot" }) {
   const s = normalizeStatus(status);

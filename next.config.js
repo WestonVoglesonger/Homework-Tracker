@@ -9,8 +9,8 @@ const nextConfig = {
       "default-src 'self'",
       // Allow inline styles for Tailwind preflight; consider hashing in strict setups
       "style-src 'self' 'unsafe-inline'",
-      // Next.js dev needs 'unsafe-eval'; production should avoid it
-      `script-src 'self'${isDev ? " 'unsafe-eval'" : ""}`,
+      // Next.js dev needs 'unsafe-eval'; production should avoid it. Allow inline scripts in dev for Next runtime.
+      `script-src 'self'${isDev ? " 'unsafe-eval' 'unsafe-inline'" : ""}`,
       "img-src 'self' data: https:",
       "font-src 'self' data:",
       // Allow API/websocket connections to self and HTTPS origins (e.g., Vercel)

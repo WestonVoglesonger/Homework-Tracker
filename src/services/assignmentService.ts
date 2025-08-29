@@ -34,6 +34,7 @@ export async function create(
     estimatedHours?: number;
     priority?: number;
     notes?: string;
+    status?: "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
     source?: string;
     canvasId?: string | null;
     canvasUrl?: string | null;
@@ -50,6 +51,7 @@ export async function create(
       estimatedHours: input.estimatedHours,
       priority: input.priority ?? 0,
       notes: input.notes,
+      status: input.status ?? undefined,
       source: input.source ?? "manual",
       canvasId: input.canvasId ?? undefined,
       canvasUrl: input.canvasUrl ?? undefined,
@@ -99,6 +101,11 @@ export async function getById(userId: string, id: string) {
   return assignment;
 }
 
-export const assignmentService = { list, create, update, remove, getById };
+export async function getByUserCanvasId(userId: string, canvasId: string) {
+  const assignment = await prisma.assignment.findUnique({ where: { userId_canvasId: { userId, canvasId } } });
+  return assignment;
+}
+
+export const assignmentService = { list, create, update, remove, getById, getByUserCanvasId };
 
 
