@@ -24,7 +24,7 @@ export async function syncUser(userId: string) {
         const mapped = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : "NOT_SUBMITTED";
         if (existing) {
           if (existing.status !== mapped) {
-            await prisma.assignment.update({ where: { id: existing.id }, data: { status: mapped } });
+            await assignmentService.update(userId, existing.id, { status: mapped } as any);
             results.updated++;
           }
         } else {
