@@ -39,7 +39,7 @@ export function useCanvasImport() {
       if (!courseRes.ok) throw new Error("Failed to create course");
       const createdCourse: CourseDTO = await courseRes.json();
       
-      // Then, fetch and import all assignments for this course
+      // Then, fetch and import all assignments for this course (with status)
       const assignments = await listCanvasAssignments(course.canvasId!);
       const createdAssignments: AssignmentDTO[] = [];
       
@@ -62,6 +62,8 @@ export function useCanvasImport() {
         if (res.ok) createdAssignments.push(await res.json());
       }
       
+      // Optionally trigger a lightweight status sync now that the course exists
+      try { await fetch("/api/canvas/sync/user", { method: "POST" }); } catch {}
       return { course: createdCourse, assignments: createdAssignments };
     },
   });

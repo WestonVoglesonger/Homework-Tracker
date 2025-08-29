@@ -106,6 +106,11 @@ export async function getByUserCanvasId(userId: string, canvasId: string) {
   return assignment;
 }
 
-export const assignmentService = { list, create, update, remove, getById, getByUserCanvasId };
+export async function purgeAllForUser(userId: string) {
+  const res = await prisma.assignment.deleteMany({ where: { userId } });
+  return { deleted: res.count } as const;
+}
+
+export const assignmentService = { list, create, update, remove, getById, getByUserCanvasId, purgeAllForUser };
 
 

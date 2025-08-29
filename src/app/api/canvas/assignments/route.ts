@@ -17,8 +17,21 @@ export async function GET(req: NextRequest) {
   if (!courseId) return NextResponse.json({ error: "Missing courseId" }, { status: 400 });
   const access = await canvasTokenService.getAccessTokenForUser(session.user.id);
   if (!access) return NextResponse.json({ error: "Not connected" }, { status: 401 });
-  const data = await canvasService.listCanvasAssignments(access, courseId);
-  return NextResponse.json(data);
+  const items = await canvasService.listCanvasAssignments(access, courseId);
+  // Enrich with submission status
+  const enriched = await Promise.all(
+    items.map(async (a) => {
+      try {
+        const sub = await canvasService.getSubmissionForSelf(access, courseId, a.canvasId!);
+        const wf = (sub as any)?.workflow_state as string | undefined;
+        const status = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : "NOT_SUBMITTED";
+        return { ...a, status };
+      } catch {
+        return a;
+      }
+    })
+  );
+  return NextResponse.json(enriched);
 }
 
 

@@ -82,6 +82,12 @@ export async function remove(userId: string, id: string) {
   return { ok: true } as const;
 }
 
-export const courseService = { list, create, upsert, update, remove, findByUserCanvasId };
+export async function purgeAllForUser(userId: string) {
+  // Delete assignments first due to FK
+  await prisma.assignment.deleteMany({ where: { userId } });
+  const res = await prisma.course.deleteMany({ where: { userId } });
+  return { deleted: res.count } as const;
+}
+export const courseService = { list, create, upsert, update, remove, findByUserCanvasId, purgeAllForUser };
 
 

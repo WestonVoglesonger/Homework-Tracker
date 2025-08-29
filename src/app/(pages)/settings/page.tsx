@@ -6,6 +6,7 @@ import { Button } from "@components/ui/button";
 import { Spinner } from "@components/ui/spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import CanvasImportPanel from "@components/canvas/CanvasImportPanel";
+import DangerZone from "@components/settings/DangerZone";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { toast } from "sonner";
@@ -98,6 +99,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
         {connected && <CanvasImportPanel />}
+        <DangerZone />
       </div>
     </AppShell>
   );
