@@ -196,6 +196,23 @@ export async function logApiError(
   userId?: string,
   additionalContext?: Record<string, any>
 ) {
+  // Skip routine/client-side errors to avoid noisy logs
+  const msg = (error?.message || "").toLowerCase();
+  const routine = [
+    "unauthorized",
+    "forbidden",
+    "invalid credentials",
+    "invalid admin password",
+    "invalid input",
+    "bad request",
+    "not found",
+    "too many requests",
+    "csrf"
+  ];
+  if ((error as any)?.name === "ZodError" || routine.some(s => msg.includes(s))) {
+    return;
+  }
+
   const context = extractRequestContext(req, userId);
   if (additionalContext) {
     context.additionalData = additionalContext;
