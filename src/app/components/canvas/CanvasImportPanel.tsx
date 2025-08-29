@@ -24,6 +24,20 @@ export default function CanvasImportPanel() {
         if (Object.keys(pre).length) setSelectedCourses(pre);
       })
       .catch(() => setCourses([]));
+    const onPurge = () => {
+      listCanvasCourses()
+        .then((cs) => {
+          setCourses(cs);
+          const pre: Record<string, boolean> = {};
+          cs.forEach((c) => {
+            if ((c as any).isImported && (c.canvasId || c.id)) pre[c.canvasId || c.id] = true;
+          });
+          setSelectedCourses(pre);
+        })
+        .catch(() => setCourses([]));
+    };
+    window.addEventListener("purge:done", onPurge);
+    return () => window.removeEventListener("purge:done", onPurge);
   }, []);
 
   async function handleImport() {

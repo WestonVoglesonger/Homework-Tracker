@@ -27,7 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-h-screen grid grid-cols-[280px_1fr]">
         <aside className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 space-y-6">
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            Homework Tracker
+            DueNorth
           </div>
           <nav className="flex flex-col gap-2">
             <Link 

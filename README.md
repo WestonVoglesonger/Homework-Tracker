@@ -1,4 +1,4 @@
-# Homework Tracker
+# DueNorth
 
 Minimal Next.js app to track courses and assignments with optional Canvas import.
 

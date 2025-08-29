@@ -1,5 +1,5 @@
 {
-  "name": "Homework Tracker",
+  "name": "DueNorth",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/Homework-Tracker",

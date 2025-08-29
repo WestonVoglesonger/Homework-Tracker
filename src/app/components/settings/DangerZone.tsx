@@ -9,6 +9,8 @@ export default function DangerZone() {
     const res = await fetch("/api/admin/purge", { method: "POST" });
     if (res.ok) {
       toast.success("Deleted all courses and assignments");
+      // Notify other components to refresh
+      try { window.dispatchEvent(new Event("purge:done")); } catch {}
     } else {
       toast.error("Failed to delete");
     }
