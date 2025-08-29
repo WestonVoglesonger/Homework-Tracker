@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "../ui/button";
 import { Spinner } from "@components/ui/spinner";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Ping Canvas on any page load (if connected) so calls aren't limited to Settings
   useEffect(() => {
@@ -24,8 +25,57 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="min-h-screen grid grid-cols-[280px_1fr]">
-        <aside className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 space-y-6">
+      <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
+        {/* Mobile header with dropdown */}
+        <div className="md:hidden sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
+          <div className="text-lg font-bold text-gray-900 dark:text-white">DueNorth</div>
+          <button
+            className="px-3 py-1.5 rounded-md text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+            onClick={() => setMobileNavOpen((v) => !v)}
+            aria-label="Toggle menu"
+          >
+            Menu
+          </button>
+        </div>
+        {mobileNavOpen && (
+          <>
+            <div className="md:hidden fixed inset-0 z-40 bg-black/40" onClick={() => setMobileNavOpen(false)} />
+            <div className="md:hidden fixed top-0 inset-x-0 z-50 bg-white dark:bg-gray-800 p-4 shadow-xl space-y-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-lg font-semibold">Menu</div>
+                <button className="px-2 py-1 text-sm border rounded" onClick={() => setMobileNavOpen(false)}>Close</button>
+              </div>
+              <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Dashboard</Link>
+              <Link href="/courses" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Courses</Link>
+              <Link href="/calendar" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Calendar</Link>
+              <Link href="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Settings</Link>
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                {status === "authenticated" ? (
+                  <button
+                    className="w-full px-3 py-2 rounded-md border text-left"
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      signOut({ callbackUrl: "/" });
+                    }}
+                  >
+                    Sign out
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Link href="/auth/signin" className="flex-1">
+                      <button className="w-full px-3 py-2 rounded-md border">Sign in</button>
+                    </Link>
+                    <Link href="/auth/register" className="flex-1">
+                      <button className="w-full px-3 py-2 rounded-md border">Register</button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        <aside className="hidden md:block bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 space-y-6">
           <div className="text-2xl font-bold text-gray-900 dark:text-white">DueNorth</div>
           <nav className="flex flex-col gap-2">
             <Link 
@@ -89,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
         
-        <main className="p-8 bg-gray-50 dark:bg-gray-900 overflow-auto">
+        <main className="p-4 md:p-8 bg-gray-50 dark:bg-gray-900 overflow-auto">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

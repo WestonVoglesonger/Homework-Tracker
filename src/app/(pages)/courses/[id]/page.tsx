@@ -38,7 +38,7 @@ export default function CourseDetailPage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Course</h1>
       </div>
-      <div className="grid md:grid-cols-[55%_45%] gap-6">
+      <div className="grid gap-6 md:grid-cols-[55%_45%]">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-4">

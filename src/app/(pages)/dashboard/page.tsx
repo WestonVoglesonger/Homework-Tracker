@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-10 p-6">
+      <div className="max-w-7xl mx-auto space-y-10 p-4 md:p-6">
         {/* Header Section with more breathing room */}
         <div className="text-center lg:text-left">
           <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">Dashboard</h1>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Cards with improved spacing */}
-        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-8">
           {isLoading ? (
             <>
               <Skeleton className="h-36" />
@@ -158,7 +158,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Assignment Groups with better spacing */}
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           {sections.map((s) => (
             <Card 
               key={s.key} 
