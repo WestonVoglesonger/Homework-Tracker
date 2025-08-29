@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ReactNode, useEffect } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "../ui/button";
+import { Spinner } from "@components/ui/spinner";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
@@ -14,6 +15,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [status]);
 
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <Spinner size={48} className="text-gray-500" />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="min-h-screen grid grid-cols-[280px_1fr]">

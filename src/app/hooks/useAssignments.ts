@@ -1,5 +1,6 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { AssignmentDTO, AssignmentStatus } from "@/interfaces/assignment";
 
 async function getJSON<T>(url: string, init?: RequestInit): Promise<T> {
@@ -9,13 +10,14 @@ async function getJSON<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export function useAssignments(params?: { status?: AssignmentStatus; from?: string; to?: string }) {
+  const { status } = useSession();
   const query = new URLSearchParams();
   if (params?.status) query.set("status", params.status);
   if (params?.from) query.set("from", params.from);
   if (params?.to) query.set("to", params.to);
   const qs = query.toString();
   const url = `/api/assignments${qs ? `?${qs}` : ""}`;
-  return useQuery<AssignmentDTO[]>({ queryKey: ["assignments", params || {}], queryFn: () => getJSON(url) });
+  return useQuery<AssignmentDTO[]>({ queryKey: ["assignments", params || {}], queryFn: () => getJSON(url), enabled: status === "authenticated" });
 }
 
 export function useCreateAssignment() {

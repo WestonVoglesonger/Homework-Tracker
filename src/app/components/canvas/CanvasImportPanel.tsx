@@ -14,7 +14,15 @@ export default function CanvasImportPanel() {
 
   useEffect(() => {
     listCanvasCourses()
-      .then((cs) => setCourses(cs))
+      .then((cs) => {
+        setCourses(cs);
+        // Preselect already-imported courses
+        const pre: Record<string, boolean> = {};
+        cs.forEach((c) => {
+          if ((c as any).isImported && (c.canvasId || c.id)) pre[c.canvasId || c.id] = true;
+        });
+        if (Object.keys(pre).length) setSelectedCourses(pre);
+      })
       .catch(() => setCourses([]));
   }, []);
 
@@ -60,7 +68,7 @@ export default function CanvasImportPanel() {
         )}
         <div className="space-y-2 mb-4">
           {courses?.map((c) => (
-            <label key={c.canvasId} className="flex items-center gap-3 border rounded-lg p-3 hover:bg-accent/50 cursor-pointer">
+            <label key={c.canvasId || c.id} className="flex items-center gap-3 border rounded-lg p-3 hover:bg-accent/50 cursor-pointer">
               <input
                 type="checkbox"
                 checked={!!selectedCourses[c.canvasId || c.id]}
@@ -73,6 +81,9 @@ export default function CanvasImportPanel() {
                 <div className="font-medium">{c.name}</div>
                 <div className="text-sm text-muted-foreground">{[c.code, c.term].filter(Boolean).join(" • ")}</div>
               </div>
+              {((c as any).isImported) && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Imported</span>
+              )}
               {c.color && <div className="w-4 h-4 rounded" style={{ backgroundColor: c.color }} />}
             </label>
           ))}

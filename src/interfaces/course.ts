@@ -6,6 +6,7 @@ export interface CourseDTO {
   color?: string;
   source: "manual" | "canvas";
   canvasId?: string;
+  isImported?: boolean;
   createdAt: string;
   updatedAt: string;
 }

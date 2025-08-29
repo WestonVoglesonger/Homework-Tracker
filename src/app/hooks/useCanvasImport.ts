@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
 import { CourseDTO } from "@/interfaces/course";
 import { AssignmentDTO } from "@/interfaces/assignment";
@@ -11,6 +12,7 @@ async function getJSON<T>(url: string): Promise<T> {
 }
 
 export function useCanvasImport() {
+  const { status } = useSession();
   const startOAuth = () => {
     window.location.href = "/api/canvas/oauth/start";
   };
@@ -116,9 +118,10 @@ export function useCanvasImport() {
 }
 
 export function useEnsureCanvasCoursesPrefetched() {
+  const { status } = useSession();
   useEffect(() => {
-    fetch("/api/canvas/courses").catch(() => {});
-  }, []);
+    if (status === "authenticated") fetch("/api/canvas/courses").catch(() => {});
+  }, [status]);
 }
 
 
