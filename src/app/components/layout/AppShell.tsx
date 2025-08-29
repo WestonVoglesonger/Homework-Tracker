@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => signOut()}
+                  onClick={() => signOut({ callbackUrl: "/" })}
                   className="w-full"
                 >
                   Sign out
