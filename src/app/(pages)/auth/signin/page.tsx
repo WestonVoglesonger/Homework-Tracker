@@ -10,6 +10,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,6 +23,21 @@ export default function SignInPage() {
       window.location.href = "/dashboard";
     }
     setLoading(false);
+  }
+
+  async function onResendVerification() {
+    if (!email) return;
+    setResending(true);
+    try {
+      await fetch("/api/auth/verify/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      // No toast framework here; remain silent per anti-enumeration.
+    } finally {
+      setResending(false);
+    }
   }
 
   return (
@@ -40,8 +56,18 @@ export default function SignInPage() {
         <button type="submit" disabled={loading} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
           {loading ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Signing in…</span>) : "Sign in"}
         </button>
-        <div className="text-sm text-center">
-          No account? <Link href={"/auth/register" as any} className="text-blue-600">Register</Link>
+        <div className="text-sm text-center space-y-1">
+          <div>
+            No account? <Link href={"/auth/register" as any} className="text-blue-600">Register</Link>
+          </div>
+          <div>
+            <Link href={"/auth/forgot-password" as any} className="text-blue-600">Forgot password?</Link>
+          </div>
+          <div>
+            <button type="button" onClick={onResendVerification} disabled={resending || !email} className="text-blue-600 disabled:opacity-60">
+              {resending ? "Resending…" : "Resend verification email"}
+            </button>
+          </div>
         </div>
       </form>
     </div>

@@ -9,6 +9,38 @@ Minimal Next.js app to track courses and assignments with optional Canvas import
 - NextAuth (Email + Google; Canvas token stored in Account provider "canvas")
 - Prisma + SQLite (dev)
 
+## Email Verification & Password Reset
+
+This app supports email verification and password reset via secure, single-use tokens.
+
+### Environment
+
+- `NEXTAUTH_URL` – canonical base URL (e.g., `https://your-domain.com`)
+- `EMAIL_FROM` – display From (e.g., `"Homework Tracker" <noreply@your-domain.com>`)
+- `EMAIL_SERVER` – SMTP URI, e.g. `smtps://user:pass@smtp.your-domain.com:465`
+
+If `EMAIL_SERVER` is not configured, emails are logged to console in development.
+
+### Endpoints
+
+- `POST /api/auth/verify/request` – body: `{ email }`
+- `GET /api/auth/verify/confirm?email=...&token=...`
+- `POST /api/auth/password/forgot` – body: `{ email }`
+- `POST /api/auth/password/reset` – body: `{ email, token, newPassword }`
+
+All endpoints are rate limited and return generic responses to avoid leaking account existence.
+
+### Best Practices
+
+- Tokens are random, hashed at rest, time-limited, and single-use.
+- `CredentialsProvider` requires `emailVerified` to sign in.
+- Configure SPF/DKIM/DMARC for your domain when using SMTP to improve deliverability.
+
+### No-cost options
+
+- Dev: console log emails; Ethereal Email for test inboxes.
+- Production: a hosting-provided SMTP account (often included), or self-host (Postfix/Exim). Free-tier ESPs such as Brevo or Resend can be used if acceptable.
+
 ## Setup
 1. Install pnpm and deps
 ```bash
