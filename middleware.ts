@@ -5,17 +5,27 @@ import { getCSPHeaders, isValidOrigin } from "@/lib/security";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  
-  // Add security headers to all responses
+  const isApiRoute = pathname.startsWith("/api/");
+
+  // Add security headers to non-API responses only
   const response = NextResponse.next();
-  const securityHeaders = getCSPHeaders();
-  
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
+  if (!isApiRoute) {
+    const securityHeaders = getCSPHeaders();
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+  }
+
+  // Add no-cache headers for authentication-related routes
+  if (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/register") ||
+      pathname.startsWith("/api/auth/password/")) {
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+  }
 
   // Validate origin for API requests
-  if (pathname.startsWith("/api/") && req.method !== "GET") {
+  if (isApiRoute && req.method !== "GET") {
     if (!isValidOrigin(req)) {
       return NextResponse.json({ error: "Invalid origin" }, { status: 400 });
     }

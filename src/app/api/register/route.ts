@@ -36,9 +36,25 @@ export async function POST(req: NextRequest) {
     const { userInterface } = await import("../../../interfaces/user");
     const user = await userInterface.register({ email, password, name });
 
-    return NextResponse.json({ id: user.id, email: user.email, name: user.name });
+    // Send verification email (fire-and-forget)
+    try {
+      const { verificationInterface } = await import("../../../interfaces/verification");
+      await verificationInterface.requestVerification(email);
+    } catch {}
+
+    const response = NextResponse.json({ id: user.id, email: user.email, name: user.name });
+    // Ensure no caching for registration responses
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    return response;
   } catch (err) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    const response = NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    // Ensure no caching for error responses
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    return response;
   }
 }
 
