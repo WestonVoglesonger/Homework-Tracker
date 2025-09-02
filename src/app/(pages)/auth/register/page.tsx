@@ -26,11 +26,10 @@ export default function RegisterPage() {
       try {
         data = bodyText ? JSON.parse(bodyText) : null;
       } catch {
-        // Non-JSON error response from server (e.g., runtime error stack)
         if (!res.ok) throw new Error(bodyText?.slice(0, 200) || "Failed to register");
       }
       if (!res.ok) throw new Error(data?.error || "Failed to register");
-      router.push("/");
+      router.push("/auth/verify/sent");
     } catch (err: any) {
       setError(err.message || "Failed to register");
     } finally {

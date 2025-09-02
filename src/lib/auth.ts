@@ -30,6 +30,9 @@ export async function getAuth() {
           if (!ok) {
             throw new Error("InvalidPassword");
           }
+          if (!user.emailVerified) {
+            throw new Error("EmailNotVerified");
+          }
           return { id: user.id, email: user.email || undefined, name: user.name || undefined } as any;
         },
       }),
