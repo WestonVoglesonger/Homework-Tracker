@@ -36,12 +36,6 @@ export async function POST(req: NextRequest) {
     const { userInterface } = await import("../../../interfaces/user");
     const user = await userInterface.register({ email, password, name });
 
-    // Send verification email (fire-and-forget)
-    try {
-      const { verificationInterface } = await import("../../../interfaces/verification");
-      await verificationInterface.requestVerification(email);
-    } catch {}
-
     const response = NextResponse.json({ id: user.id, email: user.email, name: user.name });
     // Ensure no caching for registration responses
     response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");

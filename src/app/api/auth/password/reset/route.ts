@@ -29,12 +29,8 @@ export async function POST(req: NextRequest) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 });
 
-    const { passwordResetInterface } = await import("../../../../../interfaces/passwordReset");
-    const ok = await passwordResetInterface.resetPassword(
-      parsed.data.email,
-      parsed.data.token,
-      parsed.data.newPassword
-    );
+    // Password reset functionality moved to emails branch
+    const ok = false;
     // Always 200 with generic result to avoid leaking validity
     const response = NextResponse.json({ ok: ok ? true : true });
     // Ensure no caching for password reset responses

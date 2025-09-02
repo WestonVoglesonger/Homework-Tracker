@@ -44,18 +44,18 @@ export function setupGlobalErrorHandler() {
       });
     });
 
-    // Override console.error to capture manual errors
-    const originalConsoleError = console.error;
-    console.error = async (...args: any[]) => {
-      originalConsoleError(...args);
-      
-      const message = args.map(arg => 
-        typeof arg === "object" ? JSON.stringify(arg) : String(arg)
-      ).join(" ");
-      
-      await logError("ERROR", `Console error: ${message}`, undefined, {
-        endpoint: window.location.pathname,
-      });
-    };
+    // Override console.error to capture manual errors (temporarily disabled)
+    // const originalConsoleError = console.error;
+    // console.error = async (...args: any[]) => {
+    //   originalConsoleError(...args);
+
+    //   const message = args.map(arg =>
+    //     typeof arg === "object" ? JSON.stringify(arg) : String(arg)
+    //   ).join(" ");
+
+    //   await logError("ERROR", `Console error: ${message}`, undefined, {
+    //     endpoint: window.location.pathname,
+    //   });
+    // };
   }
 }

@@ -1,14 +1,22 @@
 "use client";
 import AppShell from "@components/layout/AppShell";
 import { useAssignments } from "@/app/hooks/useAssignments";
+import { useCourses } from "@/app/hooks/useCourses";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { format, addDays, startOfDay, isSameDay, parseISO, isToday, isPast } from "date-fns";
 import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
 import { Skeleton } from "@components/ui/skeleton";
+import { AssignmentDetailDialog } from "@components/assignments/AssignmentDetailDialog";
+import { AssignmentDTO } from "@/interfaces/assignment";
+import { useState } from "react";
 
 export default function CalendarPage() {
   useEnsureCanvasCoursesPrefetched();
   const { data, isLoading } = useAssignments();
+  const { data: courses } = useCourses();
+  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentDTO | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const start = startOfDay(new Date());
   const days = Array.from({ length: 21 }, (_, i) => addDays(start, i));
 
@@ -16,6 +24,16 @@ export default function CalendarPage() {
     day,
     items: (data || []).filter((a) => (a.dueAt ? isSameDay(parseISO(a.dueAt), day) : false)),
   }));
+
+  const handleAssignmentClick = (assignment: AssignmentDTO) => {
+    setSelectedAssignment(assignment);
+    setIsDialogOpen(true);
+  };
+
+  const getCourseForAssignment = (assignment: AssignmentDTO) => {
+    if (!assignment.courseId || !courses) return null;
+    return courses.find(course => course.id === assignment.courseId) || null;
+  };
 
   // Group by weeks
   const weeks = [];
@@ -111,9 +129,14 @@ export default function CalendarPage() {
                           ) : (
                             <div className="space-y-2">
                               {dayData.items.map((a) => (
-                                <div 
-                                  key={a.id} 
-                                  className="group/item text-xs p-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                                <div
+                                  key={a.id}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleAssignmentClick(a);
+                                  }}
+                                  className="group/item text-xs p-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200 cursor-pointer hover:shadow-sm"
                                 >
                                   <div className="font-medium text-gray-900 dark:text-white truncate group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">
                                     {a.title}
@@ -133,6 +156,18 @@ export default function CalendarPage() {
               </div>
             ))}
           </div>
+        )}
+
+        {isDialogOpen && selectedAssignment && (
+          <AssignmentDetailDialog
+            assignment={selectedAssignment}
+            course={getCourseForAssignment(selectedAssignment)}
+            isOpen={isDialogOpen}
+            onClose={() => {
+              setIsDialogOpen(false);
+              setSelectedAssignment(null);
+            }}
+          />
         )}
       </div>
     </AppShell>
