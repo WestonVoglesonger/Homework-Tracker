@@ -29,8 +29,8 @@ export default function RegisterPage() {
         if (!res.ok) throw new Error(bodyText?.slice(0, 200) || "Failed to register");
       }
       if (!res.ok) throw new Error(data?.error || "Failed to register");
-      // Skip verification step and redirect to signin
-      router.push("/auth/signin");
+      // Redirect to verification sent page
+      router.push("/auth/verify/sent");
     } catch (err: any) {
       setError(err.message || "Failed to register");
     } finally {
@@ -54,6 +54,9 @@ export default function RegisterPage() {
         <div className="space-y-1">
           <label className="text-sm">Password</label>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded p-2" required />
+          <div className="text-xs text-gray-600 mt-1">
+            Password must be at least 8 characters and include uppercase, lowercase, and number.
+          </div>
         </div>
         <button type="submit" disabled={loading} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
           {loading ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Creating…</span>) : "Create account"}

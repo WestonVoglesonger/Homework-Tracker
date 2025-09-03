@@ -1,19 +1,16 @@
-import type { Transporter } from "nodemailer";
+import { Resend } from "resend";
 
-let cachedTransporter: Transporter | null = null;
+let cachedResend: Resend | null = null;
 
-function hasSmtpConfig(): boolean {
-  return Boolean(process.env.EMAIL_SERVER && process.env.EMAIL_FROM);
+function hasResendConfig(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
 }
 
-async function getTransporter(): Promise<Transporter | null> {
-  if (!hasSmtpConfig()) return null;
-  if (cachedTransporter) return cachedTransporter;
-  const nodemailer = await import("nodemailer");
-  // EMAIL_SERVER can be a connection URI per Nodemailer docs
-  const transporter = nodemailer.createTransport(process.env.EMAIL_SERVER as string);
-  cachedTransporter = transporter;
-  return transporter;
+function getResend(): Resend | null {
+  if (!hasResendConfig()) return null;
+  if (cachedResend) return cachedResend;
+  cachedResend = new Resend(process.env.RESEND_API_KEY);
+  return cachedResend;
 }
 
 export interface SendEmailInput {
@@ -26,26 +23,45 @@ export interface SendEmailInput {
 export interface SendEmailResult {
   success: boolean;
   messageId?: string;
-  provider: "smtp" | "dev";
+  provider: "smtp" | "dev" | "resend";
 }
 
 export const emailService = {
   async sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
     const { to, subject, html, text } = input;
 
-    const transporter = await getTransporter();
-    if (transporter) {
-      const info = await transporter.sendMail({
-        from: process.env.EMAIL_FROM!,
-        to,
-        subject,
-        text: text || undefined,
-        html: html || undefined,
-      });
-      return { success: true, messageId: info?.messageId, provider: "smtp" };
+    console.log("[emailService] Attempting to send email...");
+    console.log("[emailService] Environment check:");
+    console.log("  RESEND_API_KEY:", process.env.RESEND_API_KEY ? "SET" : "NOT SET");
+
+    const resend = getResend();
+    console.log("[emailService] Resend client:", resend ? "CREATED" : "NULL");
+
+    if (resend) {
+      try {
+        console.log("[emailService] Sending via Resend API...");
+        const { data, error } = await resend.emails.send({
+          from: process.env.EMAIL_FROM || "DueNorth App <noreply@duenorthapp.com>",
+          to: [to],
+          subject,
+          html: html || text || "",
+        });
+
+        if (error) {
+          console.error("[emailService] Resend API send failed:", error);
+          return { success: false, provider: "resend" };
+        }
+
+        console.log("[emailService] Resend API send successful:", data?.id);
+        return { success: true, messageId: data?.id, provider: "resend" };
+      } catch (error) {
+        console.error("[emailService] Resend API send failed:", error);
+        return { success: false, provider: "resend" };
+      }
     }
 
     // Dev fallback: log to console; don't actually send
+    console.log("[emailService] Using dev fallback - no Resend configured");
     const preview = {
       from: process.env.EMAIL_FROM || "dev@example.com",
       to,

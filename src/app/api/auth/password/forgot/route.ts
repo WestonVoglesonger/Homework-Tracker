@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ ok: true });
 
+    const { passwordResetInterface } = await import("../../../../../interfaces/passwordReset");
+    await passwordResetInterface.requestReset(parsed.data.email);
+
     const response = NextResponse.json({ ok: true });
     // Ensure no caching for password forgot responses
     response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");

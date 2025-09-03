@@ -29,10 +29,11 @@ export async function POST(req: NextRequest) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 });
 
-    // Password reset functionality moved to emails branch
-    const ok = false;
+    const { passwordResetInterface } = await import("../../../../../interfaces/passwordReset");
+    const ok = await passwordResetInterface.resetPassword(parsed.data.email, parsed.data.token, parsed.data.newPassword);
+
     // Always 200 with generic result to avoid leaking validity
-    const response = NextResponse.json({ ok: ok ? true : true });
+    const response = NextResponse.json({ ok: true });
     // Ensure no caching for password reset responses
     response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
     response.headers.set("Pragma", "no-cache");

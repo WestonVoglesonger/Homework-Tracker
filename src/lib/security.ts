@@ -109,6 +109,13 @@ export function isValidOrigin(req: Request): boolean {
   const origin = req.headers.get("origin");
   const host = req.headers.get("host");
 
+  // In development, be more permissive
+  if (process.env.NODE_ENV !== "production") {
+    // Allow if no origin (server-side requests) or localhost origins
+    if (!origin) return true;
+    if (origin.includes("localhost") || origin.includes("127.0.0.1")) return true;
+  }
+
   if (!origin || !host) return false;
 
   const allowedOrigins = [

@@ -32,10 +32,10 @@ export async function getAuth() {
           if (!ok) {
             throw new Error("InvalidPassword");
           }
-          // Email verification bypassed - users can login immediately after registration
-          // if (!user.emailVerified) {
-          //   throw new Error("EmailNotVerified");
-          // }
+          // Require email verification for security
+          if (!user.emailVerified) {
+            throw new Error("EmailNotVerified");
+          }
           return { id: user.id, email: user.email || undefined, name: user.name || undefined } as any;
         },
       }),

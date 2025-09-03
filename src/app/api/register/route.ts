@@ -21,11 +21,14 @@ export async function POST(req: NextRequest) {
   let body: any = null;
 
   try {
+    // Origin validation
     if (!isValidOrigin(req as any)) return NextResponse.json({ error: "Invalid origin" }, { status: 400 });
 
     const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "")
       .split(",")[0]
       .trim() || "unknown";
+
+    // Rate limiting
     const ok = await rateLimit(`register:${ip}`);
     if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
@@ -36,8 +39,16 @@ export async function POST(req: NextRequest) {
     }
     const { email, password, name } = parsed.data;
 
+    console.log("[register API] Creating user...");
     const { userInterface } = await import("../../../interfaces/user");
     const user = await userInterface.register({ email, password, name });
+    console.log("[register API] User created:", user.id);
+
+    // Send verification email after successful registration
+    console.log("[register API] Sending verification email...");
+    const { verificationInterface } = await import("../../../interfaces/verification");
+    await verificationInterface.requestVerification(email);
+    console.log("[register API] Verification email process completed");
 
     const response = NextResponse.json({ id: user.id, email: user.email, name: user.name });
     // Ensure no caching for registration responses
