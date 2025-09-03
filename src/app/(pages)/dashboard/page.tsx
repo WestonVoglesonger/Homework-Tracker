@@ -8,11 +8,50 @@ import { AssignmentRow } from "@components/assignments/AssignmentRow";
 import EmptyState from "@components/common/EmptyState";
 import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
 import { Skeleton } from "@components/ui/skeleton";
+import { Button } from "@components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   useEnsureCanvasCoursesPrefetched();
-  const { data: assignments, isLoading } = useAssignments();
+  const { data: assignments, isLoading, refetch } = useAssignments();
+  const router = useRouter();
   const nowTs = Date.now();
+
+  // State for refresh functionality
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  const handleCanvasSync = async () => {
+    setIsRefreshing(true);
+    setSyncMessage(null);
+
+    try {
+      const response = await fetch('/api/canvas/sync/manual', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setLastSyncTime(new Date());
+        setSyncMessage(`✅ Synced successfully! Updated ${result.results.assignments || 0} assignments.`);
+        // Refresh the assignments data
+        refetch();
+      } else {
+        setSyncMessage(`❌ Sync failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      setSyncMessage(`❌ Sync failed: ${error instanceof Error ? error.message : 'Network error'}`);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
   const cutoffTs = nowTs + twoWeeksMs;
   const overdue = (assignments || []).filter((a) => {
@@ -63,10 +102,35 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto space-y-10 p-4 md:p-6">
         {/* Header Section with more breathing room */}
         <div className="text-center lg:text-left">
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
-            Track your assignments and stay on top of deadlines
-          </p>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">Dashboard</h1>
+              <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
+                Track your assignments and stay on top of deadlines
+              </p>
+            </div>
+            <div className="flex flex-col items-center lg:items-end gap-2">
+              <Button
+                onClick={handleCanvasSync}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 min-w-[140px]"
+                variant="outline"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Syncing...' : 'Sync Canvas'}
+              </Button>
+              {lastSyncTime && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Last synced: {lastSyncTime.toLocaleString()}
+                </p>
+              )}
+              {syncMessage && (
+                <p className={`text-sm ${syncMessage.startsWith('✅') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {syncMessage}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards with improved spacing */}
