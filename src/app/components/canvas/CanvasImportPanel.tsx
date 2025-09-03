@@ -117,9 +117,6 @@ export default function CanvasImportPanel() {
             )}
 
             <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                Importing a course will also import all its assignments. This process may take a minute or two.
-              </p>
               <Button
                 disabled={importing || Object.values(selectedCourses).every((v) => !v)}
                 onClick={handleImport}
