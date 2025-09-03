@@ -27,7 +27,7 @@ export const verificationInterface = {
     console.log("[verificationInterface] Token created, expires:", expiresAt);
 
     const url = getBaseUrl(baseUrl) +
-      `/api/auth/verify/confirm?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+      `/auth/verify/confirm?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
     console.log("[verificationInterface] Verification URL:", url);
 
     const subject = "Verify your email - DueNorth App";
