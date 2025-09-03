@@ -29,7 +29,8 @@ export default function RegisterPage() {
         if (!res.ok) throw new Error(bodyText?.slice(0, 200) || "Failed to register");
       }
       if (!res.ok) throw new Error(data?.error || "Failed to register");
-      router.push("/auth/verify/sent");
+      // Skip verification step and redirect to signin
+      router.push("/auth/signin");
     } catch (err: any) {
       setError(err.message || "Failed to register");
     } finally {

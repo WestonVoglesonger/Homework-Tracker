@@ -60,14 +60,14 @@ export default function SignInPage() {
           <div>
             No account? <Link href={"/auth/register" as any} className="text-blue-600">Register</Link>
           </div>
-          <div>
+          {/* <div>
             <Link href={"/auth/forgot-password" as any} className="text-blue-600">Forgot password?</Link>
-          </div>
-          <div>
+          </div> */}
+          {/* <div>
             <button type="button" onClick={onResendVerification} disabled={resending || !email} className="text-blue-600 disabled:opacity-60">
               {resending ? "Resending…" : "Resend verification email"}
             </button>
-          </div>
+          </div> */}
         </div>
       </form>
     </div>

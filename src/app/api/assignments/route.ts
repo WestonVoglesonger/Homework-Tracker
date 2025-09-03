@@ -9,10 +9,40 @@ export async function GET(req: NextRequest) {
   const { authOptions } = await getAuth();
   const { listAssignmentsQuerySchema } = await import("../../../lib/validators");
   const { assignmentInterface } = await import("../../../interfaces/assignment");
+  const { assignmentService } = await import("../../../services/assignmentService");
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { searchParams } = new URL(req.url);
+
+  // Check if we're looking for a specific assignment by canvasId
+  const canvasId = searchParams.get("canvasId");
+  if (canvasId) {
+    const assignment = await assignmentService.getByUserCanvasId(session.user.id, canvasId);
+    if (assignment) {
+      return NextResponse.json([{
+        id: assignment.id,
+        courseId: assignment.courseId ?? undefined,
+        title: assignment.title,
+        description: assignment.description ?? undefined,
+        type: assignment.type as any,
+        dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : undefined,
+        estimatedHours: assignment.estimatedHours ?? undefined,
+        status: assignment.status as any,
+        priority: assignment.priority,
+        notes: assignment.notes ?? undefined,
+        source: (assignment.source as any) ?? "manual",
+        canvasId: assignment.canvasId ?? undefined,
+        canvasUrl: assignment.canvasUrl ?? undefined,
+        createdAt: assignment.createdAt.toISOString(),
+        updatedAt: assignment.updatedAt.toISOString(),
+      }]);
+    } else {
+      return NextResponse.json([]);
+    }
+  }
+
+  // Regular list query
   const parsed = listAssignmentsQuerySchema.safeParse({
     status: searchParams.get("status") || undefined,
     from: searchParams.get("from") || undefined,

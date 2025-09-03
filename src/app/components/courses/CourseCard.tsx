@@ -39,32 +39,18 @@ export function CourseCard({ id, name, code, term, color }: {
         <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-200`} />
         
         <CardHeader className="relative flex-row items-center justify-between pb-3">
-          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-            <Link href={`/courses/${id}`}>{name}</Link>
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+            <Link href={`/courses/${id}`} className="block truncate max-w-full">{name}</Link>
           </CardTitle>
           {color ? (
             <div 
-              className="w-5 h-5 rounded-full shadow-sm border-2 border-white dark:border-gray-700" 
+              className="w-5 h-5 rounded-full shadow-sm border-2 border-white dark:border-gray-700 flex-shrink-0" 
               style={{ backgroundColor: color }} 
             />
           ) : (
-            <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${gradient} shadow-sm border-2 border-white dark:border-gray-700`} />
+            <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${gradient} shadow-sm border-2 border-white dark:border-gray-700 flex-shrink-0`} />
           )}
-          <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
-            <button
-              className="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              title="Delete course"
-              disabled={del.isPending}
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!confirm("Delete this course and its assignments?")) return;
-                await del.mutateAsync(id);
-              }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a2 2 0 012 2v1H8V6a2 2 0 012-2z"/></svg>
-            </button>
-          </div>
+          
         </CardHeader>
         
         <CardContent className="relative pt-0">
@@ -79,6 +65,23 @@ export function CourseCard({ id, name, code, term, color }: {
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </div>
           </Link>
+
+          {/* Delete button - bottom right */}
+          <div className="absolute right-3 bottom-3 z-10">
+            <button
+              className="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              title="Delete course"
+              disabled={del.isPending}
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!confirm("Delete this course and its assignments?")) return;
+                await del.mutateAsync(id);
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a2 2 0 012 2v1H8V6a2 2 0 012-2z"/></svg>
+            </button>
+          </div>
         </CardContent>
       </Card>
   );

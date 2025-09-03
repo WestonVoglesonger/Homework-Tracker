@@ -1,7 +1,7 @@
 "use client";
 import { AssignmentDTO } from "@/interfaces/assignment";
 import { CourseDTO } from "@/interfaces/course";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@components/ui/dialog";
 import { Badge } from "@components/ui/badge";
 import { format, parseISO, isPast } from "date-fns";
 import { Calendar, Clock, BookOpen, ExternalLink, FileText, AlertCircle, CheckCircle } from "lucide-react";
@@ -17,16 +17,21 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
   if (!assignment) return null;
 
   let isOverdue: boolean = false;
+  let shouldShowRed: boolean = false;
+
   try {
     if (assignment.dueAt) {
       isOverdue = isPast(parseISO(assignment.dueAt));
+      // Only show red if overdue AND not submitted/graded
+      shouldShowRed = isOverdue && assignment.status === "NOT_SUBMITTED";
     }
   } catch (error) {
     // Error parsing due date - using default value
     isOverdue = false;
+    shouldShowRed = false;
   }
 
-  const getStatusColor = (status: AssignmentDTO["status"]) => {
+  const getStatusColor = (status: AssignmentDTO["status"]): string => {
     switch (status) {
       case "NOT_SUBMITTED":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
@@ -37,32 +42,7 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
     }
   };
 
-  const getTypeColor = (type: AssignmentDTO["type"]) => {
-    switch (type) {
-      case "HOMEWORK":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "QUIZ":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-      case "EXAM":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "PROJECT":
-        return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200";
-      case "OTHER":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
-    }
-  };
 
-  const getPriorityLabel = (priority: number) => {
-    if (priority <= 3) return "Low";
-    if (priority <= 7) return "Medium";
-    return "High";
-  };
-
-  const getPriorityColor = (priority: number) => {
-    if (priority <= 3) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-    if (priority <= 7) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -72,26 +52,23 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
             <FileText className="h-5 w-5" />
             {assignment.title}
           </DialogTitle>
+          <DialogDescription>
+            View detailed information about this assignment including due dates, course details, and status.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Status and Type Badges */}
+          {/* Status Badges */}
           <div className="flex flex-wrap gap-2">
             <Badge className={getStatusColor(assignment.status)}>
               {assignment.status.replace("_", " ")}
-            </Badge>
-            <Badge className={getTypeColor(assignment.type)}>
-              {assignment.type}
-            </Badge>
-            <Badge className={getPriorityColor(assignment.priority)}>
-              {getPriorityLabel(assignment.priority)} Priority
             </Badge>
             {assignment.source === "canvas" && (
               <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-300">
                 Canvas
               </Badge>
             )}
-            {isOverdue && (
+            {isOverdue && assignment.status === "NOT_SUBMITTED" && (
               <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                 <AlertCircle className="h-3 w-3 mr-1" />
                 Overdue
@@ -119,9 +96,9 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
           {/* Due Date */}
           {assignment.dueAt && (
             <div className="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Calendar className={`h-4 w-4 ${isOverdue ? 'text-red-500' : 'text-gray-500'}`} />
+              <Calendar className={`h-4 w-4 ${shouldShowRed ? 'text-red-500' : 'text-gray-500'}`} />
               <div>
-                <div className={`font-medium ${isOverdue ? 'text-red-700 dark:text-red-300' : 'text-gray-900 dark:text-white'}`}>
+                <div className={`font-medium ${shouldShowRed ? 'text-red-700 dark:text-red-300' : 'text-gray-900 dark:text-white'}`}>
                   Due: {(() => {
                     try {
                       return format(parseISO(assignment.dueAt), "EEEE, MMMM d, yyyy");
@@ -139,6 +116,11 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
                     }
                   })()}
                 </div>
+                {isOverdue && assignment.status === "NOT_SUBMITTED" && (
+                  <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">
+                    Past due - please submit as soon as possible
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -160,9 +142,10 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Description</h3>
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                  {assignment.description}
-                </p>
+                <div
+                  className="text-gray-700 dark:text-gray-300 [&>*]:mb-4 [&>p]:mb-2 [&>p]:leading-relaxed [&>ul]:ml-4 [&>ol]:ml-4 [&>li]:mb-1"
+                  dangerouslySetInnerHTML={{ __html: assignment.description }}
+                />
               </div>
             </div>
           )}
@@ -172,9 +155,10 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notes</h3>
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
-                  {assignment.notes}
-                </p>
+                <div
+                  className="text-blue-800 dark:text-blue-200 [&>*]:mb-4 [&>p]:mb-2 [&>p]:leading-relaxed [&>ul]:ml-4 [&>ol]:ml-4 [&>li]:mb-1"
+                  dangerouslySetInnerHTML={{ __html: assignment.notes }}
+                />
               </div>
             </div>
           )}
@@ -197,21 +181,14 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
 
           {/* Metadata */}
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <div>Created: {(() => {
-                try {
-                  return format(parseISO(assignment.createdAt), "MMM d, yyyy 'at' h:mm a");
-                } catch (error) {
-                  return assignment.createdAt;
-                }
-              })()}</div>
-              <div>Last Updated: {(() => {
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Last Updated: {(() => {
                 try {
                   return format(parseISO(assignment.updatedAt), "MMM d, yyyy 'at' h:mm a");
                 } catch (error) {
                   return assignment.updatedAt;
                 }
-              })()}</div>
+              })()}
             </div>
           </div>
         </div>

@@ -108,16 +108,25 @@ export function validateCSRFToken(token: string, sessionToken: string): boolean 
 export function isValidOrigin(req: Request): boolean {
   const origin = req.headers.get("origin");
   const host = req.headers.get("host");
-  
+
   if (!origin || !host) return false;
-  
+
   const allowedOrigins = [
     `https://${host}`,
     `http://${host}`,
     process.env.NEXTAUTH_URL,
   ].filter(Boolean);
-  
-  return allowedOrigins.some(allowed => origin === allowed);
+
+  // In development, also allow localhost origins with any port
+  if (process.env.NODE_ENV !== "production") {
+    allowedOrigins.push(
+      ...["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "http://127.0.0.1:3002"]
+    );
+  }
+
+  const isValid = allowedOrigins.some(allowed => origin === allowed);
+
+  return isValid;
 }
 
 // SQL injection prevention helpers

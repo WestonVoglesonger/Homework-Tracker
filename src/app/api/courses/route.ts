@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   }
 
-  const created = await courseService.create(session.user.id, {
+  const created = await courseService.upsert(session.user.id, {
     ...parsed.data,
     source: json?.source === "canvas" ? "canvas" : "manual",
     canvasId: json?.canvasId ?? undefined,

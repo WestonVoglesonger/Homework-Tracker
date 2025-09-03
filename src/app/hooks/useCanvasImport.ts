@@ -22,7 +22,8 @@ export function useCanvasImport() {
 
   const importCourseWithAssignments = useMutation({
     mutationFn: async (course: Partial<CourseDTO>) => {
-      // First, create the course
+      // First, create or resolve the course
+      let createdCourse: CourseDTO | null = null;
       const courseRes = await fetch("/api/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -36,30 +37,60 @@ export function useCanvasImport() {
         }),
       });
       
-      if (!courseRes.ok) throw new Error("Failed to create course");
-      const createdCourse: CourseDTO = await courseRes.json();
+      if (courseRes.ok) {
+        createdCourse = await courseRes.json();
+      } else {
+        // Fallback: the course may already exist (unique constraint). Find it.
+        try {
+          const existing = await getJSON<CourseDTO[]>("/api/courses");
+          createdCourse = existing.find(c => c.source === "canvas" && c.canvasId === course.canvasId) || null;
+        } catch {}
+        if (!createdCourse) throw new Error("Failed to create course");
+      }
       
       // Then, fetch and import all assignments for this course (with status)
       const assignments = await listCanvasAssignments(course.canvasId!);
       const createdAssignments: AssignmentDTO[] = [];
       
       for (const a of assignments) {
-        const res = await fetch("/api/assignments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            courseId: createdCourse.id, // Use the local database course ID, not Canvas ID
-            title: a.title,
-            type: a.type || "OTHER",
-            dueAt: a.dueAt,
-            estimatedHours: a.estimatedHours,
-            priority: a.priority || 0,
-            notes: a.notes,
-            source: "canvas",
-            canvasId: a.canvasId,
-          }),
-        });
-        if (res.ok) createdAssignments.push(await res.json());
+        // Check if assignment already exists
+        let existingAssignment = null;
+        if (a.canvasId) {
+          try {
+            const existingRes = await fetch(`/api/assignments?canvasId=${a.canvasId}`);
+            if (existingRes.ok) {
+              const existingData = await existingRes.json();
+              existingAssignment = existingData.find((assignment: any) =>
+                assignment.canvasId === a.canvasId && assignment.source === "canvas"
+              );
+            }
+          } catch (error) {
+            // Ignore errors when checking for existing assignments
+          }
+        }
+
+        if (existingAssignment) {
+          // Assignment already exists, add it to the created list
+          createdAssignments.push(existingAssignment);
+        } else {
+          // Assignment doesn't exist, create it
+          const res = await fetch("/api/assignments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              courseId: createdCourse?.id, // Use the local database course ID, not Canvas ID
+              title: a.title,
+              type: a.type || "OTHER",
+              dueAt: a.dueAt,
+              estimatedHours: a.estimatedHours,
+              priority: a.priority || 0,
+              notes: a.notes,
+              source: "canvas",
+              canvasId: a.canvasId,
+            }),
+          });
+          if (res.ok) createdAssignments.push(await res.json());
+        }
       }
       
       // Optionally trigger a lightweight status sync now that the course exists

@@ -21,7 +21,9 @@ export async function getAuth() {
             throw new Error("MissingCredentials");
           }
           const { prisma: directPrisma } = await import("../db/client");
-          const user = await directPrisma.user.findUnique({ where: { email: credentials.email } }) as any;
+          // Normalize email for case-insensitive lookup
+          const normalizedEmail = credentials.email.toLowerCase().trim();
+          const user = await directPrisma.user.findUnique({ where: { email: normalizedEmail } }) as any;
           if (!user?.passwordHash) {
             throw new Error("UserNotFound");
           }
@@ -30,9 +32,10 @@ export async function getAuth() {
           if (!ok) {
             throw new Error("InvalidPassword");
           }
-          if (!user.emailVerified) {
-            throw new Error("EmailNotVerified");
-          }
+          // Email verification bypassed - users can login immediately after registration
+          // if (!user.emailVerified) {
+          //   throw new Error("EmailNotVerified");
+          // }
           return { id: user.id, email: user.email || undefined, name: user.name || undefined } as any;
         },
       }),

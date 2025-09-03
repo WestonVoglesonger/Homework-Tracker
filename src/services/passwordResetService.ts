@@ -16,9 +16,10 @@ export const passwordResetService = {
     const token = randomBytes(32).toString("hex");
     const tokenHash = sha256Hex(token);
     const expiresAt = new Date(Date.now() + ttlMinutes * 60_000);
+    const normalizedEmail = email.toLowerCase().trim();
 
     // Ensure user exists
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
       // For privacy, still behave as if success
       return { token, expiresAt };
@@ -26,7 +27,7 @@ export const passwordResetService = {
 
     await prisma.passwordResetToken.create({
       data: {
-        email,
+        email: normalizedEmail,
         tokenHash,
         expires: expiresAt,
       },
@@ -38,16 +39,17 @@ export const passwordResetService = {
   async consumeTokenAndResetPassword(email: string, token: string, newPassword: string): Promise<boolean> {
     const now = new Date();
     const tokenHash = sha256Hex(token);
+    const normalizedEmail = email.toLowerCase().trim();
 
     return await prisma.$transaction(async tx => {
-      const record = await tx.passwordResetToken.findFirst({ where: { email, tokenHash } });
+      const record = await tx.passwordResetToken.findFirst({ where: { email: normalizedEmail, tokenHash } });
       if (!record) return false;
       if (record.expires <= now || record.usedAt) {
-        await tx.passwordResetToken.deleteMany({ where: { email, tokenHash } });
+        await tx.passwordResetToken.deleteMany({ where: { email: normalizedEmail, tokenHash } });
         return false;
       }
 
-      const user = await tx.user.findUnique({ where: { email } });
+      const user = await tx.user.findUnique({ where: { email: normalizedEmail } });
       if (!user) {
         await tx.passwordResetToken.deleteMany({ where: { email, tokenHash } });
         return false;
