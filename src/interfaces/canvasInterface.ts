@@ -1,6 +1,6 @@
 import { canvasService, canvasTokenService } from "@/services/canvasService";
-import { courseService } from "@/services/courseService";
-import { assignmentService } from "@/services/assignmentService";
+import { courseInterface } from "@/interfaces/course";
+import { assignmentInterface } from "@/interfaces/assignment";
 import { accountService } from "@/services/accountService";
 
 export async function syncUser(userId: string) {
@@ -10,13 +10,14 @@ export async function syncUser(userId: string) {
 
   const canvasCourses = await canvasService.listCanvasCourses(accessToken);
   for (const c of canvasCourses) {
-    const localCourse = await courseService.findByUserCanvasId(userId, c.canvasId!);
+    const localCourse = await courseInterface.findByUserCanvasId(userId, c.canvasId!);
     if (!localCourse) continue;
-    await courseService.update(userId, localCourse.id, { name: c.name, code: c.code, term: c.term });
+    await courseInterface.update(userId, localCourse.id, { name: c.name, code: c.code, term: c.term });
     results.courses++;
     const cas = await canvasService.listCanvasAssignments(accessToken, c.canvasId!);
     for (const ca of cas) {
-      const existing = await assignmentService.getByUserCanvasId(userId, ca.canvasId!);
+      const existing = await assignmentInterface.findByUserCanvasId(userId, ca.canvasId!);
+
       // Always fetch latest submission status and persist it
       try {
         const sub = await canvasService.getSubmissionForSelf(accessToken, c.canvasId!, ca.canvasId!);
@@ -24,17 +25,16 @@ export async function syncUser(userId: string) {
         const mapped = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : "NOT_SUBMITTED";
         if (existing) {
           if (existing.status !== mapped) {
-            await assignmentService.update(userId, existing.id, { status: mapped } as any);
+            await assignmentInterface.update(userId, existing.id, { status: mapped });
             results.updated++;
           }
         } else {
-          await assignmentService.create(userId, {
+          await assignmentInterface.create(userId, {
             courseId: localCourse.id,
             title: ca.title,
             description: ca.description,
             type: ca.type as any,
             dueAt: ca.dueAt,
-            status: mapped,
             source: "canvas",
             canvasId: ca.canvasId,
             canvasUrl: ca.canvasUrl,
@@ -43,7 +43,7 @@ export async function syncUser(userId: string) {
       } catch {
         // If fetching submission fails, still upsert the assignment without changing status
         if (!existing) {
-          await assignmentService.create(userId, {
+          await assignmentInterface.create(userId, {
             courseId: localCourse.id,
             title: ca.title,
             description: ca.description,
@@ -56,13 +56,45 @@ export async function syncUser(userId: string) {
         }
       }
       if (existing) {
-        await assignmentService.update(userId, existing.id, { dueAt: ca.dueAt ?? undefined } as any);
+        await assignmentInterface.update(userId, existing.id, { dueAt: ca.dueAt ?? undefined });
       }
       results.assignments++;
     }
   }
   return { ok: true, results } as const;
 }
+
+export const canvasInterface = {
+  async getAccessTokenForUser(userId: string): Promise<string | null> {
+    return canvasTokenService.getAccessTokenForUser(userId);
+  },
+
+  async listCanvasCourses(userId: string) {
+    const accessToken = await canvasTokenService.getAccessTokenForUser(userId);
+    if (!accessToken) return [];
+    return canvasService.listCanvasCourses(accessToken);
+  },
+
+  async listCanvasAssignments(userId: string, courseId: string) {
+    const accessToken = await canvasTokenService.getAccessTokenForUser(userId);
+    if (!accessToken) return [];
+    return canvasService.listCanvasAssignments(accessToken, courseId);
+  },
+
+  async getSubmissionForSelf(userId: string, courseId: string, assignmentId: string) {
+    const accessToken = await canvasTokenService.getAccessTokenForUser(userId);
+    if (!accessToken) return null;
+    return canvasService.getSubmissionForSelf(accessToken, courseId, assignmentId);
+  },
+
+  async upsertCanvasAccount(userId: string, tokenJson: { access_token: string; refresh_token?: string; expires_in?: number; token_type?: string; scope?: string }) {
+    return canvasTokenService.upsertCanvasAccount(userId, tokenJson);
+  },
+
+  async deleteCanvasAccount(userId: string) {
+    return canvasTokenService.deleteCanvasAccount(userId);
+  },
+};
 
 export const canvasAdminInterface = {
   async syncAllUsers(): Promise<{ users: number; courses: number; assignments: number; errors: string[] }> {
@@ -75,28 +107,40 @@ export const canvasAdminInterface = {
         const canvasCourses = await canvasService.listCanvasCourses(account.access_token);
         for (const canvasCourse of canvasCourses) {
           try {
-            const localCourse = await courseService.findByUserCanvasId(account.userId, canvasCourse.canvasId!);
+            const localCourse = await courseInterface.findByUserCanvasId(account.userId, canvasCourse.canvasId!);
             if (!localCourse) continue;
-            const { default: prisma } = await import("@/db/client");
-            await prisma.course.update({ where: { id: localCourse.id }, data: { name: canvasCourse.name, code: canvasCourse.code, term: canvasCourse.term } });
+            await courseInterface.update(account.userId, localCourse.id, { name: canvasCourse.name, code: canvasCourse.code, term: canvasCourse.term });
             results.courses++;
             const canvasAssignments = await canvasService.listCanvasAssignments(account.access_token, canvasCourse.canvasId!);
             for (const canvasAssignment of canvasAssignments) {
               try {
-                const { default: prisma } = await import("@/db/client");
-                const existing = await prisma.assignment.findUnique({ where: { userId_canvasId: { userId: account.userId, canvasId: canvasAssignment.canvasId! } } });
+                const existing = await assignmentInterface.findByUserCanvasId(account.userId, canvasAssignment.canvasId!);
                 try {
                   const submission = await canvasService.getSubmissionForSelf(account.access_token, canvasCourse.canvasId!, canvasAssignment.canvasId!);
                   const wf = submission?.workflow_state;
                   const newStatus = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : undefined;
                   if (existing && newStatus && existing.status !== newStatus) {
-                    await prisma.assignment.update({ where: { id: existing.id }, data: { status: newStatus } });
+                    await assignmentInterface.update(account.userId, existing.id, { status: newStatus });
                   }
                 } catch {}
                 if (existing) {
-                  await prisma.assignment.update({ where: { id: existing.id }, data: { title: canvasAssignment.title, description: canvasAssignment.description, dueAt: canvasAssignment.dueAt ? new Date(canvasAssignment.dueAt) : null, canvasUrl: canvasAssignment.canvasUrl } });
+                  await assignmentInterface.update(account.userId, existing.id, {
+                    title: canvasAssignment.title,
+                    description: canvasAssignment.description,
+                    dueAt: canvasAssignment.dueAt ?? undefined,
+                    canvasUrl: canvasAssignment.canvasUrl
+                  });
                 } else {
-                  await assignmentService.create(account.userId, { courseId: localCourse.id, title: canvasAssignment.title, description: canvasAssignment.description, type: canvasAssignment.type as any, dueAt: canvasAssignment.dueAt, source: "canvas", canvasId: canvasAssignment.canvasId, canvasUrl: canvasAssignment.canvasUrl });
+                  await assignmentInterface.create(account.userId, {
+                    courseId: localCourse.id,
+                    title: canvasAssignment.title,
+                    description: canvasAssignment.description,
+                    type: canvasAssignment.type as any,
+                    dueAt: canvasAssignment.dueAt,
+                    source: "canvas",
+                    canvasId: canvasAssignment.canvasId,
+                    canvasUrl: canvasAssignment.canvasUrl
+                  });
                 }
                 results.assignments++;
               } catch (err: any) {

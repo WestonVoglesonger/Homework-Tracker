@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getAuth } from "@/lib/auth";
 import { adminInterface } from "@/interfaces/admin";
+import { userInterface } from "@/interfaces/user";
+import { analyticsInterface } from "@/interfaces/analyticsInterface";
+import { errorLogInterface } from "@/interfaces/errorLogInterface";
 import { rateLimit } from "@/lib/security";
 import { z } from "zod";
-import { logApiError } from "@/services/errorLogService";
-import { trackApiCall } from "@/services/analyticsService";
 
 const promoteAdminSchema = z.object({
   email: z.string().email(),
@@ -48,8 +49,7 @@ export async function POST(req: NextRequest) {
     const { email, password, adminPassword } = parsed.data;
 
     // Verify user credentials
-    const { userService } = await import("@/interfaces/user");
-    const user = await userService.findByEmail(email);
+    const user = await userInterface.findByEmail(email);
     
     if (!user || !user.passwordHash) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -78,7 +78,13 @@ export async function POST(req: NextRequest) {
     );
 
     // Track the event
-    await trackApiCall("/api/admin/auth/promote", "POST", req, session.user.id);
+    await analyticsInterface.trackEvent({
+      event: "api_call",
+      data: { endpoint: "/api/admin/auth/promote", method: "POST" },
+      userId: session.user.id,
+      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+      userAgent: req.headers.get("user-agent") || undefined,
+    });
 
     return NextResponse.json({
       success: true,
@@ -93,7 +99,19 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Admin promotion error:", error);
     // Log the error
-    await logApiError(req, error as Error, session?.user?.id);
+    await errorLogInterface.createErrorLog({
+      level: "ERROR",
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      context: {
+        userId: session?.user?.id,
+        endpoint: req.nextUrl.pathname,
+        method: req.method,
+        userAgent: req.headers.get("user-agent") || undefined,
+        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+        additionalData: { adminOperation: true },
+      },
+    }, session?.user?.id);
     
     if (error instanceof Error) {
       console.error("Error message:", error.message);

@@ -1,5 +1,5 @@
 import { analyticsService, type AnalyticsEvent } from "@/services/analyticsService";
-import { adminService } from "@/services/adminService";
+import { adminInterface } from "@/interfaces/admin";
 
 export const analyticsInterface = {
   async trackEvent(event: AnalyticsEvent) {
@@ -10,7 +10,7 @@ export const analyticsInterface = {
     adminUserId: string,
     timeRange: "day" | "week" | "month" = "day"
   ) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -19,7 +19,7 @@ export const analyticsInterface = {
   },
 
   async getSystemMetrics(adminUserId: string) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -38,7 +38,7 @@ export const analyticsInterface = {
       offset?: number;
     }
   ) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -47,14 +47,16 @@ export const analyticsInterface = {
   },
 
   async cleanupOldAnalytics(adminUserId: string, daysOld: number = 90) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
 
     const result = await analyticsService.deleteOld(daysOld);
 
-    // Log admin action
+    // Log admin action - Note: adminInterface doesn't have logAdminAction method
+    // We'll need to call adminService directly for logging
+    const { adminService } = await import("@/services/adminService");
     await adminService.logAdminAction({
       action: "analytics_cleanup",
       targetType: "analytics",

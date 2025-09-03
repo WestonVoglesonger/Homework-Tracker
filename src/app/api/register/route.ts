@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { isValidOrigin, rateLimit } from "../../../lib/security";
-import { logApiError } from "../../../services/errorLogService";
+import { errorLogInterface } from "../../../interfaces/errorLogInterface";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -58,9 +58,20 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (err: any) {
     // Log the error for monitoring
-    await logApiError(req, err, undefined, {
-      email: body?.email,
-      registrationAttempt: true
+    await errorLogInterface.createErrorLog({
+      level: "ERROR",
+      message: err.message,
+      stack: err.stack,
+      context: {
+        endpoint: req.nextUrl.pathname,
+        method: req.method,
+        userAgent: req.headers.get("user-agent") || undefined,
+        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+        additionalData: {
+          email: body?.email,
+          registrationAttempt: true
+        },
+      },
     });
 
     // Handle specific error types

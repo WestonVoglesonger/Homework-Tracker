@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getAuth } from "@/lib/auth";
 import { errorLogInterface } from "@/interfaces/errorLogInterface";
+import { analyticsInterface } from "@/interfaces/analyticsInterface";
 import { z } from "zod";
-import { logApiError } from "@/services/errorLogService";
-import { trackApiCall } from "@/services/analyticsService";
 
 const getErrorsSchema = z.object({
   level: z.enum(["ERROR", "WARN", "INFO", "DEBUG"]).optional(),
@@ -60,13 +59,32 @@ export async function GET(req: NextRequest) {
     const errorLogs = await errorLogInterface.getErrorLogs(session.user.id, filters);
 
     // Track the API call
-    await trackApiCall("/api/admin/errors", "GET", req, session.user.id);
+    await analyticsInterface.trackEvent({
+      event: "api_call",
+      data: { endpoint: "/api/admin/errors", method: "GET" },
+      userId: session.user.id,
+      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+      userAgent: req.headers.get("user-agent") || undefined,
+    });
 
     return NextResponse.json(errorLogs);
 
   } catch (error) {
-    await logApiError(req, error as Error, session?.user?.id);
-    
+    // Log the error using the interface
+    await errorLogInterface.createErrorLog({
+      level: "ERROR",
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      context: {
+        userId: session?.user?.id,
+        endpoint: req.nextUrl.pathname,
+        method: req.method,
+        userAgent: req.headers.get("user-agent") || undefined,
+        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+        additionalData: { adminOperation: true },
+      },
+    }, session?.user?.id);
+
     if (error instanceof Error && error.message.includes("Unauthorized")) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
@@ -93,7 +111,13 @@ export async function POST(req: NextRequest) {
       const result = await errorLogInterface.resolveErrorLog(session.user.id, errorLogId);
       
       // Track the API call
-      await trackApiCall("/api/admin/errors", "POST", req, session.user.id);
+      await analyticsInterface.trackEvent({
+        event: "api_call",
+        data: { endpoint: "/api/admin/errors", method: "POST" },
+        userId: session.user.id,
+        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+        userAgent: req.headers.get("user-agent") || undefined,
+      });
 
       return NextResponse.json(result);
     }
@@ -101,8 +125,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
   } catch (error) {
-    await logApiError(req, error as Error, session?.user?.id);
-    
+    // Log the error using the interface
+    await errorLogInterface.createErrorLog({
+      level: "ERROR",
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      context: {
+        userId: session?.user?.id,
+        endpoint: req.nextUrl.pathname,
+        method: req.method,
+        userAgent: req.headers.get("user-agent") || undefined,
+        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+        additionalData: { adminOperation: true },
+      },
+    }, session?.user?.id);
+
     if (error instanceof Error && error.message.includes("Unauthorized")) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }

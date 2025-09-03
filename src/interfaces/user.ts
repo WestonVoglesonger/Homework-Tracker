@@ -20,6 +20,10 @@ export const userService = {
   },
 };
 
+export type UserPreferences = {
+  canvasSetupDismissed: boolean;
+};
+
 export const userInterface = {
   async register(input: { email: string; password: string; name?: string | null }) {
     const { hash } = await import("bcryptjs");
@@ -33,6 +37,21 @@ export const userInterface = {
     const passwordHash = await hash(input.password, 12);
     const user = await userService.upsertByEmail(normalizedEmail, { passwordHash, name: input.name ?? undefined });
     return { id: user.id, email: user.email, name: user.name } as const;
+  },
+
+  async getPreferences(userId: string): Promise<UserPreferences> {
+    const { userPreferenceService } = await import("@/services/userPreferenceService");
+    return userPreferenceService.get(userId);
+  },
+
+  async updatePreferences(userId: string, prefs: Partial<UserPreferences>): Promise<UserPreferences> {
+    const { userPreferenceService } = await import("@/services/userPreferenceService");
+    return userPreferenceService.update(userId, prefs);
+  },
+
+  async findByEmail(email: string) {
+    const { userService } = await import("./user");
+    return userService.findByEmail(email);
   },
 };
 

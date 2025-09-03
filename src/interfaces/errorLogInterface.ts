@@ -1,5 +1,5 @@
 import { errorLogService, type ErrorLevel, type CreateErrorLogInput } from "@/services/errorLogService";
-import { adminService } from "@/services/adminService";
+import { adminInterface } from "@/interfaces/admin";
 
 export const errorLogInterface = {
   async createErrorLog(input: CreateErrorLogInput, userId?: string) {
@@ -24,7 +24,7 @@ export const errorLogInterface = {
     }
   ) {
     // Verify admin permissions
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -33,7 +33,7 @@ export const errorLogInterface = {
   },
 
   async getErrorLogById(adminUserId: string, errorLogId: string) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -42,7 +42,7 @@ export const errorLogInterface = {
   },
 
   async resolveErrorLog(adminUserId: string, errorLogId: string) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -50,6 +50,7 @@ export const errorLogInterface = {
     const result = await errorLogService.resolve(errorLogId, adminUserId);
 
     // Log admin action
+    const { adminService } = await import("@/services/adminService");
     await adminService.logAdminAction({
       action: "error_resolve",
       targetId: errorLogId,
@@ -67,7 +68,7 @@ export const errorLogInterface = {
       endDate?: Date;
     }
   ) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -76,7 +77,7 @@ export const errorLogInterface = {
   },
 
   async cleanupOldErrors(adminUserId: string, daysOld: number = 30) {
-    const isAdmin = await adminService.isAdmin(adminUserId);
+    const isAdmin = await adminInterface.isUserAdmin(adminUserId);
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -84,6 +85,7 @@ export const errorLogInterface = {
     const result = await errorLogService.deleteOld(daysOld);
 
     // Log admin action
+    const { adminService } = await import("@/services/adminService");
     await adminService.logAdminAction({
       action: "error_cleanup",
       targetType: "error_log",
