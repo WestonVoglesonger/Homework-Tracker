@@ -44,8 +44,7 @@ export const courseInterface = {
 
   async getById(userId: string, id: string): Promise<CourseDTO | null> {
     const { courseService } = await import("@/services/courseService");
-    const courses = await courseService.list(userId);
-    const course = courses.find(c => c.id === id);
+    const course = await courseService.getById(userId, id);
     if (!course) return null;
     return {
       id: course.id,

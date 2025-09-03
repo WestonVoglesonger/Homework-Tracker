@@ -16,6 +16,13 @@ export async function findByUserCanvasId(userId: string, canvasId: string) {
   return course;
 }
 
+export async function getById(userId: string, id: string) {
+  const course = await prisma.course.findFirst({
+    where: { id, userId },
+  });
+  return course;
+}
+
 export async function create(
   userId: string,
   input: { name: string; code?: string; term?: string; color?: string; source?: string; canvasId?: string | null }
@@ -88,6 +95,6 @@ export async function purgeAllForUser(userId: string) {
   const res = await prisma.course.deleteMany({ where: { userId } });
   return { deleted: res.count } as const;
 }
-export const courseService = { list, create, upsert, update, remove, findByUserCanvasId, purgeAllForUser };
+export const courseService = { list, create, upsert, update, remove, findByUserCanvasId, getById, purgeAllForUser };
 
 

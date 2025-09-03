@@ -131,15 +131,18 @@ export const analyticsService = {
   async getUserActivityOverTime(startDate: Date, timeRange: "day" | "week" | "month") {
     // This would be more complex in a real implementation
     // For now, we'll do a simple grouping by date
-    const rawData = await prisma.$queryRaw`
-      SELECT 
+    const rawData = await prisma.$queryRaw(
+      `
+      SELECT
         DATE_TRUNC('hour', timestamp) as period,
         COUNT(*) as count
-      FROM "Analytics" 
-      WHERE timestamp >= ${startDate}
+      FROM "Analytics"
+      WHERE timestamp >= $1
       GROUP BY DATE_TRUNC('hour', timestamp)
       ORDER BY period ASC
-    ` as Array<{ period: Date; count: bigint }>;
+      `,
+      [startDate]
+    ) as Array<{ period: Date; count: bigint }>;
 
     return rawData.map(item => ({
       period: item.period.toISOString(),

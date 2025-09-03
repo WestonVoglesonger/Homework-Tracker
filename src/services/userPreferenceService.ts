@@ -20,8 +20,11 @@ export const userPreferenceService = {
   async update(userId: string, prefs: Partial<UserPreferences>): Promise<UserPreferences> {
     try {
       if (typeof prefs.canvasSetupDismissed === "boolean") {
-        // Use raw SQL to avoid TS/type coupling before migration is applied
-        await prisma.$executeRaw`UPDATE "User" SET "canvasSetupDismissed" = ${prefs.canvasSetupDismissed} WHERE id = ${userId}`;
+        // Use parameterized query to prevent SQL injection
+        await prisma.$executeRaw(
+          `UPDATE "User" SET "canvasSetupDismissed" = $1 WHERE id = $2`,
+          [prefs.canvasSetupDismissed, userId]
+        );
         return { canvasSetupDismissed: prefs.canvasSetupDismissed };
       }
       const current = await prisma.user.findUnique({ where: { id: userId } });
