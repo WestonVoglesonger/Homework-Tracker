@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ReactNode, useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "../ui/button";
+import { Logo } from "../ui/Logo";
 import { Spinner } from "@components/ui/spinner";
 import { useAdmin } from "@/app/hooks/useAdmin";
 import { setupGlobalErrorHandler } from "@/lib/errorLogger";
@@ -37,7 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
         {/* Mobile header with dropdown */}
         <div className="md:hidden sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">DueNorth</div>
+          <Logo size="md" />
           <button
             className="px-3 py-1.5 rounded-md text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
             onClick={() => setMobileNavOpen((v) => !v)}
@@ -88,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
 
         <aside className="hidden md:block bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 space-y-6">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">DueNorth</div>
+          <Logo size="lg" />
           <nav className="flex flex-col gap-2">
             <Link 
               href="/dashboard" 
