@@ -4,6 +4,7 @@ import { useCanvasImport } from "@/app/hooks/useCanvasImport";
 import { useEffect, useState } from "react";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
+import { Spinner } from "@components/ui/spinner";
 import CanvasImportPanel from "@components/canvas/CanvasImportPanel";
 import DangerZone from "@components/settings/DangerZone";
 
@@ -14,12 +15,19 @@ import { QuickCanvasSetup } from "@/app/components/canvas/QuickCanvasSetup";
 export default function SettingsPage() {
   const { listCanvasCourses } = useCanvasImport();
   const [connected, setConnected] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [highlightImport, setHighlightImport] = useState(false);
   useEffect(() => {
     listCanvasCourses()
-      .then((d) => setConnected(Array.isArray(d)))
-      .catch(() => setConnected(false));
+      .then((d) => {
+        setConnected(Array.isArray(d));
+        setLoading(false);
+      })
+      .catch(() => {
+        setConnected(false);
+        setLoading(false);
+      });
   }, []);
 
   // Check for canvas-import URL parameter
@@ -40,6 +48,7 @@ export default function SettingsPage() {
 
   const handleCanvasConnectionSuccess = () => {
     setConnected(true);
+    setLoading(false);
     // Refresh the connection status
     listCanvasCourses()
       .then((d) => setConnected(Array.isArray(d)))
@@ -54,65 +63,78 @@ export default function SettingsPage() {
             <CardTitle>Canvas Integration</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground mb-4">
-              Status: <span className={connected ? "text-green-600" : "text-orange-600"}>
-                {connected ? "Connected" : "Not Connected"}
-              </span>
-            </div>
-
-            {connected ? (
-              // Connected state - show disconnect option
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    onClick={async () => {
-                      const res = await fetch("/api/canvas/token", { method: "DELETE" });
-                      if (res.ok) {
-                        toast.success("Disconnected Canvas");
-                        setConnected(false);
-                      }
-                    }}
-                  >
-                    Disconnect Canvas
-                  </Button>
-                </div>
-
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Use the import panel below to sync courses and assignments.
+            {loading ? (
+              // Loading state
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+                  <Spinner size={20} />
+                  <span className="text-sm">Checking Canvas connection...</span>
                 </div>
               </div>
             ) : (
-              // Not connected state - show setup options
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">Choose your setup method:</h4>
-                  <div className="grid gap-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <div>
-                        <div className="font-medium">Guided Setup</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Step-by-step walkthrough with screenshots
-                        </div>
-                      </div>
-                      <Button onClick={() => setShowWizard(true)}>
-                        Start Guide
+              // Loaded state
+              <>
+                <div className="text-sm text-muted-foreground mb-4">
+                  Status: <span className={connected ? "text-green-600" : "text-orange-600"}>
+                    {connected ? "Connected" : "Not Connected"}
+                  </span>
+                </div>
+
+                {connected ? (
+                  // Connected state - show disconnect option
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        onClick={async () => {
+                          const res = await fetch("/api/canvas/token", { method: "DELETE" });
+                          if (res.ok) {
+                            toast.success("Disconnected Canvas");
+                            setConnected(false);
+                          }
+                        }}
+                      >
+                        Disconnect Canvas
                       </Button>
                     </div>
 
-                    <div className="border-t pt-3">
-                      <QuickCanvasSetup
-                        onSuccess={handleCanvasConnectionSuccess}
-                        onShowWizard={() => setShowWizard(true)}
-                      />
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Use the import panel below to sync courses and assignments.
                     </div>
                   </div>
-                </div>
-              </div>
+                ) : (
+                  // Not connected state - show setup options
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Choose your setup method:</h4>
+                      <div className="grid gap-3">
+                        <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                          <div>
+                            <div className="font-medium">Guided Setup</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              Step-by-step walkthrough with screenshots
+                            </div>
+                          </div>
+                          <Button onClick={() => setShowWizard(true)}>
+                            Start Guide
+                          </Button>
+                        </div>
+
+                        <div className="border-t pt-3">
+                          <QuickCanvasSetup
+                            onSuccess={handleCanvasConnectionSuccess}
+                            onShowWizard={() => setShowWizard(true)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
-        {connected && (
+        {!loading && connected && (
           <div className={highlightImport ? "ring-2 ring-blue-500 ring-offset-2 rounded-lg" : ""}>
             <CanvasImportPanel />
           </div>
