@@ -248,7 +248,7 @@ export default function DashboardPage() {
                     <EmptyState title={`No ${s.key} assignments`} />
                   </div>
                 ) : (
-                  <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
                     {groups[s.key].map((a) => (
                       <AssignmentRow key={a.id} a={a} />
                     ))}

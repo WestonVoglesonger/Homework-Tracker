@@ -11,6 +11,8 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
   const update = useUpdateAssignment();
   const del = useDeleteAssignment();
   
+
+  
   // centralized in StatusPill
 
   return (
@@ -24,13 +26,13 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-purple-400 rounded-l-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
       
       <div className="flex items-start gap-4">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 sm:min-w-[200px]">
           <Link 
             href={`/assignments/${a.id}`}
             className="block group/title"
           >
             <div className="font-semibold text-gray-900 dark:text-white group-hover/title:text-blue-600 dark:group-hover/title:text-blue-400 transition-colors mb-2 line-clamp-2 leading-tight">
-              {a.title}
+              {a.title || 'No title'}
             </div>
           </Link>
           <div className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
@@ -55,14 +57,17 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
           </div>
         </div>
         
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 shrink">
           <Select
             value={a.status}
             onValueChange={(value) => update.mutate({ id: a.id, patch: { status: value as any } })}
           >
-            <SelectTrigger className="h-8 w-auto px-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <SelectTrigger className="h-8 w-auto min-w-0 px-1 sm:px-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
               <SelectValue>
-                <StatusPill status={a.status as any} size="sm" />
+                <div className="flex items-center gap-1">
+                  <span className={`w-2 h-2 rounded-full ${statusMeta[a.status].dot}`} />
+                  <span className="hidden sm:inline text-xs">{statusMeta[a.status].short}</span>
+                </div>
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -80,7 +85,7 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
           
           <Link 
             href={`/assignments/${a.id}`}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex-shrink-0"
+            className="p-1 sm:p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex-shrink-0"
             title="View details"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,7 +94,7 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
             </svg>
           </Link>
           <button
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex-shrink-0"
+            className="p-1 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex-shrink-0"
             title="Delete assignment"
             disabled={del.isPending}
             onClick={async () => {
