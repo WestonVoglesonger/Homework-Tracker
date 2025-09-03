@@ -1,4 +1,5 @@
 import prisma from "@/db/client";
+import { Prisma } from "@prisma/client";
 
 export type UserPreferences = {
   canvasSetupDismissed: boolean;
@@ -22,8 +23,7 @@ export const userPreferenceService = {
       if (typeof prefs.canvasSetupDismissed === "boolean") {
         // Use parameterized query to prevent SQL injection
         await prisma.$executeRaw(
-          `UPDATE "User" SET "canvasSetupDismissed" = $1 WHERE id = $2`,
-          [prefs.canvasSetupDismissed, userId]
+          Prisma.sql`UPDATE "User" SET "canvasSetupDismissed" = ${prefs.canvasSetupDismissed} WHERE id = ${userId}`
         );
         return { canvasSetupDismissed: prefs.canvasSetupDismissed };
       }

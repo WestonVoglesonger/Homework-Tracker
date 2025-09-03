@@ -1,5 +1,6 @@
 import prisma from "@/db/client";
 import type { NextRequest } from "next/server";
+import  { Prisma } from "@prisma/client";
 
 export interface AnalyticsEvent {
   event: string;
@@ -132,16 +133,15 @@ export const analyticsService = {
     // This would be more complex in a real implementation
     // For now, we'll do a simple grouping by date
     const rawData = await prisma.$queryRaw(
-      `
+      Prisma.sql`
       SELECT
         DATE_TRUNC('hour', timestamp) as period,
         COUNT(*) as count
       FROM "Analytics"
-      WHERE timestamp >= $1
+      WHERE timestamp >= ${startDate}
       GROUP BY DATE_TRUNC('hour', timestamp)
       ORDER BY period ASC
-      `,
-      [startDate]
+      `
     ) as Array<{ period: Date; count: bigint }>;
 
     return rawData.map(item => ({
