@@ -108,25 +108,7 @@ export async function getAccessTokenForUser(userId: string) {
   return stored ? decryptText(stored) : null;
 }
 
-export async function exchangeCodeForToken(code: string) {
-  const base = process.env.CANVAS_BASE_URL || "";
-  const clientId = process.env.CANVAS_CLIENT_ID || "";
-  const clientSecret = process.env.CANVAS_CLIENT_SECRET || "";
-  const redirect = process.env.CANVAS_REDIRECT_URL || "";
-  const tokenRes = await fetch(new URL("/login/oauth2/token", base).toString(), {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirect,
-      code,
-    }),
-  });
-  if (!tokenRes.ok) throw new Error("Token exchange failed");
-  return (await tokenRes.json()) as { access_token: string; refresh_token?: string; expires_in?: number; token_type?: string; scope?: string };
-}
+
 
 export async function upsertCanvasAccount(userId: string, tokenJson: { access_token: string; refresh_token?: string; expires_in?: number; token_type?: string; scope?: string }) {
   await prisma.account.upsert({
@@ -134,7 +116,7 @@ export async function upsertCanvasAccount(userId: string, tokenJson: { access_to
     create: {
       userId,
       provider: "canvas",
-      type: "oauth",
+      type: "canvas",
       providerAccountId: userId,
       access_token: encryptText(tokenJson.access_token),
       refresh_token: tokenJson.refresh_token ? encryptText(tokenJson.refresh_token) : undefined,
@@ -156,6 +138,6 @@ export async function deleteCanvasAccount(userId: string) {
   await prisma.account.deleteMany({ where: { userId, provider: "canvas" } });
 }
 
-export const canvasTokenService = { getAccessTokenForUser, exchangeCodeForToken, upsertCanvasAccount, deleteCanvasAccount };
+export const canvasTokenService = { getAccessTokenForUser, upsertCanvasAccount, deleteCanvasAccount };
 
 

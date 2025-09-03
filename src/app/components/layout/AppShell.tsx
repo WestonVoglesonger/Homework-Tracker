@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { Spinner } from "@components/ui/spinner";
 import { useAdmin } from "@/app/hooks/useAdmin";
 import { setupGlobalErrorHandler } from "@/lib/errorLogger";
+import { CanvasSetupGate } from "@/app/components/canvas/CanvasSetupGate";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
@@ -161,6 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         
         <main className="p-4 md:p-8 bg-gray-50 dark:bg-gray-900 overflow-auto">
           <div className="max-w-7xl mx-auto">
+            <CanvasSetupGate />
             {children}
           </div>
         </main>

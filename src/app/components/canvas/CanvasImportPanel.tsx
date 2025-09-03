@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { toast } from "sonner";
 
 export default function CanvasImportPanel() {
-  const { listCanvasCourses, importCourseWithAssignments, startOAuth } = useCanvasImport();
+  const { listCanvasCourses, importCourseWithAssignments } = useCanvasImport();
   const [courses, setCourses] = useState<CourseDTO[] | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<Record<string, boolean>>({});
   const [importing, setImporting] = useState(false);
@@ -43,7 +43,7 @@ export default function CanvasImportPanel() {
   async function handleImport() {
     setImporting(true);
     const selected = courses?.filter((c) => selectedCourses[c.canvasId || c.id]) || [];
-    
+
     let successCount = 0;
     let assignmentCount = 0;
     
@@ -77,7 +77,7 @@ export default function CanvasImportPanel() {
         {courses === null && <div className="text-sm text-muted-foreground">Loading Canvas courses...</div>}
         {courses && courses.length === 0 && (
           <div className="text-sm text-muted-foreground">
-            No Canvas connection. <Button variant="link" onClick={() => startOAuth()}>Connect to Canvas</Button>
+            No Canvas connection found.
           </div>
         )}
         <div className="space-y-2 mb-4">
@@ -103,16 +103,30 @@ export default function CanvasImportPanel() {
           ))}
         </div>
         {courses && courses.length > 0 && (
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              Importing a course will also import all its assignments
-            </p>
-            <Button
-              disabled={importing || Object.values(selectedCourses).every((v) => !v)}
-              onClick={handleImport}
-            >
-              {importing ? "Importing..." : "Import Selected Courses"}
-            </Button>
+          <div className="space-y-3">
+            {importing && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <div className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Importing courses...</strong><br />
+                    This may take a minute or two depending on how many assignments your courses have.
+                    Please don't close this page while the import is in progress.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                Importing a course will also import all its assignments. This process may take a minute or two.
+              </p>
+              <Button
+                disabled={importing || Object.values(selectedCourses).every((v) => !v)}
+                onClick={handleImport}
+              >
+                {importing ? "Importing..." : "Import Selected Courses"}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

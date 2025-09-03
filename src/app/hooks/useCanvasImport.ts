@@ -13,10 +13,6 @@ async function getJSON<T>(url: string): Promise<T> {
 
 export function useCanvasImport() {
   const { status } = useSession();
-  const startOAuth = () => {
-    window.location.href = "/api/canvas/oauth/start";
-  };
-
   const listCanvasCourses = () => getJSON<CourseDTO[]>("/api/canvas/courses");
   const listCanvasAssignments = (courseId: string) => getJSON<AssignmentDTO[]>(`/api/canvas/assignments?courseId=${courseId}`);
 
@@ -147,7 +143,7 @@ export function useCanvasImport() {
     },
   });
 
-  return { startOAuth, listCanvasCourses, listCanvasAssignments, importSelected, importCourseWithAssignments };
+  return { listCanvasCourses, listCanvasAssignments, importSelected, importCourseWithAssignments };
 }
 
 export function useEnsureCanvasCoursesPrefetched() {
