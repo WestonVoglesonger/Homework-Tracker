@@ -28,23 +28,34 @@ export const statusMeta: Record<AppStatus, { short: string; long: string; dot: s
 export function StatusPill({ status, size = "md", variant = "pill" }: { status: string; size?: "sm" | "md"; variant?: "pill" | "dot" }) {
   const s = normalizeStatus(status);
   const m = statusMeta[s];
+
+  // Fallback to NOT_SUBMITTED if statusMeta entry doesn't exist
+  if (!m) {
+    console.warn(`Unknown status: ${status}, falling back to NOT_SUBMITTED`);
+  }
+
+  const fallbackMeta = statusMeta.NOT_SUBMITTED;
+  const meta = m || fallbackMeta;
+
   const sizeClasses = size === "sm" ? "gap-1 px-1.5 py-0.5 text-[11px]" : "gap-2 px-2 py-1 text-xs";
   const dotClasses = size === "sm" ? "w-1.5 h-1.5" : "w-2 h-2";
+
   if (variant === "dot") {
     return (
-      <span className="inline-flex items-center" title={m.long}>
-        <span className={`${dotClasses} rounded-full ${m.dot}`} />
-        <span className="sr-only">{m.short}</span>
+      <span className="inline-flex items-center" title={meta.long}>
+        <span className={`${dotClasses} rounded-full ${meta.dot}`} />
+        <span className="sr-only">{meta.short}</span>
       </span>
     );
   }
+
   return (
     <span
-      className={`inline-flex items-center ${sizeClasses} rounded-full leading-none font-medium ${m.pill}`}
-      title={m.long}
+      className={`inline-flex items-center ${sizeClasses} rounded-full leading-none font-medium ${meta.pill}`}
+      title={meta.long}
     >
-      <span className={`${dotClasses} rounded-full ${m.dot}`} />
-      {m.short}
+      <span className={`${dotClasses} rounded-full ${meta.dot}`} />
+      {meta.short}
     </span>
   );
 }

@@ -65,8 +65,8 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
             <SelectTrigger className="h-8 w-auto min-w-0 px-1 sm:px-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
               <SelectValue>
                 <div className="flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${statusMeta[a.status].dot}`} />
-                  <span className="hidden sm:inline text-xs">{statusMeta[a.status].short}</span>
+                  <span className={`w-2 h-2 rounded-full ${statusMeta[a.status]?.dot || statusMeta.NOT_SUBMITTED.dot}`} />
+                  <span className="hidden sm:inline text-xs">{statusMeta[a.status]?.short || statusMeta.NOT_SUBMITTED.short}</span>
                 </div>
               </SelectValue>
             </SelectTrigger>
