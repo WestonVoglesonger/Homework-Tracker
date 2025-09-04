@@ -182,23 +182,34 @@ export function isStrongPassword(password: string): {
 
 // Content Security Policy headers
 export function getCSPHeaders(): Record<string, string> {
+  const isDev = process.env.NODE_ENV !== "production";
+
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    // Allow Vercel Analytics in both dev and prod
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self'",
-    "connect-src 'self'",
+    // Allow Vercel Analytics and other necessary connections
+    `connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-analytics.com`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
   ].join("; ");
 
-  return {
+  const headers: Record<string, string> = {
     "Content-Security-Policy": csp,
     "X-Frame-Options": "DENY",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
   };
+
+  // Only add COOP header in production (not localhost)
+  if (!isDev) {
+    headers["Cross-Origin-Opener-Policy"] = "same-origin";
+  }
+
+  return headers;
 }

@@ -4,7 +4,10 @@ import { isValidOrigin, rateLimit } from "../../../lib/security";
 import { errorLogInterface } from "../../../interfaces/errorLogInterface";
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().refine(
+    (email) => !email.toLowerCase().includes('.edu'),
+    "Personal email addresses only. .edu emails are not allowed."
+  ),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")

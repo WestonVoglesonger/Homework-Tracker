@@ -11,10 +11,39 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Validate email for .edu restriction
+  const validateEmail = (emailValue: string) => {
+    if (emailValue.toLowerCase().includes('.edu')) {
+      setEmailError("Personal email addresses only, .edu emails are not allowed.");
+      return false;
+    } else {
+      setEmailError(null);
+      return true;
+    }
+  };
+
+  // Handle email input change
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    if (newEmail) {
+      validateEmail(newEmail);
+    } else {
+      setEmailError(null);
+    }
+  };
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    // Validate email before submission
+    if (!validateEmail(email)) {
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/register", {
@@ -61,7 +90,14 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-1">
             <label className="text-sm">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border rounded p-2" required />
+            <input
+              type="email"
+              value={email}
+              onChange={handleEmailChange}
+              className={`w-full border rounded p-2 ${emailError ? 'border-red-500' : ''}`}
+              required
+            />
+            {emailError && <div className="text-sm text-red-600">{emailError}</div>}
           </div>
           <div className="space-y-1">
             <label className="text-sm">Password</label>
@@ -70,7 +106,7 @@ export default function RegisterPage() {
               Password must be at least 8 characters and include uppercase, lowercase, and number.
             </div>
           </div>
-          <button type="submit" disabled={loading} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
+          <button type="submit" disabled={loading || !!emailError} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
             {loading ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Creating…</span>) : "Create account"}
           </button>
         </form>
