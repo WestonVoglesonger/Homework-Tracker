@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Spinner } from "@components/ui/spinner";
 
-export default function VerifyConfirmPage() {
+function VerifyConfirmContent() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") || "";
@@ -71,6 +71,35 @@ export default function VerifyConfirmPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyConfirmPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md w-full space-y-6">
+          <div className="text-center">
+            <Image 
+              src="/logo/due-north-logo.png" 
+              alt="DueNorth Logo" 
+              width={80} 
+              height={80} 
+              className="mx-auto w-20 h-20 mb-4"
+              priority
+            />
+          </div>
+          <div className="space-y-4 p-6 rounded-xl border bg-white text-center">
+            <h1 className="text-xl font-semibold">Loading...</h1>
+            <div className="flex justify-center">
+              <Spinner size={24} />
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyConfirmContent />
+    </Suspense>
   );
 }
 
