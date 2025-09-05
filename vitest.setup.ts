@@ -62,6 +62,16 @@ vi.mock("@tanstack/react-query", () => ({
     mutateAsync: vi.fn(),
     isLoading: false,
     error: null,
+    isPending: false,
+    isError: false,
+    isIdle: false,
+    isSuccess: false,
+    failureCount: 0,
+    failureReason: null,
+    reset: vi.fn(),
+    status: 'idle',
+    submittedAt: 0,
+    variables: undefined
   })),
   QueryClient: vi.fn(() => ({
     invalidateQueries: vi.fn(),
@@ -70,6 +80,11 @@ vi.mock("@tanstack/react-query", () => ({
   })),
   QueryClientProvider: ({ children }: { children: React.ReactNode }) => 
     React.createElement(React.Fragment, null, children),
+  useQueryClient: vi.fn(() => ({
+    invalidateQueries: vi.fn(),
+    setQueryData: vi.fn(),
+    getQueryData: vi.fn(),
+  })),
 }));
 
 // Mock Sonner toast notifications

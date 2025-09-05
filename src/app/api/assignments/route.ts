@@ -47,7 +47,14 @@ export async function POST(req: NextRequest) {
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const json = await req.json();
+  
+  let json;
+  try {
+    json = await req.json();
+  } catch (error) {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  
   const parsed = createAssignmentSchema.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 

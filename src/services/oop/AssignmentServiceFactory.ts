@@ -262,8 +262,15 @@ export class UnifiedAssignmentService implements ICompleteAssignmentService {
   }
 
   async getAssignment(userId: string, assignmentId: string) {
-    const service = await this.factory.getServiceForAssignment(userId, assignmentId);
-    return await service.getAssignment(userId, assignmentId);
+    try {
+      const service = await this.factory.getServiceForAssignment(userId, assignmentId);
+      return await service.getAssignment(userId, assignmentId);
+    } catch (error: any) {
+      if (error.message === 'Assignment not found') {
+        return null; // Assignment was deleted, return null instead of throwing
+      }
+      throw error; // Re-throw other errors
+    }
   }
 
   async createAssignment(userId: string, input: any) {

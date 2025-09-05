@@ -186,9 +186,8 @@ describe('Assignment Workflow Integration', () => {
       assignmentService.updateAssignment(user1.id, user2Assignment.id, { title: 'Hacked!' })
     ).rejects.toThrow('Assignment not found');
 
-    await expect(
-      assignmentService.getAssignment(user1.id, user2Assignment.id)
-    ).rejects.toThrow('Assignment not found');
+    const isolationResult = await assignmentService.getAssignment(user1.id, user2Assignment.id);
+    expect(isolationResult).toBeNull(); // User isolation: user1 cannot see user2's assignment
 
     // Course isolation testing would go here but is handled by test factory
   });
