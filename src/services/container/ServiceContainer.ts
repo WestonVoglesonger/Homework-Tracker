@@ -3,6 +3,15 @@ import { AssignmentServiceFactory, UnifiedAssignmentService } from "../oop/Assig
 import { ManualAssignmentService } from "../oop/ManualAssignmentService";
 import { CanvasAssignmentService } from "../oop/CanvasAssignmentService";
 import { ICompleteAssignmentService } from "../interfaces/IAssignmentService";
+import { CourseServiceFactory } from "../oop/CourseServiceFactory";
+import { ICompleteCourseService } from "../interfaces/ICourseService";
+import { UserPreferenceService } from "../oop/UserPreferenceService";
+import { AdminService } from "../oop/AdminService";
+import { CanvasIntegrationService } from "../oop/CanvasIntegrationService";
+import { EmailService } from "../oop/EmailService";
+import { AnalyticsService } from "../oop/AnalyticsService";
+import { ErrorLogService } from "../oop/ErrorLogService";
+import { AuthenticationService } from "../oop/AuthenticationService";
 
 /**
  * Dependency Injection Container for managing service instances
@@ -15,6 +24,15 @@ export class ServiceContainer {
   // Service instances (lazy-loaded)
   private assignmentServiceFactory?: AssignmentServiceFactory;
   private unifiedAssignmentService?: ICompleteAssignmentService;
+  private courseServiceFactory?: CourseServiceFactory;
+  private unifiedCourseService?: ICompleteCourseService;
+  private userPreferenceService?: UserPreferenceService;
+  private adminService?: AdminService;
+  private canvasIntegrationService?: CanvasIntegrationService;
+  private emailService?: EmailService;
+  private analyticsService?: AnalyticsService;
+  private errorLogService?: ErrorLogService;
+  private authenticationService?: AuthenticationService;
   private services: Map<string, any> = new Map();
 
   private constructor(database: PrismaClient) {
@@ -89,6 +107,97 @@ export class ServiceContainer {
   }
 
   /**
+   * Get course service factory (lazy-loaded)
+   */
+  getCourseServiceFactory(): CourseServiceFactory {
+    if (!this.courseServiceFactory) {
+      this.courseServiceFactory = new CourseServiceFactory(this.database);
+    }
+    return this.courseServiceFactory;
+  }
+
+  /**
+   * Get unified course service (lazy-loaded)
+   */
+  getCourseService(): ICompleteCourseService {
+    if (!this.unifiedCourseService) {
+      const factory = this.getCourseServiceFactory();
+      this.unifiedCourseService = factory.getUnifiedService();
+    }
+    return this.unifiedCourseService;
+  }
+
+  /**
+   * Get user preference service (lazy-loaded)
+   */
+  getUserPreferenceService(): UserPreferenceService {
+    if (!this.userPreferenceService) {
+      this.userPreferenceService = new UserPreferenceService(this.database);
+    }
+    return this.userPreferenceService;
+  }
+
+  /**
+   * Get admin service (lazy-loaded)
+   */
+  getAdminService(): AdminService {
+    if (!this.adminService) {
+      this.adminService = new AdminService(this.database);
+    }
+    return this.adminService;
+  }
+
+  /**
+   * Get Canvas integration service (lazy-loaded)
+   */
+  getCanvasIntegrationService(): CanvasIntegrationService {
+    if (!this.canvasIntegrationService) {
+      this.canvasIntegrationService = new CanvasIntegrationService(this.database);
+    }
+    return this.canvasIntegrationService;
+  }
+
+  /**
+   * Get email service (lazy-loaded)
+   */
+  getEmailService(): EmailService {
+    if (!this.emailService) {
+      this.emailService = new EmailService(this.database);
+    }
+    return this.emailService;
+  }
+
+  /**
+   * Get analytics service (lazy-loaded)
+   */
+  getAnalyticsService(): AnalyticsService {
+    if (!this.analyticsService) {
+      this.analyticsService = new AnalyticsService(this.database);
+    }
+    return this.analyticsService;
+  }
+
+  /**
+   * Get error log service (lazy-loaded)
+   */
+  getErrorLogService(): ErrorLogService {
+    if (!this.errorLogService) {
+      this.errorLogService = new ErrorLogService(this.database);
+    }
+    return this.errorLogService;
+  }
+
+  /**
+   * Get authentication service (lazy-loaded)
+   */
+  getAuthenticationService(): AuthenticationService {
+    if (!this.authenticationService) {
+      this.authenticationService = new AuthenticationService(this.database);
+    }
+    return this.authenticationService;
+  }
+
+  /**
    * Create a scoped container for testing or isolated operations
    */
   createScope(database?: PrismaClient): ServiceContainer {
@@ -101,6 +210,14 @@ export class ServiceContainer {
   async cleanup(): Promise<void> {
     await Promise.all([
       this.assignmentServiceFactory?.cleanup(),
+      this.courseServiceFactory?.cleanup(),
+      this.userPreferenceService?.cleanup(),
+      this.adminService?.cleanup(),
+      this.canvasIntegrationService?.cleanup(),
+      this.emailService?.cleanup(),
+      this.analyticsService?.cleanup(),
+      this.errorLogService?.cleanup(),
+      this.authenticationService?.cleanup(),
       ...Array.from(this.services.values())
         .filter(service => service.cleanup)
         .map(service => service.cleanup())
@@ -109,6 +226,15 @@ export class ServiceContainer {
     this.services.clear();
     this.assignmentServiceFactory = undefined;
     this.unifiedAssignmentService = undefined;
+    this.courseServiceFactory = undefined;
+    this.unifiedCourseService = undefined;
+    this.userPreferenceService = undefined;
+    this.adminService = undefined;
+    this.canvasIntegrationService = undefined;
+    this.emailService = undefined;
+    this.analyticsService = undefined;
+    this.errorLogService = undefined;
+    this.authenticationService = undefined;
   }
 
   /**
@@ -134,4 +260,60 @@ export function getServiceContainer(database?: PrismaClient): ServiceContainer {
  */
 export function getAssignmentService(database?: PrismaClient): ICompleteAssignmentService {
   return getServiceContainer(database).getAssignmentService();
+}
+
+/**
+ * Convenience function to get the main course service
+ */
+export function getCourseService(database?: PrismaClient): ICompleteCourseService {
+  return getServiceContainer(database).getCourseService();
+}
+
+/**
+ * Convenience function to get the user preference service
+ */
+export function getUserPreferenceService(database?: PrismaClient): UserPreferenceService {
+  return getServiceContainer(database).getUserPreferenceService();
+}
+
+/**
+ * Convenience function to get the admin service
+ */
+export function getAdminService(database?: PrismaClient): AdminService {
+  return getServiceContainer(database).getAdminService();
+}
+
+/**
+ * Convenience function to get the Canvas integration service
+ */
+export function getCanvasIntegrationService(database?: PrismaClient): CanvasIntegrationService {
+  return getServiceContainer(database).getCanvasIntegrationService();
+}
+
+/**
+ * Convenience function to get the email service
+ */
+export function getEmailService(database?: PrismaClient): EmailService {
+  return getServiceContainer(database).getEmailService();
+}
+
+/**
+ * Convenience function to get the analytics service
+ */
+export function getAnalyticsService(database?: PrismaClient): AnalyticsService {
+  return getServiceContainer(database).getAnalyticsService();
+}
+
+/**
+ * Convenience function to get the error log service
+ */
+export function getErrorLogService(database?: PrismaClient): ErrorLogService {
+  return getServiceContainer(database).getErrorLogService();
+}
+
+/**
+ * Convenience function to get the authentication service
+ */
+export function getAuthenticationService(database?: PrismaClient): AuthenticationService {
+  return getServiceContainer(database).getAuthenticationService();
 }
