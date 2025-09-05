@@ -45,7 +45,14 @@ export class TestDataFactory {
   private assignmentCounter = 0;
 
   constructor(database?: PrismaClient) {
-    this.db = database || testDb!;
+    this.db = database || this.getTestDb();
+  }
+
+  private getTestDb(): PrismaClient {
+    if (!testDb) {
+      throw new Error('Test database not initialized. Make sure setupTestDatabase() is called before using factories.');
+    }
+    return testDb;
   }
 
   async createUser(input: TestUserInput = {}): Promise<TestUser> {
@@ -211,5 +218,27 @@ export class TestDataFactory {
   }
 }
 
-// Singleton instance for convenience
-export const testFactory = new TestDataFactory();
+// Singleton instance for convenience - initialized lazily to avoid database issues
+let _testFactory: TestDataFactory | null = null;
+
+export const testFactory = {
+  get instance(): TestDataFactory {
+    if (!_testFactory) {
+      _testFactory = new TestDataFactory();
+    }
+    return _testFactory;
+  },
+
+  // Proxy methods for convenience
+  createUser: (input?: TestUserInput) => testFactory.instance.createUser(input),
+  createCourse: (userId: string, input?: TestCourseInput) => testFactory.instance.createCourse(userId, input),
+  createAssignment: (userId: string, courseId?: string | null, input?: TestAssignmentInput) => 
+    testFactory.instance.createAssignment(userId, courseId, input),
+  createCompleteUserWithData: (userInput?: TestUserInput) => testFactory.instance.createCompleteUserWithData(userInput),
+  createCanvasCourse: (userId: string, canvasId?: string) => testFactory.instance.createCanvasCourse(userId, canvasId),
+  createCanvasAssignment: (userId: string, courseId: string, canvasId?: string) => 
+    testFactory.instance.createCanvasAssignment(userId, courseId, canvasId),
+  createAdminUser: (input?: TestUserInput) => testFactory.instance.createAdminUser(input),
+  createBulkAssignments: (userId: string, courseId: string, count?: number) => 
+    testFactory.instance.createBulkAssignments(userId, courseId, count),
+};
