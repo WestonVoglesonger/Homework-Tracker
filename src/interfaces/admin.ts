@@ -1,4 +1,4 @@
-import { assignmentService } from "@/services/assignmentService";
+import { getAssignmentService } from "@/services/container/ServiceContainer";
 import { courseService } from "@/services/courseService";
 import { adminService } from "@/services/adminService";
 
@@ -10,7 +10,9 @@ export const adminInterface = {
       throw new Error("Unauthorized: Admin access required");
     }
 
-    const a = await assignmentService.purgeAllForUser(targetUserId);
+    const { default: prisma } = await import("@/db/client");
+    const assignmentService = getAssignmentService(prisma);
+    const a = await assignmentService.purgeUserAssignments(targetUserId);
     const c = await courseService.purgeAllForUser(targetUserId);
 
     // Log admin action

@@ -78,14 +78,14 @@ export class ServiceContainer {
    * Get manual assignment service directly
    */
   getManualAssignmentService(): ManualAssignmentService {
-    return this.getAssignmentServiceFactory().getServiceForSource('manual') as ManualAssignmentService;
+    return this.getAssignmentServiceFactory().getServiceForSource('manual') as unknown as ManualAssignmentService;
   }
 
   /**
-   * Get Canvas assignment service directly  
+   * Get Canvas assignment service directly
    */
   getCanvasAssignmentService(): CanvasAssignmentService {
-    return this.getAssignmentServiceFactory().getServiceForSource('canvas') as CanvasAssignmentService;
+    return this.getAssignmentServiceFactory().getServiceForSource('canvas') as unknown as CanvasAssignmentService;
   }
 
   /**

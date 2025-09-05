@@ -122,7 +122,7 @@ export class AssignmentRepository implements ICanvasRepository<Assignment, Creat
           await this.update(userId, existing.id, {
             title: canvasAssignment.title,
             description: canvasAssignment.description,
-            dueAt: canvasAssignment.dueAt ? new Date(canvasAssignment.dueAt) : null,
+            dueAt: canvasAssignment.dueAt ? new Date(canvasAssignment.dueAt) : undefined,
             canvasUrl: canvasAssignment.canvasUrl,
           });
           updated++;

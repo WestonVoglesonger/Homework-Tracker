@@ -25,6 +25,7 @@ export interface UpdateAssignmentDTO {
   status?: "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
   priority?: number;
   notes?: string;
+  canvasUrl?: string;
 }
 
 export interface AssignmentFilters {

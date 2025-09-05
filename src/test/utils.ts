@@ -11,7 +11,7 @@ export function createMockRequest(
   body?: any,
   headers?: Record<string, string>
 ): NextRequest {
-  const requestInit: RequestInit = {
+  const requestInit: RequestInit & { signal?: AbortSignal } = {
     method,
     headers: {
       'content-type': 'application/json',
@@ -23,7 +23,7 @@ export function createMockRequest(
     requestInit.body = typeof body === 'string' ? body : JSON.stringify(body);
   }
 
-  return new NextRequest(url, requestInit);
+  return new NextRequest(url, requestInit as any);
 }
 
 // Mock authenticated session

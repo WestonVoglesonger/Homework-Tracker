@@ -88,7 +88,7 @@ export abstract class BaseAssignmentService extends BaseService implements IAssi
   }
 
   // Common validation methods
-  private validateUserId(userId: string): void {
+  protected validateUserId(userId: string): void {
     if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
       throw new Error('Invalid user ID provided');
     }

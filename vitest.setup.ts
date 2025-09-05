@@ -91,7 +91,7 @@ vi.mock("@vercel/analytics/react", () => ({
   track: vi.fn(),
 }));
 
-// Prisma client mocking is handled in individual test files
+// Old service mocks removed - integration tests now use OOP services
 
 // Mock crypto for consistent test runs
 Object.defineProperty(global, 'crypto', {
@@ -102,11 +102,11 @@ Object.defineProperty(global, 'crypto', {
 });
 
 // Mock environment variables
-process.env.NODE_ENV = 'test';
-process.env.NEXTAUTH_SECRET = 'test-secret-key';
-process.env.NEXTAUTH_URL = 'http://localhost:3000';
-process.env.POSTGRES_PRISMA_URL = 'postgresql://postgres:postgres@db:5432/homework_test';
-process.env.POSTGRES_URL_NON_POOLING = 'postgresql://postgres:postgres@db:5432/homework_test';
+(process.env as any).NODE_ENV = 'test';
+(process.env as any).NEXTAUTH_SECRET = 'test-secret-key';
+(process.env as any).NEXTAUTH_URL = 'http://localhost:3000';
+(process.env as any).POSTGRES_PRISMA_URL = 'postgresql://postgres:postgres@db:5432/homework_test';
+(process.env as any).POSTGRES_URL_NON_POOLING = 'postgresql://postgres:postgres@db:5432/homework_test';
 
 // Global test database setup
 beforeAll(async () => {

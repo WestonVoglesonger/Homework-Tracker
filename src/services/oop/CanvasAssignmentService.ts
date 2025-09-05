@@ -93,7 +93,7 @@ export class CanvasAssignmentService extends BaseAssignmentService implements IC
     
     // Sanitize Canvas HTML description if being updated
     if (processed.description !== undefined) {
-      processed.description = processed.description ? this.sanitizeCanvasHtml(processed.description) : null;
+      processed.description = processed.description ? this.sanitizeCanvasHtml(processed.description) : undefined;
     }
 
     return processed;
@@ -139,12 +139,6 @@ export class CanvasAssignmentService extends BaseAssignmentService implements IC
   }
 
   // Canvas-specific helper methods
-  private validateUserId(userId: string): void {
-    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-      throw new Error('Invalid user ID provided');
-    }
-  }
-
   private async validateCanvasCourseOwnership(courseId: string): Promise<void> {
     const course = await this.db.course.findFirst({
       where: { 

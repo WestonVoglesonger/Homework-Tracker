@@ -48,8 +48,17 @@ export interface UpdateAssignmentInput {
 
 export const assignmentInterface = {
   async listForUser(userId: string, filters?: { status?: AssignmentStatus; from?: string; to?: string }): Promise<AssignmentDTO[]> {
-    const { assignmentService } = await import("@/services/assignmentService");
-    const items = await assignmentService.list(userId, filters as any);
+    const { getAssignmentService } = await import("@/services/container/ServiceContainer");
+    const { testDb } = await import("@/test/db-setup");
+    const { default: prisma } = await import("@/db/client");
+    const database = testDb || prisma;
+    const assignmentService = getAssignmentService(database);
+    
+    const items = await assignmentService.listAssignments(userId, {
+      status: filters?.status,
+      from: filters?.from ? new Date(filters.from) : undefined,
+      to: filters?.to ? new Date(filters.to) : undefined,
+    });
     return items.map((a) => ({
       id: a.id,
       courseId: a.courseId ?? undefined,
@@ -69,8 +78,13 @@ export const assignmentInterface = {
     }));
   },
   async getById(userId: string, id: string): Promise<AssignmentDTO | null> {
-    const { assignmentService } = await import("@/services/assignmentService");
-    const a = await assignmentService.getById(userId, id);
+    const { getAssignmentService } = await import("@/services/container/ServiceContainer");
+    const { testDb } = await import("@/test/db-setup");
+    const { default: prisma } = await import("@/db/client");
+    const database = testDb || prisma;
+    const assignmentService = getAssignmentService(database);
+    
+    const a = await assignmentService.getAssignment(userId, id);
     if (!a) return null;
     return {
       id: a.id,
@@ -92,8 +106,25 @@ export const assignmentInterface = {
   },
 
   async create(userId: string, input: CreateAssignmentInput): Promise<AssignmentDTO> {
-    const { assignmentService } = await import("@/services/assignmentService");
-    const created = await assignmentService.create(userId, input as any);
+    const { getAssignmentService } = await import("@/services/container/ServiceContainer");
+    const { testDb } = await import("@/test/db-setup");
+    const { default: prisma } = await import("@/db/client");
+    const database = testDb || prisma;
+    const assignmentService = getAssignmentService(database);
+    
+    const created = await assignmentService.createAssignment(userId, {
+      courseId: input.courseId,
+      title: input.title,
+      description: input.description,
+      type: input.type,
+      dueAt: input.dueAt ? new Date(input.dueAt) : undefined,
+      estimatedHours: input.estimatedHours,
+      priority: input.priority,
+      notes: input.notes,
+      source: input.source,
+      canvasId: input.canvasId,
+      canvasUrl: input.canvasUrl,
+    });
     return {
       id: created.id,
       courseId: created.courseId ?? undefined,
@@ -114,8 +145,24 @@ export const assignmentInterface = {
   },
 
   async update(userId: string, id: string, patch: UpdateAssignmentInput): Promise<AssignmentDTO> {
-    const { assignmentService } = await import("@/services/assignmentService");
-    const updated = await assignmentService.update(userId, id, patch as any);
+    const { getAssignmentService } = await import("@/services/container/ServiceContainer");
+    const { testDb } = await import("@/test/db-setup");
+    const { default: prisma } = await import("@/db/client");
+    const database = testDb || prisma;
+    const assignmentService = getAssignmentService(database);
+    
+    const updated = await assignmentService.updateAssignment(userId, id, {
+      courseId: patch.courseId,
+      title: patch.title,
+      description: patch.description,
+      type: patch.type,
+      dueAt: patch.dueAt ? new Date(patch.dueAt) : undefined,
+      estimatedHours: patch.estimatedHours,
+      status: patch.status,
+      priority: patch.priority,
+      notes: patch.notes,
+      canvasUrl: patch.canvasUrl,
+    });
     return {
       id: updated.id,
       courseId: updated.courseId ?? undefined,
@@ -136,13 +183,24 @@ export const assignmentInterface = {
   },
 
   async delete(userId: string, id: string): Promise<{ ok: true }> {
-    const { assignmentService } = await import("@/services/assignmentService");
-    return assignmentService.remove(userId, id);
+    const { getAssignmentService } = await import("@/services/container/ServiceContainer");
+    const { testDb } = await import("@/test/db-setup");
+    const { default: prisma } = await import("@/db/client");
+    const database = testDb || prisma;
+    const assignmentService = getAssignmentService(database);
+    
+    await assignmentService.deleteAssignment(userId, id);
+    return { ok: true };
   },
 
   async findByUserCanvasId(userId: string, canvasId: string): Promise<AssignmentDTO | null> {
-    const { assignmentService } = await import("@/services/assignmentService");
-    const assignment = await assignmentService.getByUserCanvasId(userId, canvasId);
+    const { getAssignmentService } = await import("@/services/container/ServiceContainer");
+    const { testDb } = await import("@/test/db-setup");
+    const { default: prisma } = await import("@/db/client");
+    const database = testDb || prisma;
+    const assignmentService = getAssignmentService(database);
+    
+    const assignment = await assignmentService.getAssignmentByCanvasId(userId, canvasId);
     if (!assignment) return null;
     return {
       id: assignment.id,

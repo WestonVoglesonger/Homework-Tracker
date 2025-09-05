@@ -74,7 +74,7 @@ export class ManualAssignmentService extends BaseAssignmentService {
     
     // Sanitize HTML description if being updated
     if (processed.description !== undefined) {
-      processed.description = processed.description ? this.sanitizeHtml(processed.description) : null;
+      processed.description = processed.description ? this.sanitizeHtml(processed.description) : undefined;
     }
 
     return processed;

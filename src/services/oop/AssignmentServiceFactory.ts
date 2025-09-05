@@ -157,12 +157,6 @@ class BulkAssignmentService extends BaseAssignmentService implements IBulkAssign
 
     return { deleted: result.count };
   }
-
-  private validateUserId(userId: string): void {
-    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-      throw new Error('Invalid user ID provided');
-    }
-  }
 }
 
 /**
@@ -290,15 +284,15 @@ export class UnifiedAssignmentService implements ICompleteAssignmentService {
 
   // Canvas operations delegate to Canvas service
   async getAssignmentByCanvasId(userId: string, canvasId: string) {
-    return await this.factory.getServiceForSource('canvas').getAssignmentByCanvasId(userId, canvasId);
+    return await (this.factory.getServiceForSource('canvas') as any).getAssignmentByCanvasId(userId, canvasId);
   }
 
   async syncFromCanvas(userId: string, canvasAssignments: any[]) {
-    return await this.factory.getServiceForSource('canvas').syncFromCanvas(userId, canvasAssignments);
+    return await (this.factory.getServiceForSource('canvas') as any).syncFromCanvas(userId, canvasAssignments);
   }
 
   async importFromCanvas(userId: string, canvasAssignment: any) {
-    return await this.factory.getServiceForSource('canvas').importFromCanvas(userId, canvasAssignment);
+    return await (this.factory.getServiceForSource('canvas') as any).importFromCanvas(userId, canvasAssignment);
   }
 
   // Bulk operations delegate to bulk service
