@@ -12,8 +12,8 @@ import { useMemo, useState } from "react";
 export default function CourseDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const { data } = useAssignments();
-  const items = (data || []).filter((a) => a.courseId === id);
+  const { data } = useAssignments({ courseId: id });
+  const items = data || [];
 
   const [sort, setSort] = useState<"earliest" | "latest">("earliest");
 

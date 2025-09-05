@@ -36,6 +36,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
@@ -53,6 +55,8 @@ model User {
   assignments          Assignment[]
   errorLogs            ErrorLog[]
   adminActions         AdminAction[]
+
+  @@index([isAdmin])
 }
 
 model VerificationToken {
@@ -61,6 +65,7 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@index([expires])
 }
 
 model PasswordResetToken {
@@ -90,6 +95,7 @@ model Course {
   assignments Assignment[]
 
   @@unique([userId, canvasId])
+  @@index([userId])
 }
 
 model Assignment {
@@ -113,6 +119,10 @@ model Assignment {
   course         Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, canvasId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([dueAt])
+  @@index([status])
 }
 
 model ErrorLog {

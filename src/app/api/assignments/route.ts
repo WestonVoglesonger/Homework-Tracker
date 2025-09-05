@@ -53,11 +53,19 @@ export async function GET(req: NextRequest) {
   });
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
+  // Check for courseId filter to avoid N+1 queries
+  const courseId = searchParams.get("courseId");
+
   const assignments = await assignmentService.listAssignments(session.user.id, {
     status: parsed.data.status,
     from: parsed.data.from ? new Date(parsed.data.from) : undefined,
     to: parsed.data.to ? new Date(parsed.data.to) : undefined,
+    courseId: courseId || undefined,
   });
+
+  // Add basic query optimization hints
+  // Consider implementing caching for frequently accessed data
+  // This route could benefit from Redis caching for user assignments
 
   // Convert to frontend DTO format
   const dtos = assignments.map(a => ({

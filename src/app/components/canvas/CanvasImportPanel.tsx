@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useCanvasImport } from "@/app/hooks/useCanvasImport";
-import { CourseDTO } from "@/interfaces/course";
+import { CourseDTO } from "@/types/courses";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { toast } from "sonner";

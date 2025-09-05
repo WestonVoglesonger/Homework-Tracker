@@ -2,7 +2,7 @@
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "@components/layout/AppShell";
 import { useQuery } from "@tanstack/react-query";
-import { AssignmentDTO } from "@/interfaces/assignment";
+import { AssignmentDTO } from "@/types/assignments";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Skeleton } from "@components/ui/skeleton";

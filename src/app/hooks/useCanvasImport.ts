@@ -2,8 +2,8 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
-import { CourseDTO } from "@/interfaces/course";
-import { AssignmentDTO } from "@/interfaces/assignment";
+import { CourseDTO } from "@/types/courses";
+import { AssignmentDTO } from "@/types/assignments";
 
 async function getJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);

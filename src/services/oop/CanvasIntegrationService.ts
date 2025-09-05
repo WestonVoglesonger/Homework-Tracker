@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { BaseService } from "../base/BaseService";
-import { CanvasAssignment, CanvasCourse } from "../../interfaces/canvas";
+import { CanvasAssignment, CanvasCourse } from "../interfaces/ICanvasTypes";
 import { encryptText, decryptText } from "../../lib/crypto";
 import { ICanvasIntegrationService } from "../interfaces/ICanvasIntegrationService";
 
@@ -95,24 +95,30 @@ export class CanvasIntegrationService extends BaseService implements ICanvasInte
           { per_page: 100 }
         );
       } else {
-        // Get assignments from all courses
+        // Get assignments from all courses - optimized to avoid N+1 queries
         const courses = await this.getCourses(accessToken);
-        const allAssignments: CanvasAssignment[] = [];
-        
-        for (const course of courses) {
-          try {
-            const courseAssignments = await this.fetchCanvas<CanvasAssignment[]>(
-              `/courses/${course.id}/assignments`,
-              accessToken,
-              { per_page: 100 }
-            );
-            allAssignments.push(...courseAssignments);
-          } catch (error) {
-            // Continue with other courses if one fails
+
+        // Use Promise.allSettled to fetch assignments for all courses concurrently
+        const assignmentPromises = courses.map(course =>
+          this.fetchCanvas<CanvasAssignment[]>(
+            `/courses/${course.id}/assignments`,
+            accessToken,
+            { per_page: 100 }
+          ).catch(error => {
             console.warn(`Failed to fetch assignments for course ${course.id}:`, error);
+            return []; // Return empty array for failed requests
+          })
+        );
+
+        const results = await Promise.allSettled(assignmentPromises);
+        const allAssignments: CanvasAssignment[] = [];
+
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            allAssignments.push(...result.value);
           }
-        }
-        
+        });
+
         return allAssignments;
       }
     } catch (error: any) {

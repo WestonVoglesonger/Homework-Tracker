@@ -12,6 +12,8 @@ import { EmailService } from "../oop/EmailService";
 import { AnalyticsService } from "../oop/AnalyticsService";
 import { ErrorLogService } from "../oop/ErrorLogService";
 import { AuthenticationService } from "../oop/AuthenticationService";
+import { CacheService } from "../oop/CacheService";
+import { ICacheService } from "../interfaces/ICacheService";
 
 /**
  * Dependency Injection Container for managing service instances
@@ -33,6 +35,7 @@ export class ServiceContainer {
   private analyticsService?: AnalyticsService;
   private errorLogService?: ErrorLogService;
   private authenticationService?: AuthenticationService;
+  private cacheService?: ICacheService;
   private services: Map<string, any> = new Map();
 
   private constructor(database: PrismaClient) {
@@ -198,6 +201,16 @@ export class ServiceContainer {
   }
 
   /**
+   * Get cache service (lazy-loaded)
+   */
+  getCacheService(): ICacheService {
+    if (!this.cacheService) {
+      this.cacheService = new CacheService(this.database);
+    }
+    return this.cacheService;
+  }
+
+  /**
    * Create a scoped container for testing or isolated operations
    */
   createScope(database?: PrismaClient): ServiceContainer {
@@ -316,4 +329,11 @@ export function getErrorLogService(database?: PrismaClient): ErrorLogService {
  */
 export function getAuthenticationService(database?: PrismaClient): AuthenticationService {
   return getServiceContainer(database).getAuthenticationService();
+}
+
+/**
+ * Convenience function to get the cache service
+ */
+export function getCacheService(database?: PrismaClient): ICacheService {
+  return getServiceContainer(database).getCacheService();
 }

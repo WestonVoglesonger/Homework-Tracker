@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AssignmentRow } from '../assignments/AssignmentRow';
-import { AssignmentDTO } from '../../../interfaces/assignment';
+import { AssignmentDTO } from '@/types/assignments';
 import { testFactory } from '../../../test/factories';
 
 // Mock the hooks

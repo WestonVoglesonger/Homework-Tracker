@@ -1,4 +1,4 @@
-import { CanvasAssignment, CanvasCourse } from "../../interfaces/canvas";
+import { CanvasAssignment, CanvasCourse } from "./ICanvasTypes";
 
 /**
  * Canvas Integration Service Interface

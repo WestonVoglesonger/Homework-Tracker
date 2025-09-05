@@ -1,5 +1,5 @@
 "use client";
-import { AssignmentDTO } from "@/interfaces/assignment";
+import { AssignmentDTO } from "@/types/assignments";
 import { useUpdateAssignment, useDeleteAssignment } from "@/app/hooks/useAssignments";
 import { formatDate } from "@/lib/date";
 import { Button } from "@components/ui/button";

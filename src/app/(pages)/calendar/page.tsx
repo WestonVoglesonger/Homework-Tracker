@@ -7,7 +7,7 @@ import { format, addDays, startOfDay, isSameDay, parseISO, isToday, isPast } fro
 import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
 import { Skeleton } from "@components/ui/skeleton";
 import { AssignmentDetailDialog } from "@components/assignments/AssignmentDetailDialog";
-import { AssignmentDTO } from "@/interfaces/assignment";
+import { AssignmentDTO } from "@/types/assignments";
 import { useState } from "react";
 
 export default function CalendarPage() {

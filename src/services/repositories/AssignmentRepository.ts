@@ -20,6 +20,14 @@ export class AssignmentRepository implements ICanvasRepository<Assignment, Creat
   }
 
   async findMany(userId: string, filters: AssignmentFilters = {}): Promise<Assignment[]> {
+    return this.findManyInternal(userId, filters, false);
+  }
+
+  async findManyWithCourse(userId: string, filters: AssignmentFilters = {}): Promise<Assignment[]> {
+    return this.findManyInternal(userId, filters, true);
+  }
+
+  private async findManyInternal(userId: string, filters: AssignmentFilters = {}, includeCourse: boolean = false): Promise<Assignment[]> {
     const where: any = { userId };
 
     // Apply filters
@@ -40,7 +48,14 @@ export class AssignmentRepository implements ICanvasRepository<Assignment, Creat
       orderBy: [
         { dueAt: "asc" },
         { createdAt: "desc" }
-      ]
+      ],
+      ...(includeCourse && {
+        include: {
+          course: {
+            select: { id: true, name: true, code: true, color: true }
+          }
+        }
+      })
     });
   }
 

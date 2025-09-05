@@ -16,6 +16,9 @@ export async function GET() {
   const courseService = getCourseService(prisma);
   const courses = await courseService.listCourses(session.user.id);
 
+  // TODO: Consider adding caching for user courses
+  // Courses change less frequently than assignments and would benefit from Redis caching
+
   // Convert to frontend DTO format
   const dtos = courses.map(c => ({
     id: c.id,

@@ -1,6 +1,6 @@
 "use client";
-import { AssignmentDTO } from "@/interfaces/assignment";
-import { CourseDTO } from "@/interfaces/course";
+import { AssignmentDTO } from "@/types/assignments";
+import { CourseDTO } from "@/types/courses";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@components/ui/dialog";
 import { Badge } from "@components/ui/badge";
 import { format, parseISO, isPast } from "date-fns";
