@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getAuth } from "@/lib/auth";
-import { analyticsInterface } from "@/interfaces/analyticsInterface";
-import { errorLogInterface } from "@/interfaces/errorLogInterface";
 import { z } from "zod";
+import { getAdminService, getAnalyticsService, getErrorLogService } from "@/services/container/ServiceContainer";
+import { default as prisma } from "@/db/client";
 
 const getAnalyticsSchema = z.object({
   timeRange: z.enum(["day", "week", "month"]).default("day"),
@@ -20,11 +20,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   let session: any = null;
-  
+
   try {
     const { authOptions } = await getAuth();
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -47,21 +47,29 @@ export async function GET(req: NextRequest) {
     });
 
     if (!parsed.success) {
-      return NextResponse.json({ 
-        error: parsed.error.issues[0]?.message || "Invalid query parameters" 
+      return NextResponse.json({
+        error: parsed.error.issues[0]?.message || "Invalid query parameters"
       }, { status: 400 });
     }
 
+    // Check admin permissions
+    const adminService = getAdminService(prisma);
+    const isAdmin = await adminService.isAdmin(session.user.id);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
     const { type, timeRange, ...filters } = parsed.data;
+    const analyticsService = getAnalyticsService(prisma);
 
     let result;
-    
+
     switch (type) {
       case "dashboard":
-        result = await analyticsInterface.getDashboardMetrics(session.user.id, timeRange);
+        result = await analyticsService.getDashboardMetrics(timeRange);
         break;
       case "system":
-        result = await analyticsInterface.getSystemMetrics(session.user.id);
+        result = await analyticsService.getSystemMetrics();
         break;
       case "events":
         const eventFilters = {
@@ -69,42 +77,21 @@ export async function GET(req: NextRequest) {
           startDate: filters.startDate ? new Date(filters.startDate) : undefined,
           endDate: filters.endDate ? new Date(filters.endDate) : undefined,
         };
-        result = await analyticsInterface.getEvents(session.user.id, eventFilters);
+        result = await analyticsService.getEvents(eventFilters);
         break;
       default:
         return NextResponse.json({ error: "Invalid type parameter" }, { status: 400 });
     }
 
     // Track the API call
-    await analyticsInterface.trackEvent({
-      event: "api_call",
-      data: { endpoint: "/api/admin/analytics", method: "GET" },
-      userId: session.user.id,
-      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
-      userAgent: req.headers.get("user-agent") || undefined,
-    });
+    await analyticsService.trackUserActivity(session.user.id, "API: GET /api/admin/analytics");
 
     return NextResponse.json(result);
 
   } catch (error) {
-    // Log the error using the interface
-    await errorLogInterface.createErrorLog({
-      level: "ERROR",
-      message: (error as Error).message,
-      stack: (error as Error).stack,
-      context: {
-        userId: session?.user?.id,
-        endpoint: req.nextUrl.pathname,
-        method: req.method,
-        userAgent: req.headers.get("user-agent") || undefined,
-        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
-        additionalData: { adminOperation: true },
-      },
-    }, session?.user?.id);
-
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
-    }
+    // Log the error using OOP service
+    const errorLogService = getErrorLogService(prisma);
+    await errorLogService.logApiError("/api/admin/analytics", "GET", error as Error, session?.user?.id);
 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

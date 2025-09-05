@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { isValidOrigin, rateLimit } from "../../../lib/security";
-import { errorLogInterface } from "../../../interfaces/errorLogInterface";
+import { PrismaClient } from "@prisma/client";
+import { getErrorLogService, getAuthenticationService } from "../../../services/container/ServiceContainer";
 
 const registerSchema = z.object({
   email: z.string().email().refine(
@@ -43,14 +44,14 @@ export async function POST(req: NextRequest) {
     const { email, password, name } = parsed.data;
 
     console.log("[register API] Creating user...");
-    const { userInterface } = await import("../../../interfaces/user");
-    const user = await userInterface.register({ email, password, name });
+    const db = new PrismaClient();
+    const authService = getAuthenticationService(db);
+    const user = await authService.createAccount(email, password, name);
     console.log("[register API] User created:", user.id);
 
     // Send verification email after successful registration
     console.log("[register API] Sending verification email...");
-    const { verificationInterface } = await import("../../../interfaces/verification");
-    await verificationInterface.requestVerification(email);
+    await authService.resendVerificationEmail(email);
     console.log("[register API] Verification email process completed");
 
     const response = NextResponse.json({ id: user.id, email: user.email, name: user.name });
@@ -61,19 +62,18 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (err: any) {
     // Log the error for monitoring
-    await errorLogInterface.createErrorLog({
-      level: "ERROR",
+    const db = new PrismaClient();
+    const errorLogService = getErrorLogService(db);
+    await errorLogService.logError({
       message: err.message,
       stack: err.stack,
-      context: {
-        endpoint: req.nextUrl.pathname,
-        method: req.method,
-        userAgent: req.headers.get("user-agent") || undefined,
-        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
-        additionalData: {
-          email: body?.email,
-          registrationAttempt: true
-        },
+      path: req.nextUrl.pathname,
+      method: req.method,
+      userAgent: req.headers.get("user-agent") || undefined,
+      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+      metadata: {
+        email: body?.email,
+        registrationAttempt: true
       },
     });
 

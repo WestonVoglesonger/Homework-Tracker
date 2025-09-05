@@ -7,7 +7,11 @@ export async function POST(req: NextRequest) {
   const { getServerSession } = await import("next-auth");
   const { getAuth } = await import("../../../../lib/auth");
   const { authOptions } = await getAuth();
-  const { canvasInterface } = await import("../../../../interfaces/canvasInterface");
+  const { PrismaClient } = await import("@prisma/client");
+  const { getCanvasIntegrationService } = await import("../../../../services/container/ServiceContainer");
+
+  const db = new PrismaClient();
+  const canvasInterface = getCanvasIntegrationService(db);
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,7 +26,11 @@ export async function DELETE() {
   const { getServerSession } = await import("next-auth");
   const { getAuth } = await import("../../../../lib/auth");
   const { authOptions } = await getAuth();
-  const { canvasInterface } = await import("../../../../interfaces/canvasInterface");
+  const { PrismaClient } = await import("@prisma/client");
+  const { getCanvasIntegrationService } = await import("../../../../services/container/ServiceContainer");
+
+  const db = new PrismaClient();
+  const canvasInterface = getCanvasIntegrationService(db);
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

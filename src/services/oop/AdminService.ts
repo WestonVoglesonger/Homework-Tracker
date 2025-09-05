@@ -1,24 +1,7 @@
 import { PrismaClient, User, AdminAction } from "@prisma/client";
 import { BaseService } from "../base/BaseService";
 import { compare, hash } from "bcryptjs";
-
-export interface AdminActionData {
-  action: string;
-  targetId?: string;
-  targetType?: string;
-  data?: Record<string, any>;
-  adminId: string;
-}
-
-export interface IAdminService {
-  promoteToAdmin(userId: string, adminPassword: string, promotedBy: string): Promise<User>;
-  demoteFromAdmin(userId: string, demotedBy: string): Promise<User>;
-  isAdmin(userId: string): Promise<boolean>;
-  logAdminAction(action: AdminActionData): Promise<AdminAction>;
-  getAdminActions(adminId?: string, limit?: number): Promise<AdminAction[]>;
-  getUserAnalytics(): Promise<any>;
-  getSystemHealth(): Promise<any>;
-}
+import { IAdminService, AdminActionData } from "../interfaces/IAdminService";
 
 /**
  * Admin Service using OOP architecture
@@ -125,6 +108,23 @@ export class AdminService extends BaseService implements IAdminService {
         return false;
       }
       throw this.handleDatabaseError(error, 'Check admin status');
+    }
+  }
+
+  async getAllUsers(filters?: { isAdmin?: boolean; limit?: number; offset?: number }): Promise<User[]> {
+    try {
+      const where: any = {};
+      if (filters?.isAdmin !== undefined) {
+        where.isAdmin = filters.isAdmin;
+      }
+
+      return await this.db.user.findMany({
+        where,
+        take: filters?.limit || 50,
+        skip: filters?.offset || 0
+      });
+    } catch (error: any) {
+      throw this.handleDatabaseError(error, 'Get all users');
     }
   }
 

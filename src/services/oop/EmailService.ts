@@ -1,29 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { BaseService } from "../base/BaseService";
-
-export interface EmailTemplate {
-  subject: string;
-  html: string;
-  text: string;
-}
-
-export interface EmailOptions {
-  to: string;
-  subject?: string;
-  html?: string;
-  text?: string;
-  template?: string;
-  templateData?: Record<string, any>;
-}
-
-export interface IEmailService {
-  sendEmail(options: EmailOptions): Promise<{ success: true; messageId?: string }>;
-  sendVerificationEmail(userId: string, email: string, token: string): Promise<void>;
-  sendPasswordResetEmail(userId: string, email: string, token: string): Promise<void>;
-  sendWelcomeEmail(userId: string, email: string, name?: string): Promise<void>;
-  validateEmailAddress(email: string): boolean;
-  getEmailTemplate(templateName: string): EmailTemplate | null;
-}
+import { EmailOptions, EmailTemplate, IEmailService } from "../interfaces/IEmailService";
 
 /**
  * Email Service using OOP architecture

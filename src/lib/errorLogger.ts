@@ -1,5 +1,4 @@
-import { logApiError, logError } from "@/services/errorLogService";
-import { trackApiCall } from "@/services/analyticsService";
+import { getErrorLogService, getAnalyticsService } from "@/services/container/ServiceContainer";
 import type { NextRequest } from "next/server";
 
 // Global error handler for API routes
@@ -10,15 +9,19 @@ export async function withErrorLogging<T>(
   endpoint?: string
 ): Promise<T> {
   try {
-    // Track the API call
+    // Track the API call using OOP service
     if (endpoint) {
-      await trackApiCall(endpoint, req.method, req, userId);
+      const { default: prisma } = await import("@/db/client");
+      const analyticsService = getAnalyticsService(prisma);
+      await analyticsService.trackUserActivity(userId || 'anonymous', `API: ${req.method} ${endpoint}`);
     }
 
     return await handler();
   } catch (error) {
-    // Log the error
-    await logApiError(req, error as Error, userId);
+    // Log the error using OOP service
+    const { default: prisma } = await import("@/db/client");
+    const errorLogService = getErrorLogService(prisma);
+    await errorLogService.logApiError(endpoint || req.url, req.method, error as Error, userId);
     throw error;
   }
 }
@@ -28,19 +31,30 @@ export function setupGlobalErrorHandler() {
   if (typeof window !== "undefined") {
     // Capture unhandled promise rejections
     window.addEventListener("unhandledrejection", async (event) => {
-      await logError("ERROR", `Unhandled promise rejection: ${event.reason}`, 
-        event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
+      const { default: prisma } = await import("@/db/client");
+      const errorLogService = getErrorLogService(prisma);
+      await errorLogService.logError({
+        message: `Unhandled promise rejection: ${event.reason}`,
+        stack: event.reason instanceof Error ? event.reason.stack : undefined,
+        metadata: { type: 'unhandled_rejection' }
+      });
     });
 
     // Capture global errors
     window.addEventListener("error", async (event) => {
-      await logError("ERROR", event.message, event.error, {
-        endpoint: window.location.pathname,
-        additionalData: {
+      const { default: prisma } = await import("@/db/client");
+      const errorLogService = getErrorLogService(prisma);
+      await errorLogService.logError({
+        message: event.message,
+        stack: event.error?.stack,
+        path: window.location.pathname,
+        userAgent: navigator.userAgent,
+        metadata: {
+          type: "global_error",
           filename: event.filename,
           lineno: event.lineno,
           colno: event.colno,
-        },
+        }
       });
     });
 

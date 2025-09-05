@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { isValidOrigin, rateLimit } from "../../../../../lib/security";
+import { isValidOrigin, rateLimit } from "@/lib/security";
+import { getAuthenticationService } from "@/services/container/ServiceContainer";
+import { default as prisma } from "@/db/client";
 
 const schema = z.object({ email: z.string().email(), token: z.string().min(10) });
 
@@ -40,10 +42,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
 
-    const { verificationInterface } = await import("../../../../../interfaces/verification");
-    const ok = await verificationInterface.confirmVerification(parsed.data.email, parsed.data.token);
+    const authService = getAuthenticationService(prisma);
+    await authService.verifyEmailToken(parsed.data.token);
 
-    const response = NextResponse.json({ ok });
+    const response = NextResponse.json({ ok: true });
     response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
     response.headers.set("Pragma", "no-cache");
     response.headers.set("Expires", "0");

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getAuth } from "@/lib/auth";
-import { errorLogInterface } from "@/interfaces/errorLogInterface";
-import { analyticsInterface } from "@/interfaces/analyticsInterface";
 import { z } from "zod";
+import { getAdminService, getErrorLogService, getAnalyticsService } from "@/services/container/ServiceContainer";
+import { default as prisma } from "@/db/client";
 
 const getErrorsSchema = z.object({
   level: z.enum(["ERROR", "WARN", "INFO", "DEBUG"]).optional(),
@@ -19,13 +19,20 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   let session: any = null;
-  
+
   try {
     const { authOptions } = await getAuth();
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check admin permissions
+    const adminService = getAdminService(prisma);
+    const isAdmin = await adminService.isAdmin(session.user.id);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
     // Parse query parameters
@@ -45,49 +52,24 @@ export async function GET(req: NextRequest) {
     });
 
     if (!parsed.success) {
-      return NextResponse.json({ 
-        error: parsed.error.issues[0]?.message || "Invalid query parameters" 
+      return NextResponse.json({
+        error: parsed.error.issues[0]?.message || "Invalid query parameters"
       }, { status: 400 });
     }
 
-    const filters = {
-      ...parsed.data,
-      startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : undefined,
-      endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : undefined,
-    };
-
-    const errorLogs = await errorLogInterface.getErrorLogs(session.user.id, filters);
+    const errorLogService = getErrorLogService(prisma);
+    const errorLogs = await errorLogService.getErrorLogs(parsed.data.limit || 100, parsed.data.userId);
 
     // Track the API call
-    await analyticsInterface.trackEvent({
-      event: "api_call",
-      data: { endpoint: "/api/admin/errors", method: "GET" },
-      userId: session.user.id,
-      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
-      userAgent: req.headers.get("user-agent") || undefined,
-    });
+    const analyticsService = getAnalyticsService(prisma);
+    await analyticsService.trackUserActivity(session.user.id, "API: GET /api/admin/errors");
 
     return NextResponse.json(errorLogs);
 
   } catch (error) {
-    // Log the error using the interface
-    await errorLogInterface.createErrorLog({
-      level: "ERROR",
-      message: (error as Error).message,
-      stack: (error as Error).stack,
-      context: {
-        userId: session?.user?.id,
-        endpoint: req.nextUrl.pathname,
-        method: req.method,
-        userAgent: req.headers.get("user-agent") || undefined,
-        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
-        additionalData: { adminOperation: true },
-      },
-    }, session?.user?.id);
-
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
-    }
+    // Log the error using OOP service
+    const errorLogService = getErrorLogService(prisma);
+    await errorLogService.logApiError("/api/admin/errors", "GET", error as Error, session?.user?.id);
 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -95,29 +77,32 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   let session: any = null;
-  
+
   try {
     const { authOptions } = await getAuth();
     session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check admin permissions
+    const adminService = getAdminService(prisma);
+    const isAdmin = await adminService.isAdmin(session.user.id);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
     const body = await req.json();
     const { action, errorLogId } = body;
 
     if (action === "resolve" && errorLogId) {
-      const result = await errorLogInterface.resolveErrorLog(session.user.id, errorLogId);
-      
+      const errorLogService = getErrorLogService(prisma);
+      const result = await errorLogService.resolveErrorLog(errorLogId, session.user.id);
+
       // Track the API call
-      await analyticsInterface.trackEvent({
-        event: "api_call",
-        data: { endpoint: "/api/admin/errors", method: "POST" },
-        userId: session.user.id,
-        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
-        userAgent: req.headers.get("user-agent") || undefined,
-      });
+      const analyticsService = getAnalyticsService(prisma);
+      await analyticsService.trackUserActivity(session.user.id, "API: POST /api/admin/errors");
 
       return NextResponse.json(result);
     }
@@ -125,24 +110,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
   } catch (error) {
-    // Log the error using the interface
-    await errorLogInterface.createErrorLog({
-      level: "ERROR",
-      message: (error as Error).message,
-      stack: (error as Error).stack,
-      context: {
-        userId: session?.user?.id,
-        endpoint: req.nextUrl.pathname,
-        method: req.method,
-        userAgent: req.headers.get("user-agent") || undefined,
-        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
-        additionalData: { adminOperation: true },
-      },
-    }, session?.user?.id);
-
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
-    }
+    // Log the error using OOP service
+    const errorLogService = getErrorLogService(prisma);
+    await errorLogService.logApiError("/api/admin/errors", "POST", error as Error, session?.user?.id);
 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

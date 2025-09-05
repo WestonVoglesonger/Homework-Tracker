@@ -2,29 +2,7 @@ import { PrismaClient, User, PasswordResetToken, VerificationToken } from "@pris
 import { BaseService } from "../base/BaseService";
 import { compare, hash } from "bcryptjs";
 import { randomBytes } from "crypto";
-
-export interface IAuthenticationService {
-  // Account management
-  createAccount(email: string, password: string, name?: string): Promise<User>;
-  verifyPassword(userId: string, password: string): Promise<boolean>;
-  updatePassword(userId: string, newPassword: string, currentPassword?: string): Promise<void>;
-  deleteAccount(userId: string, password: string): Promise<void>;
-  
-  // Email verification
-  createVerificationToken(userId: string): Promise<string>;
-  verifyEmailToken(token: string): Promise<User>;
-  resendVerificationEmail(email: string): Promise<void>;
-  
-  // Password reset
-  createPasswordResetToken(email: string): Promise<string>;
-  verifyPasswordResetToken(token: string): Promise<{ userId: string; email: string }>;
-  resetPassword(token: string, newPassword: string): Promise<User>;
-  
-  // Security
-  validatePasswordStrength(password: string): { valid: boolean; errors: string[] };
-  hashPassword(password: string): Promise<string>;
-  generateSecureToken(): string;
-}
+import { IAuthenticationService } from "../interfaces/IAuthenticationService";
 
 /**
  * Authentication Service using OOP architecture
@@ -38,7 +16,7 @@ export class AuthenticationService extends BaseService implements IAuthenticatio
 
   async createAccount(email: string, password: string, name?: string): Promise<User> {
     this.validateEmail(email);
-    
+
     const passwordValidation = this.validatePasswordStrength(password);
     if (!passwordValidation.valid) {
       throw new Error(`Password validation failed: ${passwordValidation.errors.join(', ')}`);
@@ -55,7 +33,7 @@ export class AuthenticationService extends BaseService implements IAuthenticatio
 
     try {
       const hashedPassword = await this.hashPassword(password);
-      
+
       const user = await this.db.user.create({
         data: {
           email: email.toLowerCase(),
@@ -68,6 +46,18 @@ export class AuthenticationService extends BaseService implements IAuthenticatio
       return user;
     } catch (error: any) {
       throw this.handleDatabaseError(error, 'Create user account');
+    }
+  }
+
+  async findUserByEmail(email: string): Promise<User | null> {
+    this.validateEmail(email);
+
+    try {
+      return await this.db.user.findUnique({
+        where: { email: email.toLowerCase() }
+      });
+    } catch (error: any) {
+      throw this.handleDatabaseError(error, 'Find user by email');
     }
   }
 

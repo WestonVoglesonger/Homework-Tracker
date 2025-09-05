@@ -1,15 +1,6 @@
 import { PrismaClient, User } from "@prisma/client";
 import { BaseService } from "../base/BaseService";
-
-export type UserPreferences = {
-  canvasSetupDismissed: boolean;
-};
-
-export interface IUserPreferenceService {
-  get(userId: string): Promise<UserPreferences>;
-  update(userId: string, preferences: Partial<UserPreferences>): Promise<UserPreferences>;
-  reset(userId: string): Promise<UserPreferences>;
-}
+import { IUserPreferenceService, UserPreferences } from "../interfaces/IUserPreferenceService";
 
 /**
  * User Preference Service using OOP architecture

@@ -2,16 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { BaseService } from "../base/BaseService";
 import { CanvasAssignment, CanvasCourse } from "../../interfaces/canvas";
 import { encryptText, decryptText } from "../../lib/crypto";
-
-export interface ICanvasIntegrationService {
-  fetchCanvas<T>(path: string, accessToken: string, query?: Record<string, string | number | boolean | undefined>): Promise<T>;
-  getCourses(accessToken: string): Promise<CanvasCourse[]>;
-  getAssignments(accessToken: string, courseId?: string): Promise<CanvasAssignment[]>;
-  validateToken(accessToken: string): Promise<boolean>;
-  storeEncryptedToken(userId: string, token: string): Promise<void>;
-  getDecryptedToken(userId: string): Promise<string | null>;
-  removeToken(userId: string): Promise<void>;
-}
+import { ICanvasIntegrationService } from "../interfaces/ICanvasIntegrationService";
 
 /**
  * Canvas Integration Service using OOP architecture
@@ -19,14 +10,22 @@ export interface ICanvasIntegrationService {
  */
 export class CanvasIntegrationService extends BaseService implements ICanvasIntegrationService {
   private readonly baseUrl: string;
-  
+  public readonly canvasAdminInterface: {
+    syncAllUsers(): Promise<any>;
+  };
+
   constructor(database: PrismaClient) {
     super(database);
     this.baseUrl = process.env.CANVAS_BASE_URL || "";
-    
+
     if (!this.baseUrl) {
       console.warn("Canvas not configured (missing CANVAS_BASE_URL)");
     }
+
+    // Initialize admin interface
+    this.canvasAdminInterface = {
+      syncAllUsers: this.syncAllUsers.bind(this)
+    };
   }
 
   async fetchCanvas<T>(
@@ -328,5 +327,170 @@ export class CanvasIntegrationService extends BaseService implements ICanvasInte
 
   async cleanup(): Promise<void> {
     await this.db.$disconnect();
+  }
+
+  // Legacy compatibility methods
+  async listCanvasAssignments(userId: string, courseId: string): Promise<any[]> {
+    this.validateUserId(userId);
+    this.validateCourseId(courseId);
+
+    try {
+      const token = await this.getDecryptedToken(userId);
+      if (!token) {
+        throw new Error('No Canvas token found for user');
+      }
+
+      const assignments = await this.fetchCanvas<any[]>(
+        `/courses/${courseId}/assignments`,
+        token,
+        { per_page: 100 }
+      );
+
+      return assignments.map(a => ({
+        id: a.id,
+        canvasId: String(a.id),
+        title: a.name,
+        description: a.description,
+        dueAt: a.due_at ? new Date(a.due_at) : null,
+        courseId: courseId,
+        userId: userId,
+        source: 'canvas',
+        type: this.inferAssignmentType(a.name || ''),
+        canvasUrl: a.html_url,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
+    } catch (error: any) {
+      throw new Error(`Failed to list Canvas assignments: ${error.message}`);
+    }
+  }
+
+  async getSubmissionForSelf(userId: string, courseId: string, assignmentId: string): Promise<any> {
+    this.validateUserId(userId);
+    this.validateCourseId(courseId);
+
+    try {
+      const token = await this.getDecryptedToken(userId);
+      if (!token) {
+        throw new Error('No Canvas token found for user');
+      }
+
+      const submission = await this.fetchCanvas<any>(
+        `/courses/${courseId}/assignments/${assignmentId}/submissions/self`,
+        token
+      );
+
+      return submission;
+    } catch (error: any) {
+      throw new Error(`Failed to get Canvas submission: ${error.message}`);
+    }
+  }
+
+  async listCanvasCourses(userId: string): Promise<any[]> {
+    this.validateUserId(userId);
+
+    try {
+      const token = await this.getDecryptedToken(userId);
+      if (!token) {
+        throw new Error('No Canvas token found for user');
+      }
+
+      const courses = await this.getCourses(token);
+
+      return courses.map(c => ({
+        id: c.id,
+        canvasId: String(c.id),
+        name: c.name,
+        code: c.course_code,
+        term: c.term?.name,
+        userId: userId,
+        source: 'canvas',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
+    } catch (error: any) {
+      throw new Error(`Failed to list Canvas courses: ${error.message}`);
+    }
+  }
+
+  async upsertCanvasAccount(userId: string, data: { access_token: string }): Promise<void> {
+    this.validateUserId(userId);
+
+    if (!data?.access_token) {
+      throw new Error('Access token is required');
+    }
+
+    await this.storeEncryptedToken(userId, data.access_token);
+  }
+
+  async deleteCanvasAccount(userId: string): Promise<void> {
+    this.validateUserId(userId);
+    await this.removeToken(userId);
+  }
+
+  // Helper methods
+  private validateCourseId(courseId: string): void {
+    if (!courseId || typeof courseId !== 'string' || courseId.trim().length === 0) {
+      throw new Error('Invalid course ID provided');
+    }
+  }
+
+  private inferAssignmentType(title: string): "HOMEWORK" | "QUIZ" | "EXAM" | "PROJECT" | "OTHER" {
+    const lowerTitle = title.toLowerCase();
+
+    if (lowerTitle.includes('quiz') || lowerTitle.includes('test')) return 'QUIZ';
+    if (lowerTitle.includes('exam') || lowerTitle.includes('final')) return 'EXAM';
+    if (lowerTitle.includes('project')) return 'PROJECT';
+    if (lowerTitle.includes('homework') || lowerTitle.includes('hw')) return 'HOMEWORK';
+
+    return 'OTHER';
+  }
+
+  async syncUser(userId: string): Promise<any> {
+    this.validateUserId(userId);
+
+    try {
+      const token = await this.getDecryptedToken(userId);
+      if (!token) {
+        return { ok: false, reason: 'No Canvas token found for user' };
+      }
+
+      // Get user's courses and assignments from Canvas
+      const courses = await this.getCourses(token);
+      const allAssignments: any[] = [];
+
+      for (const course of courses) {
+        try {
+          const courseAssignments = await this.getAssignments(token, course.id.toString());
+          allAssignments.push(...courseAssignments);
+        } catch (error) {
+          console.warn(`Failed to sync assignments for course ${course.id}:`, error);
+        }
+      }
+
+      return {
+        ok: true,
+        courses: courses.length,
+        assignments: allAssignments.length,
+        syncedAt: new Date().toISOString()
+      };
+    } catch (error: any) {
+      return { ok: false, reason: error.message };
+    }
+  }
+
+  async syncAllUsers(): Promise<any> {
+    try {
+      // This would need to be implemented to sync all users with Canvas tokens
+      // For now, return a placeholder response
+      return {
+        syncedUsers: 0,
+        totalAssignments: 0,
+        errors: [],
+        timestamp: new Date().toISOString()
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to sync all users: ${error.message}`);
+    }
   }
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { isValidOrigin, rateLimit } from "../../../../../lib/security";
+import { isValidOrigin, rateLimit } from "@/lib/security";
+import { getAuthenticationService } from "@/services/container/ServiceContainer";
+import { default as prisma } from "@/db/client";
 
 const schema = z.object({
   email: z.string().email(),
@@ -29,8 +31,8 @@ export async function POST(req: NextRequest) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 });
 
-    const { passwordResetInterface } = await import("../../../../../interfaces/passwordReset");
-    const ok = await passwordResetInterface.resetPassword(parsed.data.email, parsed.data.token, parsed.data.newPassword);
+    const authService = getAuthenticationService(prisma);
+    await authService.resetPassword(parsed.data.token, parsed.data.newPassword);
 
     // Always 200 with generic result to avoid leaking validity
     const response = NextResponse.json({ ok: true });

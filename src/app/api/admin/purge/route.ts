@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { getAuth } from "@/lib/auth";
+import { getAdminService, getAssignmentService, getCourseService, getAnalyticsService } from "@/services/container/ServiceContainer";
+import { default as prisma } from "@/db/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
   const { authOptions } = await getAuth();
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { adminInterface } = await import("../../../../interfaces/admin");
   // Support optional target in body; default to current user
   let targetUserId: string | undefined;
   try {
@@ -19,8 +20,43 @@ export async function POST(req: NextRequest) {
   } catch {
     // ignore malformed body
   }
-  const res = await adminInterface.purgeUserData(session.user.id, targetUserId || session.user.id);
-  return NextResponse.json({ ok: true, ...res });
+
+  const finalTargetUserId = targetUserId || session.user.id;
+
+  // Check admin permissions
+  const adminService = getAdminService(prisma);
+  const isAdmin = await adminService.isAdmin(session.user.id);
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+  }
+
+  const assignmentService = getAssignmentService(prisma);
+  const courseService = getCourseService(prisma);
+  const analyticsService = getAnalyticsService(prisma);
+
+  const assignmentsResult = await assignmentService.purgeUserAssignments(finalTargetUserId);
+  const coursesResult = await courseService.purgeUserCourses(finalTargetUserId);
+
+  // Log admin action
+  await adminService.logAdminAction({
+    action: "user_data_purge",
+    targetId: finalTargetUserId,
+    targetType: "user",
+    data: {
+      assignmentsDeleted: assignmentsResult.deleted,
+      coursesDeleted: coursesResult.deleted
+    },
+    adminId: session.user.id,
+  });
+
+  // Track the API call
+  await analyticsService.trackUserActivity(session.user.id, "API: POST /api/admin/purge");
+
+  return NextResponse.json({
+    ok: true,
+    assignmentsDeleted: assignmentsResult.deleted,
+    coursesDeleted: coursesResult.deleted
+  });
 }
 
 

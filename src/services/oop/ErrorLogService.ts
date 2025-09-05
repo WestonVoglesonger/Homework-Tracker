@@ -1,29 +1,6 @@
 import { PrismaClient, ErrorLog } from "@prisma/client";
 import { BaseService } from "../base/BaseService";
-
-export interface ErrorLogData {
-  message: string;
-  stack?: string;
-  userId?: string;
-  path?: string;
-  method?: string;
-  userAgent?: string;
-  ip?: string;
-  metadata?: Record<string, any>;
-}
-
-export interface IErrorLogService {
-  logError(error: ErrorLogData): Promise<ErrorLog>;
-  getErrorLogs(limit?: number, userId?: string): Promise<ErrorLog[]>;
-  getErrorStats(days?: number): Promise<{
-    total: number;
-    byPath: Record<string, number>;
-    byUser: Record<string, number>;
-    recent: number;
-  }>;
-  clearOldLogs(daysToKeep?: number): Promise<{ deleted: number }>;
-  getErrorTrends(days?: number): Promise<Array<{ date: string; errors: number }>>;
-}
+import { IErrorLogService, ErrorLogData } from "../interfaces/IErrorLogService";
 
 /**
  * Error Log Service using OOP architecture
@@ -97,6 +74,23 @@ export class ErrorLogService extends BaseService implements IErrorLogService {
         return []; // Table doesn't exist
       }
       throw this.handleDatabaseError(error, 'Get error logs');
+    }
+  }
+
+  async resolveErrorLog(errorLogId: string, resolvedBy: string): Promise<ErrorLog> {
+    this.validateUserId(resolvedBy);
+
+    try {
+      return await this.db.errorLog.update({
+        where: { id: errorLogId },
+        data: {
+          resolved: true,
+          resolvedAt: new Date(),
+          resolvedBy: resolvedBy
+        }
+      });
+    } catch (error: any) {
+      throw this.handleDatabaseError(error, 'Resolve error log');
     }
   }
 

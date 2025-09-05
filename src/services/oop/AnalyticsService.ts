@@ -1,38 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { BaseService } from "../base/BaseService";
-
-export interface UserAnalytics {
-  totalAssignments: number;
-  completedAssignments: number;
-  overdueAssignments: number;
-  averageCompletionTime: number;
-  productivityScore: number;
-  weeklyActivity: Array<{ date: string; assignments: number }>;
-  subjectPerformance: Array<{ subject: string; completion: number; avgGrade?: number }>;
-}
-
-export interface SystemAnalytics {
-  totalUsers: number;
-  activeUsers: number;
-  totalCourses: number;
-  totalAssignments: number;
-  canvasIntegrations: number;
-  errorRate: number;
-  performanceMetrics: {
-    avgResponseTime: number;
-    successRate: number;
-    uptime: number;
-  };
-}
-
-export interface IAnalyticsService {
-  getUserAnalytics(userId: string): Promise<UserAnalytics>;
-  getSystemAnalytics(): Promise<SystemAnalytics>;
-  trackUserActivity(userId: string, activity: string, metadata?: Record<string, any>): Promise<void>;
-  getActivityTrends(userId: string, days?: number): Promise<Array<{ date: string; activity: number }>>;
-  generateUserReport(userId: string): Promise<string>;
-  generateSystemReport(): Promise<string>;
-}
+import { IAnalyticsService, SystemAnalytics, UserAnalytics } from "../interfaces/IAnalyticsService";
 
 /**
  * Analytics Service using OOP architecture
@@ -114,6 +82,22 @@ export class AnalyticsService extends BaseService implements IAnalyticsService {
     } catch (error: any) {
       throw this.handleDatabaseError(error, 'Get system analytics');
     }
+  }
+
+  async getDashboardMetrics(timeRange: "day" | "week" | "month"): Promise<SystemAnalytics> {
+    // For now, delegate to getSystemAnalytics - in a real implementation,
+    // this would filter by the timeRange
+    return this.getSystemAnalytics();
+  }
+
+  async getSystemMetrics(): Promise<SystemAnalytics> {
+    return this.getSystemAnalytics();
+  }
+
+  async getEvents(filters?: any): Promise<any[]> {
+    // In a real implementation, this would query an events/audit log table
+    // For now, return empty array
+    return [];
   }
 
   async trackUserActivity(userId: string, activity: string, metadata?: Record<string, any>): Promise<void> {

@@ -10,8 +10,12 @@ export async function POST(_req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { syncUser } = await import("@/interfaces/canvasInterface");
-  const result = await syncUser(session.user.id);
+  const { PrismaClient } = await import("@prisma/client");
+  const { getCanvasIntegrationService } = await import("../../../../../services/container/ServiceContainer");
+
+  const db = new PrismaClient();
+  const canvasService = getCanvasIntegrationService(db);
+  const result = await canvasService.syncUser(session.user.id);
   if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 401 });
   return NextResponse.json(result);
 }

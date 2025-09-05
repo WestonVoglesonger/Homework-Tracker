@@ -1,47 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { getAuth } from "@/lib/auth";
+import { updateAssignmentSchema } from "@/lib/validators";
+import { getAssignmentService } from "@/services/container/ServiceContainer";
+import { default as prisma } from "@/db/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
   const { authOptions } = await getAuth();
-  const { updateAssignmentSchema } = await import("../../../../lib/validators");
-  const { assignmentInterface } = await import("../../../../interfaces/assignment");
-
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const json = await req.json();
   const parsed = updateAssignmentSchema.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
-  const updated = await assignmentInterface.update(session.user.id, params.id, parsed.data);
-  return NextResponse.json(updated);
+
+  const assignmentService = getAssignmentService(prisma);
+  const updateData = {
+    ...parsed.data,
+    dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : undefined,
+  };
+  const updated = await assignmentService.updateAssignment(session.user.id, params.id, updateData);
+
+  // Convert to frontend DTO format
+  const dto = {
+    id: updated.id,
+    courseId: updated.courseId ?? undefined,
+    title: updated.title,
+    description: updated.description ?? undefined,
+    type: updated.type,
+    dueAt: updated.dueAt ? updated.dueAt.toISOString() : undefined,
+    estimatedHours: updated.estimatedHours ?? undefined,
+    status: updated.status,
+    priority: updated.priority,
+    notes: updated.notes ?? undefined,
+    source: updated.source ?? "manual",
+    canvasId: updated.canvasId ?? undefined,
+    canvasUrl: updated.canvasUrl ?? undefined,
+    createdAt: updated.createdAt.toISOString(),
+    updatedAt: updated.updatedAt.toISOString(),
+  };
+
+  return NextResponse.json(dto);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
   const { authOptions } = await getAuth();
-  const { assignmentInterface } = await import("../../../../interfaces/assignment");
-
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await assignmentInterface.delete(session.user.id, params.id);
+
+  const assignmentService = getAssignmentService(prisma);
+  await assignmentService.deleteAssignment(session.user.id, params.id);
   return NextResponse.json({ ok: true });
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
   const { authOptions } = await getAuth();
-  const { assignmentInterface } = await import("../../../../interfaces/assignment");
-
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const assignment = await assignmentInterface.getById(session.user.id, params.id);
+
+  const assignmentService = getAssignmentService(prisma);
+  const assignment = await assignmentService.getAssignment(session.user.id, params.id);
   if (!assignment) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(assignment);
+
+  // Convert to frontend DTO format
+  const dto = {
+    id: assignment.id,
+    courseId: assignment.courseId ?? undefined,
+    title: assignment.title,
+    description: assignment.description ?? undefined,
+    type: assignment.type,
+    dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : undefined,
+    estimatedHours: assignment.estimatedHours ?? undefined,
+    status: assignment.status,
+    priority: assignment.priority,
+    notes: assignment.notes ?? undefined,
+    source: assignment.source ?? "manual",
+    canvasId: assignment.canvasId ?? undefined,
+    canvasUrl: assignment.canvasUrl ?? undefined,
+    createdAt: assignment.createdAt.toISOString(),
+    updatedAt: assignment.updatedAt.toISOString(),
+  };
+
+  return NextResponse.json(dto);
 }
 
 
