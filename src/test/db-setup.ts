@@ -42,13 +42,32 @@ export async function setupTestDatabase(): Promise<PrismaClient> {
 
   // Run migrations on test database
   try {
-    execSync(`DATABASE_URL="postgresql://postgres:postgres@db:5432/${testDbName}" npx prisma db push`, {
+    execSync(`npx prisma migrate deploy`, {
       stdio: 'inherit',
-      env: { ...process.env, DATABASE_URL: `postgresql://postgres:postgres@db:5432/${testDbName}` }
+      env: { 
+        ...process.env, 
+        DATABASE_URL: `postgresql://postgres:postgres@db:5432/${testDbName}`,
+        POSTGRES_PRISMA_URL: `postgresql://postgres:postgres@db:5432/${testDbName}`,
+        POSTGRES_URL_NON_POOLING: `postgresql://postgres:postgres@db:5432/${testDbName}`
+      }
     });
   } catch (error) {
-    console.error('Failed to setup test database schema:', error);
-    throw error;
+    // Try prisma db push as fallback
+    console.warn('Migration deploy failed, trying db push:', error);
+    try {
+      execSync(`npx prisma db push --force-reset`, {
+        stdio: 'inherit',
+        env: { 
+          ...process.env, 
+          DATABASE_URL: `postgresql://postgres:postgres@db:5432/${testDbName}`,
+          POSTGRES_PRISMA_URL: `postgresql://postgres:postgres@db:5432/${testDbName}`,
+          POSTGRES_URL_NON_POOLING: `postgresql://postgres:postgres@db:5432/${testDbName}`
+        }
+      });
+    } catch (pushError) {
+      console.error('Failed to setup test database schema with both migrate and push:', pushError);
+      throw pushError;
+    }
   }
 
   return testDb;

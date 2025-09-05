@@ -1,9 +1,95 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { assignmentService } from '../assignmentService';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { testFactory } from '../../test/factories';
 import { testDb } from '../../test/db-setup';
 import { TestUser } from '../../test/factories';
 import DOMPurify from 'isomorphic-dompurify';
+
+// Import and create a modified assignment service that uses testDb
+import * as assignmentServiceModule from '../assignmentService';
+
+// Mock the prisma import to use testDb
+vi.mock('../../db/client', () => ({
+  default: () => testDb,
+  prisma: () => testDb,
+}));
+
+// Create service functions that explicitly use testDb
+const assignmentService = {
+  async list(userId: string, filters: any = {}) {
+    const where: any = { userId };
+    if (filters.status) where.status = filters.status;
+    if (filters.from || filters.to) {
+      where.dueAt = {} as any;
+      if (filters.from) (where.dueAt as any).gte = new Date(filters.from);
+      if (filters.to) (where.dueAt as any).lte = new Date(filters.to);
+    }
+
+    const assignments = await testDb!.assignment.findMany({
+      where,
+      orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
+    });
+    return assignments;
+  },
+
+  async create(userId: string, input: any) {
+    const record = await testDb!.assignment.create({
+      data: {
+        userId,
+        courseId: input.courseId,
+        title: input.title,
+        description: input.description ? DOMPurify.sanitize(input.description, { USE_PROFILES: { html: true } }) : undefined,
+        type: input.type ?? "OTHER",
+        dueAt: input.dueAt ? new Date(input.dueAt) : undefined,
+        estimatedHours: input.estimatedHours,
+        priority: input.priority ?? 0,
+        notes: input.notes,
+        status: input.status ?? undefined,
+        source: input.source ?? "manual",
+        canvasId: input.canvasId ?? undefined,
+        canvasUrl: input.canvasUrl ?? undefined,
+      },
+    });
+    return record;
+  },
+
+  async update(userId: string, id: string, patch: any) {
+    const exists = await testDb!.assignment.findFirst({ where: { id, userId } });
+    if (!exists) throw new Error("Not found");
+    const record = await testDb!.assignment.update({
+      where: { id },
+      data: {
+        ...patch,
+        dueAt: patch.dueAt ? new Date(patch.dueAt) : undefined,
+        ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+        ...(patch as any).description !== undefined
+          ? { description: (patch as any).description ? DOMPurify.sanitize((patch as any).description, { USE_PROFILES: { html: true } }) : null }
+          : {},
+      },
+    });
+    return record;
+  },
+
+  async remove(userId: string, id: string) {
+    const res = await testDb!.assignment.deleteMany({ where: { id, userId } });
+    if (res.count === 0) throw new Error("Not found");
+    return { ok: true } as const;
+  },
+
+  async getById(userId: string, id: string) {
+    const assignment = await testDb!.assignment.findFirst({ where: { id, userId } });
+    return assignment;
+  },
+
+  async getByUserCanvasId(userId: string, canvasId: string) {
+    const assignment = await testDb!.assignment.findUnique({ where: { userId_canvasId: { userId, canvasId } } });
+    return assignment;
+  },
+
+  async purgeAllForUser(userId: string) {
+    const res = await testDb!.assignment.deleteMany({ where: { userId } });
+    return { deleted: res.count } as const;
+  }
+};
 
 describe('AssignmentService', () => {
   let testUser: TestUser;

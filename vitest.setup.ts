@@ -1,7 +1,7 @@
 import React from "react";
 import { vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 import "@testing-library/jest-dom";
-import { setupTestDatabase, cleanupTestDatabase, resetTestDatabase } from "./src/test/db-setup";
+import { setupTestDatabase, cleanupTestDatabase, resetTestDatabase, testDb } from "./src/test/db-setup";
 
 // Mock Next.js modules
 vi.mock("next/router", () => ({
@@ -90,6 +90,8 @@ vi.mock("@vercel/analytics/react", () => ({
   Analytics: () => null,
   track: vi.fn(),
 }));
+
+// Prisma client mocking is handled in individual test files
 
 // Mock crypto for consistent test runs
 Object.defineProperty(global, 'crypto', {
