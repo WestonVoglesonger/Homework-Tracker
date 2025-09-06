@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    typedRoutes: true
+    typedRoutes: false
+  },
+  async redirects() {
+    return [
+      { source: "/data", destination: "/settings#data", permanent: true },
+    ];
   },
   async headers() {
     const headers = [];

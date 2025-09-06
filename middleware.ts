@@ -1,3 +1,26 @@
+import { withAuth } from "next-auth/middleware";
+
+export default withAuth({
+  pages: { signIn: "/auth/signin" },
+  callbacks: {
+    authorized: ({ token }) => {
+      // Only allow if a valid JWT exists
+      return Boolean(token?.sub);
+    },
+  },
+});
+
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    "/courses/:path*",
+    "/calendar/:path*",
+    "/settings/:path*",
+    "/admin/:path*",
+    "/assignments/:path*",
+  ],
+};
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -60,10 +83,3 @@ export async function middleware(req: NextRequest) {
   
   return response;
 }
-
-export const config = {
-  matcher: ["/dashboard/:path*", "/courses/:path*", "/calendar/:path*", "/settings/:path*", "/admin/:path*", "/api/:path*"],
-};
-
-
-

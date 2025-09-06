@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Spinner } from "@components/ui/spinner";
 import CanvasImportPanel from "@components/canvas/CanvasImportPanel";
 import DangerZone from "@components/settings/DangerZone";
+import Link from "next/link";
+import { Download } from "lucide-react";
 
 import { toast } from "sonner";
 import { CanvasSetupWizard } from "@/app/components/canvas/CanvasSetupWizard";
@@ -16,19 +18,25 @@ export default function SettingsPage() {
   const { listCanvasCourses } = useCanvasImport();
   const [connected, setConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [lastExport, setLastExport] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [highlightImport, setHighlightImport] = useState(false);
   useEffect(() => {
+    let mounted = true;
     listCanvasCourses()
       .then((d) => {
+        if (!mounted) return;
         setConnected(Array.isArray(d));
         setLoading(false);
       })
       .catch(() => {
+        if (!mounted) return;
         setConnected(false);
         setLoading(false);
       });
-  }, []);
+    return () => { mounted = false; };
+  }, [listCanvasCourses]);
 
   // Check for canvas-import URL parameter
   useEffect(() => {
@@ -53,6 +61,32 @@ export default function SettingsPage() {
     listCanvasCourses()
       .then((d) => setConnected(Array.isArray(d)))
       .catch(() => setConnected(false));
+  };
+
+  const handleExportData = async () => {
+    setExportLoading(true);
+    try {
+      const res = await fetch("/api/user/data/export");
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `duenorth-data-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success("Data exported successfully");
+        setLastExport(new Date().toISOString());
+      } else {
+        toast.error("Failed to export data");
+      }
+    } catch {
+      toast.error("An error occurred while exporting data");
+    } finally {
+      setExportLoading(false);
+    }
   };
   return (
     <AppShell>
@@ -139,6 +173,62 @@ export default function SettingsPage() {
             <CanvasImportPanel />
           </div>
         )}
+
+        {/* Your Data (export, retention info) */}
+        <div id="data" />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download size={20} />
+              Export Your Data
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-700 dark:text-gray-300">
+              Download a copy of your DueNorth data, including courses, assignments, and account information.
+            </p>
+            {lastExport && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Last exported: {new Date(lastExport).toLocaleDateString()}
+              </div>
+            )}
+            <Button onClick={handleExportData} disabled={exportLoading} className="w-full sm:w-auto">
+              {exportLoading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner size={16} /> Exporting...
+                </span>
+              ) : (
+                "Export Data"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Data Retention & Security</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-gray-700 dark:text-gray-300">
+            <div>
+              <h4 className="font-medium mb-1">Immediate Deletion</h4>
+              <p className="text-sm">Account data and Canvas tokens are removed instantly</p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-1">Backup Purging</h4>
+              <p className="text-sm">Automated backups are permanently deleted within 30 days</p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-1">Audit Logs</h4>
+              <p className="text-sm">Minimal security logs retained for 90 days, then automatically deleted</p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-1">Security Measures</h4>
+              <p className="text-sm">All data encrypted at rest, secure transmission, regular security audits</p>
+            </div>
+            <div className="pt-2 text-sm">
+              Questions? <Link href="mailto:westonvogle@duenorthapp.com" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Contact westonvogle@duenorthapp.com</Link>
+            </div>
+          </CardContent>
+        </Card>
         <DangerZone />
       </div>
 

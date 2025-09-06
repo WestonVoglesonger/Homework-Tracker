@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    if (!isValidOrigin(req as any)) return NextResponse.json({ ok: false }, { status: 400 });
+    if (!isValidOrigin(req as unknown as Request)) return NextResponse.json({ ok: false }, { status: 400 });
     const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "")
       .split(",")[0]
       .trim() || "unknown";
@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
     const { passwordResetInterface } = await import("../../../../../interfaces/passwordReset");
     const ok = await passwordResetInterface.resetPassword(parsed.data.email, parsed.data.token, parsed.data.newPassword);
 
-    // Always 200 with generic result to avoid leaking validity
-    const response = NextResponse.json({ ok: true });
+    // 200 with boolean result; client shows generic message on failure
+    const response = NextResponse.json({ ok });
     // Ensure no caching for password reset responses
     response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
     response.headers.set("Pragma", "no-cache");

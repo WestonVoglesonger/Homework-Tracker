@@ -15,17 +15,27 @@ const registerSchema = z.object({
     .regex(/[A-Z]/, "Password must include an uppercase letter")
     .regex(/[0-9]/, "Password must include a number"),
   name: z.string().max(100).optional(),
+  termsAccepted: z.literal(true, { errorMap: () => ({ message: "You must accept the Terms of Service" }) }),
+  privacyAccepted: z.literal(true, { errorMap: () => ({ message: "You must acknowledge the Privacy Policy" }) }),
 });
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type RegisterBody = {
+  email: string;
+  password: string;
+  name?: string;
+  termsAccepted: true;
+  privacyAccepted: true;
+};
+
 export async function POST(req: NextRequest) {
-  let body: any = null;
+  let body: RegisterBody | null = null;
 
   try {
     // Origin validation
-    if (!isValidOrigin(req as any)) return NextResponse.json({ error: "Invalid origin" }, { status: 400 });
+    if (!isValidOrigin(req as unknown as Request)) return NextResponse.json({ error: "Invalid origin" }, { status: 400 });
 
     const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "")
       .split(",")[0]
@@ -35,7 +45,7 @@ export async function POST(req: NextRequest) {
     const ok = await rateLimit(`register:${ip}`);
     if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
-    body = await req.json();
+    body = (await req.json()) as RegisterBody;
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid input" }, { status: 400 });
@@ -44,7 +54,14 @@ export async function POST(req: NextRequest) {
 
     console.log("[register API] Creating user...");
     const { userInterface } = await import("../../../interfaces/user");
-    const user = await userInterface.register({ email, password, name });
+    const now = new Date();
+    const user = await userInterface.register({
+      email,
+      password,
+      name,
+      termsAcceptedAt: now,
+      privacyAcceptedAt: now,
+    });
     console.log("[register API] User created:", user.id);
 
     // Send verification email after successful registration
@@ -59,12 +76,12 @@ export async function POST(req: NextRequest) {
     response.headers.set("Pragma", "no-cache");
     response.headers.set("Expires", "0");
     return response;
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Log the error for monitoring
     await errorLogInterface.createErrorLog({
       level: "ERROR",
-      message: err.message,
-      stack: err.stack,
+      message: err instanceof Error ? err.message : "Unknown error",
+      stack: err instanceof Error ? err.stack : undefined,
       context: {
         endpoint: req.nextUrl.pathname,
         method: req.method,
@@ -81,10 +98,10 @@ export async function POST(req: NextRequest) {
     let errorMessage = "Invalid request";
     let statusCode = 400;
 
-    if (err?.code === "EMAIL_EXISTS" || err?.message?.toLowerCase().includes("email already registered")) {
+    if (err && typeof err === "object" && 'code' in err && (err as { code?: string }).code === "EMAIL_EXISTS") {
       errorMessage = "An account with this email already exists";
       statusCode = 409; // Conflict
-    } else if (err?.message) {
+    } else if (err instanceof Error && err.message) {
       const message = err.message.toLowerCase();
 
       if (message.includes("password")) {

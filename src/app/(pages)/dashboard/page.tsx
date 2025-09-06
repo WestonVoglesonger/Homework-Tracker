@@ -7,16 +7,15 @@ import { normalizeStatus } from "@/lib/status";
 import { AssignmentRow } from "@components/assignments/AssignmentRow";
 import EmptyState from "@components/common/EmptyState";
 import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
+import type { AssignmentDTO } from "@/interfaces/assignment";
 import { Skeleton } from "@components/ui/skeleton";
 import { Button } from "@components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   useEnsureCanvasCoursesPrefetched();
   const { data: assignments, isLoading, refetch } = useAssignments();
-  const router = useRouter();
   const nowTs = Date.now();
 
   // State for refresh functionality
@@ -70,7 +69,7 @@ export default function DashboardPage() {
       return ts >= nowTs && ts < cutoffTs && st === "NOT_SUBMITTED";
     })
     .sort((a, b) => Date.parse(a.dueAt as string) - Date.parse(b.dueAt as string));
-  const groups = { overdue, upcoming } as Record<string, any[]>;
+  const groups: Record<string, AssignmentDTO[]> = { overdue, upcoming };
   
   const totalAssignments = assignments?.length || 0;
   const completedAssignments = assignments?.filter(a => a.status === "GRADED").length || 0;
@@ -99,7 +98,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-10 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6 overflow-hidden">
         {/* Header Section with more breathing room */}
         <div className="text-center lg:text-left">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -222,13 +221,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Assignment Groups with better spacing */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 overflow-hidden">
           {sections.map((s) => (
             <Card 
               key={s.key} 
               className={`assignment-card ${s.cardClass} ${s.bgColor} ${s.borderColor} border-2 hover:shadow-lg transition-all duration-300`}
             >
-              <CardHeader className="pb-6">
+              <CardHeader className="pb-4">
                 <CardTitle className="flex items-center justify-between">
                   <span className={`text-2xl font-bold ${s.color}`}>{s.title}</span>
                   <span className={`px-4 py-2 rounded-full ${s.badgeColor} ${s.color} border ${s.borderColor} font-bold text-lg min-w-[3rem] text-center shadow-sm`}>
@@ -236,7 +235,7 @@ export default function DashboardPage() {
                   </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 pb-2">
                 {isLoading ? (
                   <div className="space-y-4">
                     <Skeleton className="h-24" />
@@ -248,7 +247,7 @@ export default function DashboardPage() {
                     <EmptyState title={`No ${s.key} assignments`} />
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-2 max-h-[16rem] overflow-y-auto">
                     {groups[s.key].map((a) => (
                       <AssignmentRow key={a.id} a={a} />
                     ))}
