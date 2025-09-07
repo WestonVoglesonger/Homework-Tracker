@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6 overflow-hidden">
+      <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6 overflow-visible">
         {/* Header Section with centralized navigation */}
         <PageHeader
           title="Dashboard"
@@ -193,7 +193,7 @@ export default function DashboardPage() {
         </StatCardsGrid>
 
         {/* Assignment Groups with better spacing */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 overflow-visible">
           {sections.map((s) => (
             <Card 
               key={s.key} 
@@ -219,7 +219,7 @@ export default function DashboardPage() {
                     <NoAssignmentsEmptyState title={`No ${s.key} assignments`} showCanvasCta={false} />
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[16rem] overflow-y-auto">
+                  <div className="space-y-2 max-h-[22rem] md:max-h-[26rem] overflow-y-auto">
                     {groups[s.key].map((a) => (
                       <AssignmentRow key={a.id} a={a} />
                     ))}

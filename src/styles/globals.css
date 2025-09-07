@@ -78,6 +78,8 @@
   
   .assignment-card:hover {
     @apply shadow-xl shadow-gray-300/60 dark:shadow-gray-800/60 -translate-y-1;
+    transform: translateY(-0.25rem);
+    will-change: transform;
   }
   
   .overdue-card {
