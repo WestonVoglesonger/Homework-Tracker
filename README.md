@@ -81,12 +81,12 @@ pnpm dev
    ```json
    {
      "crons": [
-       { "path": "/api/canvas/sync", "schedule": "*/30 * * * *" }
+       { "path": "/api/canvas/sync", "schedule": "0 */3 * * *" }
      ]
    }
    ```
 
-Vercel will GET `/api/canvas/sync` every 30 minutes and include `Authorization: Bearer ${CRON_SECRET}`. The route validates this header.
+Vercel will GET `/api/canvas/sync` every 3 hours and include `Authorization: Bearer ${CRON_SECRET}`. The route validates this header.
 
 ## Dev Container
 

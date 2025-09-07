@@ -12,6 +12,10 @@ export interface CanvasAssignment {
   description?: string | null;
   html_url?: string | null;
   points_possible?: number | null;
+  // When requested with include[]=submission&student_ids[]=self
+  submission?: {
+    workflow_state?: string | null; // e.g., "submitted", "graded", etc.
+  } | null;
 }
 
 

@@ -73,8 +73,16 @@ export async function listCanvasCourses(accessToken: string) {
 export async function listCanvasAssignments(accessToken: string, courseId: string) {
   const items = await fetchCanvas<CanvasAssignment[]>(`/courses/${courseId}/assignments`, accessToken, {
     per_page: 100,
+    include: "submission",
+    student_ids: "self",
   });
-  return items.map((a) => mapCanvasAssignmentToDTO(a, courseId));
+  return items.map((a) => {
+    const dto = mapCanvasAssignmentToDTO(a, courseId);
+    // Map inline submission status if present
+    const wf = a.submission?.workflow_state;
+    const status = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : "NOT_SUBMITTED";
+    return { ...dto, status };
+  });
 }
 
 export type CanvasSubmission = {
@@ -87,6 +95,7 @@ export type CanvasSubmission = {
 };
 
 export async function getSubmissionForSelf(accessToken: string, courseId: string, assignmentId: string) {
+  // Inline submissions are fetched with assignments; keep this as a fallback if needed
   const submission = await fetchCanvas<CanvasSubmission>(
     `/courses/${courseId}/assignments/${assignmentId}/submissions/self`,
     accessToken

@@ -132,11 +132,9 @@ export default function DashboardPage() {
                  <RefreshCw className="h-4 w-4" />
                  Sync Canvas
                </LoadingButton>
-              {lastSyncTime && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Last synced: {lastSyncTime.toLocaleString()}
-                </p>
-              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Last synced: {lastSyncTime ? lastSyncTime.toLocaleString() : 'Not yet'}
+              </p>
               {syncMessage && (
                 <p className={`text-sm ${syncMessage.startsWith('✅') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {syncMessage}

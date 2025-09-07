@@ -130,14 +130,11 @@ export const canvasAdminInterface = {
             for (const canvasAssignment of canvasAssignments) {
               try {
                 const existing = await assignmentInterface.findByUserCanvasId(account.userId, canvasAssignment.canvasId!);
-                try {
-                  const submission = await canvasService.getSubmissionForSelf(account.access_token, canvasCourse.canvasId!, canvasAssignment.canvasId!);
-                  const wf = submission?.workflow_state;
-                  const newStatus = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : undefined;
-                  if (existing && newStatus && existing.status !== newStatus) {
-                    await assignmentInterface.update(account.userId, existing.id, { status: newStatus });
-                  }
-                } catch {}
+                // Status is already included via include=submission; only update if it changed
+                const newStatus = canvasAssignment.status as any;
+                if (existing && newStatus && existing.status !== newStatus) {
+                  await assignmentInterface.update(account.userId, existing.id, { status: newStatus });
+                }
                 if (existing) {
                   await assignmentInterface.update(account.userId, existing.id, {
                     title: canvasAssignment.title,
