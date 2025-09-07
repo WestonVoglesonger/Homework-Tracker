@@ -37,4 +37,37 @@ describe("getSignInErrorMessage", () => {
   });
 });
 
+// Test for email domain validation
+describe("Email Domain Validation", () => {
+  const { z } = require("zod");
+
+  const emailSchema = z.string()
+    .email()
+    .refine((email) => !email.toLowerCase().endsWith('.edu'), {
+      message: "Educational email addresses (.edu) are not allowed at this time. Please use a personal email address."
+    });
+
+  it("accepts personal email addresses", () => {
+    expect(() => emailSchema.parse("user@gmail.com")).not.toThrow();
+    expect(() => emailSchema.parse("john.doe@outlook.com")).not.toThrow();
+    expect(() => emailSchema.parse("test@protonmail.com")).not.toThrow();
+  });
+
+  it("rejects educational email addresses", () => {
+    expect(() => emailSchema.parse("student@university.edu")).toThrow();
+    expect(() => emailSchema.parse("professor@college.edu")).toThrow();
+    expect(() => emailSchema.parse("admin@school.edu")).toThrow();
+  });
+
+  it("rejects invalid email formats", () => {
+    expect(() => emailSchema.parse("invalid-email")).toThrow();
+    expect(() => emailSchema.parse("")).toThrow();
+  });
+
+  it("handles case insensitive .edu detection", () => {
+    expect(() => emailSchema.parse("student@UNIVERSITY.EDU")).toThrow();
+    expect(() => emailSchema.parse("student@university.Edu")).toThrow();
+  });
+});
+
 

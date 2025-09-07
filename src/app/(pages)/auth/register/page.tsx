@@ -24,6 +24,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [confirmedAge, setConfirmedAge] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
   const [checkingLimit, setCheckingLimit] = useState(true);
 
@@ -65,12 +66,17 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!confirmedAge) {
+      setError("You must confirm you are at least 13 years old.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, termsAccepted: true, privacyAccepted: true }),
+        body: JSON.stringify({ email, password, name, termsAccepted: true, privacyAccepted: true, ageConfirmed: true }),
       });
       const bodyText = await res.text();
       let data: RegisterResponse | null = null;
@@ -147,6 +153,9 @@ export default function RegisterPage() {
                 className={`w-full border rounded p-2 ${emailError ? 'border-red-500' : ''}`}
                 required
               />
+              <div className="text-xs text-gray-600 mt-1">
+                Personal email addresses only. Educational emails (.edu) are not allowed at this time.
+              </div>
               {emailError && <div className="text-sm text-red-600">{emailError}</div>}
             </div>
             <div className="space-y-1">
@@ -197,7 +206,7 @@ export default function RegisterPage() {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="prose max-h-[60vh] overflow-y-auto text-sm">
-                        <p>We collect only what’s necessary to operate DueNorth (like account info and coursework metadata), retain it for limited periods, and never sell your data. You can export or delete your data anytime from Settings.</p>
+                        <p>We collect only what&apos;s necessary to operate DueNorth (like account info and coursework metadata), retain it for limited periods, and never sell your data. You can export or delete your data anytime from Settings.</p>
                         <p>See the full policy at <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">/privacy</a>.</p>
                       </div>
                     </DialogContent>
@@ -207,7 +216,23 @@ export default function RegisterPage() {
               </label>
             </div>
 
-            <button type="submit" disabled={loading || !!emailError || !accepted} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
+            {/* Age verification for educational context */}
+            <div className="space-y-2">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={confirmedAge}
+                  onChange={(e) => setConfirmedAge(e.target.checked)}
+                  className="mt-0.5"
+                  required
+                />
+                <span>
+                  I confirm I am at least 13 years old and understand this service is designed for students managing their coursework.
+                </span>
+              </label>
+            </div>
+
+            <button type="submit" disabled={loading || !!emailError || !accepted || !confirmedAge} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
               {loading ? (
                 <span className="inline-flex items-center gap-2">
                   <Spinner size={16} />
