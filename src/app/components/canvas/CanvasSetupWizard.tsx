@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -98,43 +97,12 @@ const setupSteps: SetupStep[] = [
 ];
 
 export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWizardProps) {
-  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [token, setToken] = useState("");
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState("");
   const [dontShowAgain, setDontShowAgain] = useState(false);
-  const [intendedDestination, setIntendedDestination] = useState<string | null>(null);
 
-  // Check for redirect destination on component mount
-  useEffect(() => {
-    if (isOpen) {
-      // Check URL parameters for redirect destination
-      const redirectTo = searchParams.get('redirect') || searchParams.get('from');
-      if (redirectTo && redirectTo !== '/' && redirectTo !== '/auth/signin') {
-        setIntendedDestination(redirectTo);
-      } else {
-        // Check localStorage for stored destination
-        const storedDestination = localStorage.getItem('canvasSetupRedirect');
-        if (storedDestination) {
-          setIntendedDestination(storedDestination);
-          localStorage.removeItem('canvasSetupRedirect'); // Clear it after use
-        } else {
-          // Check cookies for stored destination (fallback)
-          const cookieDestination = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('canvasSetupRedirect='))
-            ?.split('=')[1];
-
-          if (cookieDestination && cookieDestination !== '/' && !cookieDestination.startsWith('/auth/')) {
-            setIntendedDestination(decodeURIComponent(cookieDestination));
-            // Clear the cookie
-            document.cookie = 'canvasSetupRedirect=; path=/; max-age=0';
-          }
-        }
-      }
-    }
-  }, [isOpen, searchParams]);
 
   const isTokenStep = currentStep === setupSteps.length - 1;
   const isLastStep = currentStep === setupSteps.length;
@@ -410,9 +378,8 @@ export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWiz
                         toast.success("Canvas connected! Redirecting...");
                         onSuccess();
                         setTimeout(() => {
-                          // Redirect to intended destination or settings using hard redirect for reliability
-                          const destination = intendedDestination || "/settings?canvas-import=true";
-                          window.location.href = destination;
+                          // Always redirect to settings page after Canvas setup completion
+                          window.location.href = "/settings?canvas-import=true";
                         }, 500);
                       } else {
                         const error = await res.text();
