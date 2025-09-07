@@ -10,6 +10,12 @@ export type SignInErrorCode =
 
 export function getSignInErrorMessage(code?: string | null): string {
   const normalized = (code || "").trim();
+  const lower = normalized.toLowerCase();
+
+  // Handle wrapped/opaque errors coming from auth callbacks
+  if (lower.includes("invalidpassword")) return "Incorrect email or password.";
+  if (lower.includes("emailnotverified")) return "Please verify your email before signing in.";
+  if (lower.includes("usernotfound")) return "No account found for that email. Please register first.";
   switch (normalized) {
     case "MissingCredentials":
       return "Please enter your email and password.";
@@ -22,6 +28,8 @@ export function getSignInErrorMessage(code?: string | null): string {
     case "OAuthAccountNotLinked":
       return "This email is linked to a different sign-in method.";
     case "CredentialsSignin":
+      return "Sign in failed. Check your credentials.";
+    case "CallbackRouteError":
       return "Sign in failed. Check your credentials.";
     case "TooManyRequests":
       return "Too many attempts. Please try again later.";

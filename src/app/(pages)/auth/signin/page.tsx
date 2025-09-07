@@ -24,6 +24,7 @@ export default function SignInPage() {
       if (code.startsWith("Error:")) {
         code = code.replace(/^Error:\\s*/, "");
       }
+      // If callback wraps codes (e.g., CallbackRouteError), we still map via getSignInErrorMessage
       setError(getSignInErrorMessage(code));
     } else if (res?.ok) {
       window.location.href = "/dashboard";
