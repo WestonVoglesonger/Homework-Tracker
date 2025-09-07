@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { CanvasSetupWizard } from "@/app/components/canvas/CanvasSetupWizard";
 
 export function CanvasSetupGate() {
   const { status } = useSession();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const check = async () => {
+  const check = useCallback(async () => {
     setLoading(true);
     try {
       const [prefsRes, canvasRes] = await Promise.all([
@@ -21,6 +23,10 @@ export function CanvasSetupGate() {
       const canvasConnected = canvasRes.ok;
 
       if (!canvasConnected && !prefs.canvasSetupDismissed) {
+        // Store current location for redirect after setup
+        if (pathname && pathname !== '/' && !pathname.startsWith('/auth/')) {
+          localStorage.setItem('canvasSetupRedirect', pathname);
+        }
         setOpen(true);
       }
     } catch {
@@ -28,13 +34,13 @@ export function CanvasSetupGate() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pathname]);
 
   useEffect(() => {
     if (status === "authenticated") {
       check();
     }
-  }, [status]);
+  }, [status, pathname, check]);
 
   if (loading) return null;
 

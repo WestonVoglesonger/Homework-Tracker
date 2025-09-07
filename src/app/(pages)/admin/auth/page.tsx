@@ -45,7 +45,11 @@ export default function AdminAuthPage() {
     e.preventDefault();
     
     try {
-      await promoteToAdmin(formData);
+      await promoteToAdmin({
+        email: formData.email.trim(),
+        password: formData.password.trim(),
+        adminPassword: formData.adminPassword.trim(),
+      });
       toast.success("Successfully promoted to admin!");
       // The useEffect will handle the redirect when isAdmin becomes true
     } catch (error) {

@@ -120,6 +120,88 @@ export const adminInterface = {
   async isUserAdmin(userId: string): Promise<boolean> {
     return await adminService.isAdmin(userId);
   },
+
+  async getWaitlistUsers(adminUserId: string, filters?: {
+    converted?: boolean;
+    limit?: number;
+    offset?: number;
+  }) {
+    const isAdmin = await adminService.isAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    const { waitlistInterface } = await import("../interfaces/waitlist");
+    return await waitlistInterface.getWaitlistEntries(adminUserId, filters);
+  },
+
+  async getWaitlistStats(adminUserId: string) {
+    const isAdmin = await adminService.isAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    const { waitlistInterface } = await import("../interfaces/waitlist");
+    return await waitlistInterface.getWaitlistStats(adminUserId);
+  },
+
+  async convertWaitlistUser(adminUserId: string, waitlistId: string) {
+    const isAdmin = await adminService.isAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    const { waitlistInterface } = await import("../interfaces/waitlist");
+    return await waitlistInterface.convertToFullUser(adminUserId, waitlistId);
+  },
+
+  async convertAllWaitlistUsers(adminUserId: string) {
+    const isAdmin = await adminService.isAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    const { waitlistInterface } = await import("../interfaces/waitlist");
+    return await waitlistInterface.convertAllToFullUsers(adminUserId);
+  },
+
+  async getSystemSettings(adminUserId: string) {
+    const isAdmin = await adminService.isAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    const { waitlistService } = await import("../services/waitlistService");
+    const maxUsers = await waitlistService.getMaxUserLimit();
+    const currentUsers = await waitlistService.getTotalUserCount();
+
+    return {
+      maxUsers,
+      currentUsers,
+      canIncrease: true,
+      minAllowed: currentUsers
+    };
+  },
+
+  async updateSystemSettings(adminUserId: string, settings: { maxUsers: number }) {
+    const isAdmin = await adminService.isAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    const { waitlistService } = await import("../services/waitlistService");
+    await waitlistService.setMaxUserLimit(settings.maxUsers, adminUserId);
+
+    // Log admin action
+    await adminService.logAdminAction({
+      action: "settings_update",
+      targetType: "system",
+      data: { setting: "max_users", newValue: settings.maxUsers.toString() },
+      adminId: adminUserId,
+    });
+
+    return { success: true, maxUsers: settings.maxUsers };
+  },
 };
 
 

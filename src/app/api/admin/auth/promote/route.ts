@@ -32,9 +32,8 @@ export async function POST(req: NextRequest) {
     const { authOptions } = await getAuth();
     session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Do not hard-reject when there's no session. We'll rely on provided
+    // email/password to prove identity for self-promotion path.
 
     // Parse request body
     const body = await req.json();
@@ -48,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const { email, password, adminPassword } = parsed.data;
 
-    // Verify user credentials
+    // Verify user credentials (case-insensitive email)
     const user = await userInterface.findByEmail(email);
     
     if (!user || !user.passwordHash) {
@@ -57,14 +56,17 @@ export async function POST(req: NextRequest) {
 
     // Verify password
     const { compare } = await import("bcryptjs");
-    const validPassword = await compare(password, user.passwordHash);
+    // Defensive trims to avoid accidental whitespace issues from input fields
+    const validPassword = await compare(password.trim(), user.passwordHash);
     
     if (!validPassword) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid account credentials" }, { status: 401 });
     }
 
-    // Check if user is trying to promote themselves
-    if (session.user.id !== user.id) {
+    // Determine current user id: prefer session, fallback to verified account
+    const currentUserId = session?.user?.id || user.id;
+    // If session exists and does not match supplied account, block
+    if (session?.user?.id && session.user.id !== user.id) {
       return NextResponse.json({ 
         error: "You can only promote your own account" 
       }, { status: 403 });
@@ -72,9 +74,9 @@ export async function POST(req: NextRequest) {
 
     // Promote to admin
     const updatedUser = await adminInterface.promoteUserToAdmin(
-      session.user.id,
+      currentUserId,
       user.id,
-      adminPassword
+      adminPassword.trim()
     );
 
     // Track the event

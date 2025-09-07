@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,16 +15,38 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
+  const [checkingLimit, setCheckingLimit] = useState(true);
+
+  // Check user limit on component mount
+  useEffect(() => {
+    const checkUserLimit = async () => {
+      try {
+        const res = await fetch("/api/user-limit", { cache: "no-store" });
+        const data = await res.json();
+        setLimitReached(Boolean(data.limitReached));
+      } catch (error) {
+        console.error("Failed to check user limit:", error);
+        // Default to allowing registration if check fails
+        setLimitReached(false);
+      } finally {
+        setCheckingLimit(false);
+      }
+    };
+
+    checkUserLimit();
+  }, []);
 
   // Validate email for .edu restriction
   const validateEmail = (emailValue: string) => {
-    if (emailValue.toLowerCase().includes('.edu')) {
-      setEmailError("Personal email addresses only, .edu emails are not allowed.");
-      return false;
-    } else {
-      setEmailError(null);
-      return true;
-    }
+    // if (emailValue.toLowerCase().includes('.edu')) {
+    //   setEmailError("Personal email addresses only, .edu emails are not allowed.");
+    //   return false;
+    // } else {
+    //   setEmailError(null);
+    //   return true;
+    // }
+    return true;
   };
 
   // Handle email input change
@@ -66,13 +88,48 @@ export default function RegisterPage() {
         if (!res.ok) throw new Error(bodyText?.slice(0, 200) || "Failed to register");
       }
       if (!res.ok) throw new Error(data?.error || "Failed to register");
-      // Redirect to verification sent page
-      router.push("/auth/verify/sent");
+
+      // Check if user was added to waitlist
+      if (data.waitlisted) {
+        // Redirect to waitlist confirmation page
+        router.push("/auth/waitlist/confirmation");
+      } else {
+        // Normal registration flow
+        router.push("/auth/verify/sent");
+      }
     } catch (err: any) {
       setError(err.message || "Failed to register");
     } finally {
       setLoading(false);
     }
+  }
+
+  // Show loading state while checking limit
+  if (checkingLimit) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-md w-full space-y-6">
+            <div className="text-center">
+              <Image
+                src="/logo/due-north-logo.png"
+                alt="DueNorth Logo"
+                width={80}
+                height={80}
+                className="mx-auto w-20 h-20 mb-4"
+                priority
+              />
+            </div>
+            <div className="space-y-4 p-6 rounded-xl border bg-white">
+              <div className="text-center">
+                <Spinner size={32} />
+                <p className="mt-4 text-gray-600">Checking availability...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -90,7 +147,16 @@ export default function RegisterPage() {
             />
           </div>
           <form onSubmit={onSubmit} className="space-y-4 p-6 rounded-xl border bg-white">
-            <h1 className="text-xl font-semibold">Create your account</h1>
+            <div className="text-center">
+              <h1 className="text-xl font-semibold">
+                {limitReached ? "Join the Waitlist" : "Create your account"}
+              </h1>
+              {limitReached && (
+                <p className="text-sm text-gray-600 mt-2">
+                  We've reached our current user limit. Join our waitlist and we'll notify you when space becomes available.
+                </p>
+              )}
+            </div>
             {error && <div className="text-sm text-red-600">{error}</div>}
             <div className="space-y-1">
               <label className="text-sm">Name</label>
@@ -166,7 +232,14 @@ export default function RegisterPage() {
             </div>
 
             <button type="submit" disabled={loading || !!emailError || !accepted} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
-              {loading ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Creating…</span>) : "Create account"}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner size={16} />
+                  {limitReached ? "Joining waitlist…" : "Creating…"}
+                </span>
+              ) : (
+                limitReached ? "Join Waitlist" : "Create account"
+              )}
             </button>
           </form>
         </div>

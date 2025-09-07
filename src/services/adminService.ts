@@ -11,13 +11,22 @@ export interface AdminActionData {
 
 export const adminService = {
   async promoteToAdmin(userId: string, adminPassword: string, promotedBy: string) {
-    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-    
-    if (!adminPasswordHash) {
+    const rawHash = process.env.ADMIN_PASSWORD_HASH;
+
+    const inputPassword = (adminPassword ?? "").trim();
+    const cleanedHash = rawHash ? rawHash.replace(/^"(.*)"$/, "$1").trim() : undefined;
+
+    if (!cleanedHash) {
       throw new Error("Admin password not configured");
     }
 
-    const isValidAdminPassword = await compare(adminPassword, adminPasswordHash);
+    let isValidAdminPassword = false;
+    try {
+      isValidAdminPassword = await compare(inputPassword, cleanedHash);
+    } catch {
+      isValidAdminPassword = false;
+    }
+
     if (!isValidAdminPassword) {
       throw new Error("Invalid admin password");
     }

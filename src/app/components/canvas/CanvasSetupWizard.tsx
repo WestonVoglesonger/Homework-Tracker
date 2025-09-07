@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -96,11 +98,44 @@ const setupSteps: SetupStep[] = [
 ];
 
 export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWizardProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [token, setToken] = useState("");
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState("");
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [intendedDestination, setIntendedDestination] = useState<string | null>(null);
+
+  // Check for redirect destination on component mount
+  useEffect(() => {
+    if (isOpen) {
+      // Check URL parameters for redirect destination
+      const redirectTo = searchParams.get('redirect') || searchParams.get('from');
+      if (redirectTo && redirectTo !== '/' && redirectTo !== '/auth/signin') {
+        setIntendedDestination(redirectTo);
+      } else {
+        // Check localStorage for stored destination
+        const storedDestination = localStorage.getItem('canvasSetupRedirect');
+        if (storedDestination) {
+          setIntendedDestination(storedDestination);
+          localStorage.removeItem('canvasSetupRedirect'); // Clear it after use
+        } else {
+          // Check cookies for stored destination (fallback)
+          const cookieDestination = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('canvasSetupRedirect='))
+            ?.split('=')[1];
+
+          if (cookieDestination && cookieDestination !== '/' && !cookieDestination.startsWith('/auth/')) {
+            setIntendedDestination(decodeURIComponent(cookieDestination));
+            // Clear the cookie
+            document.cookie = 'canvasSetupRedirect=; path=/; max-age=0';
+          }
+        }
+      }
+    }
+  }, [isOpen, searchParams]);
 
   const isTokenStep = currentStep === setupSteps.length - 1;
   const isLastStep = currentStep === setupSteps.length;
@@ -118,37 +153,6 @@ export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWiz
     }
   };
 
-  const validateToken = async () => {
-    if (!token.trim()) {
-      setValidationError("Please enter a token");
-      return;
-    }
-
-    setIsValidating(true);
-    setValidationError("");
-
-    try {
-      const res = await fetch("/api/canvas/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken: token.trim() }),
-      });
-
-      if (res.ok) {
-        toast.success("Canvas token saved! Continue to the next step.");
-        onSuccess();
-        // Move to the next step instead of redirecting
-        setCurrentStep(currentStep + 1);
-      } else {
-        const error = await res.text();
-        setValidationError(error || "Invalid token. Please check and try again.");
-      }
-    } catch (error) {
-      setValidationError("Failed to connect to Canvas. Please try again.");
-    } finally {
-      setIsValidating(false);
-    }
-  };
 
   const copyTokenToClipboard = () => {
     navigator.clipboard.writeText(token);
@@ -252,10 +256,11 @@ export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWiz
                     Screenshot: {currentStepData.title}
                   </div>
                   <div className="relative bg-gray-50 dark:bg-gray-900 min-h-[300px]">
-                    <img
+                    <Image
                       src={currentStepData.screenshot}
                       alt={`Screenshot - ${currentStepData.title}`}
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).style.display = "none";
                       }}
@@ -357,7 +362,7 @@ export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWiz
             checked={dontShowAgain}
             onChange={(e) => setDontShowAgain(e.target.checked)}
           />
-          <label htmlFor="dont-show" className="text-sm text-gray-600 dark:text-gray-300">Don't show this again</label>
+          <label htmlFor="dont-show" className="text-sm text-gray-600 dark:text-gray-300">Don&apos;t show this again</label>
         </div>
 
         {/* Navigation */}
@@ -403,16 +408,18 @@ export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWiz
                       });
 
                       if (res.ok) {
-                        toast.success("Canvas connected! Redirecting to settings...");
+                        toast.success("Canvas connected! Redirecting...");
                         onSuccess();
                         setTimeout(() => {
-                          window.location.href = "/settings?canvas-import=true";
+                          // Redirect to intended destination or settings
+                          const destination = intendedDestination || "/settings?canvas-import=true";
+                          router.push(destination);
                         }, 500);
                       } else {
                         const error = await res.text();
                         setValidationError(error || "Failed to save token");
                       }
-                    } catch (error) {
+                    } catch {
                       setValidationError("Failed to connect to Canvas");
                     } finally {
                       setIsValidating(false);

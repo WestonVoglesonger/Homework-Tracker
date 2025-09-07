@@ -4,10 +4,7 @@ import { isValidOrigin, rateLimit } from "../../../lib/security";
 import { errorLogInterface } from "../../../interfaces/errorLogInterface";
 
 const registerSchema = z.object({
-  email: z.string().email().refine(
-    (email) => !email.toLowerCase().includes('.edu'),
-    "Personal email addresses only. .edu emails are not allowed."
-  ),
+  email: z.string().email(),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -52,6 +49,56 @@ export async function POST(req: NextRequest) {
     }
     const { email, password, name } = parsed.data;
 
+    // Check if user limit is reached
+    const { waitlistInterface } = await import("../../../interfaces/waitlist");
+    const isLimitReached = await waitlistInterface.checkUserLimit();
+
+    if (isLimitReached) {
+      console.log("[register API] User limit reached, adding to waitlist...");
+      const { userInterface } = await import("../../../interfaces/user");
+      const now = new Date();
+
+      // Create user but mark as waitlisted
+      const user = await userInterface.register({
+        email,
+        password,
+        name,
+        termsAcceptedAt: now,
+        privacyAcceptedAt: now,
+      });
+
+      // Add to waitlist
+      await waitlistInterface.registerWaitlistedUser({
+        userId: user.id,
+        email,
+        name,
+      });
+
+      // Update user to be waitlisted
+      await waitlistInterface.updateUserWaitlistStatus(user.id, true);
+
+      console.log("[register API] User added to waitlist:", user.id);
+
+      // Send verification email after successful waitlist registration
+      console.log("[register API] Sending verification email...");
+      const { verificationInterface } = await import("../../../interfaces/verification");
+      await verificationInterface.requestVerification(email);
+      console.log("[register API] Verification email process completed");
+
+      const response = NextResponse.json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        waitlisted: true
+      });
+      // Ensure no caching for registration responses
+      response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      response.headers.set("Pragma", "no-cache");
+      response.headers.set("Expires", "0");
+      return response;
+    }
+
+    // Normal registration flow
     console.log("[register API] Creating user...");
     const { userInterface } = await import("../../../interfaces/user");
     const now = new Date();

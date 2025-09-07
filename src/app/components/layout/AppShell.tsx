@@ -30,22 +30,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     return protectedPrefixes.some((p) => pathname?.startsWith(p));
   }, [pathname]);
 
-  const [checkingToken, setCheckingToken] = useState<boolean>(isProtectedPath);
+  const [checkingToken, setCheckingToken] = useState<boolean>(isProtectedPath && !Boolean((session?.user as { isWaitlisted?: boolean } | undefined)?.isWaitlisted));
   const isAuthed = status === "authenticated";
+  const isWaitlisted = Boolean((session?.user as { isWaitlisted?: boolean } | undefined)?.isWaitlisted);
 
   // Ping Canvas on any page load (if connected) so calls aren't limited to Settings
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && !isWaitlisted) {
       fetch("/api/canvas/courses").catch(() => {});
     }
-  }, [status]);
+  }, [status, isWaitlisted]);
 
   // Setup global error handling
   useEffect(() => {
     setupGlobalErrorHandler();
   }, []);
 
-  // Guard: redirect unauthenticated users away from protected paths
+  // Guard: redirect unauthenticated or waitlisted users away from protected paths (but allow Settings)
   useEffect(() => {
     if (!isProtectedPath) return;
     if (status === "loading") return;
@@ -55,24 +56,34 @@ export function AppShell({ children }: { children: ReactNode }) {
       router.replace("/");
       return;
     }
-  }, [status, isProtectedPath, router]);
+    // If authenticated but waitlisted, force to landing page unless on Settings
+    if (status === "authenticated" && isWaitlisted) {
+      setCheckingToken(false);
+      if (!(pathname?.startsWith("/settings")) && pathname !== "/") router.replace("/");
+      return;
+    }
+  }, [status, isProtectedPath, isWaitlisted, pathname, router]);
 
-  // Guard: ensure authenticated users also have an active Canvas token
+  // Guard: ensure authenticated, non-waitlisted users also have an active Canvas token
+  // Instead of redirecting, allow navigation and let CanvasSetupGate handle the setup
   useEffect(() => {
     const checkToken = async () => {
-      if (!isProtectedPath || status !== "authenticated") return;
+      if (!isProtectedPath || status !== "authenticated" || isWaitlisted) return;
       setCheckingToken(true);
       try {
         const res = await fetch("/api/canvas/courses", { cache: "no-store" });
-        if (!res.ok) router.replace("/");
-      } catch {
-        router.replace("/");
+        // No redirect here - let CanvasSetupGate handle the setup wizard
+        if (!res.ok) {
+          console.log("Canvas token not found or invalid - CanvasSetupGate will show setup wizard");
+        }
+      } catch (error) {
+        console.log("Error checking Canvas token:", error);
       } finally {
         setCheckingToken(false);
       }
     };
     checkToken();
-  }, [status, isProtectedPath, router]);
+  }, [status, isProtectedPath, isWaitlisted]);
 
   if (status === "loading" || checkingToken) {
     return (
@@ -105,12 +116,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               {status === "authenticated" && (
                 <>
-                  <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Dashboard</Link>
-                  <Link href="/courses" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Courses</Link>
-                  <Link href="/calendar" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Calendar</Link>
-                  <Link href="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Settings</Link>
-                  {isAdmin && (
-                    <Link href="/admin" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Admin Panel</Link>
+                  {!isWaitlisted ? (
+                    <>
+                      <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Dashboard</Link>
+                      <Link href="/courses" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Courses</Link>
+                      <Link href="/calendar" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Calendar</Link>
+                      <Link href="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Settings</Link>
+                      {isAdmin && (
+                        <Link href="/admin" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Admin Panel</Link>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Settings</Link>
+                    </>
                   )}
                 </>
               )}
@@ -148,45 +167,57 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <nav className="flex flex-col gap-2 mt-6">
             {status === "authenticated" && (
-              <>
-                <Link 
-                  href="/dashboard" 
-                  className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                >
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  Dashboard
-                </Link>
-                <Link 
-                  href="/courses" 
-                  className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                >
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  Courses
-                </Link>
-                <Link 
-                  href="/calendar" 
-                  className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                >
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  Calendar
-                </Link>
-                <Link 
-                  href="/settings#data" 
-                  className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                >
-                  <div className="w-2 h-2 rounded-full bg-orange-500" />
-                  Settings
-                </Link>
-                {isAdmin && (
+              !isWaitlisted ? (
+                <>
                   <Link 
-                    href="/admin" 
+                    href="/dashboard" 
                     className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
                   >
-                    <div className="w-2 h-2 rounded-full bg-red-500" />
-                    Admin Panel
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    Dashboard
                   </Link>
-                )}
-              </>
+                  <Link 
+                    href="/courses" 
+                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    Courses
+                  </Link>
+                  <Link 
+                    href="/calendar" 
+                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                    Calendar
+                  </Link>
+                  <Link 
+                    href="/settings#data" 
+                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    Settings
+                  </Link>
+                  {isAdmin && (
+                    <Link 
+                      href="/admin" 
+                      className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      Admin Panel
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Link 
+                    href="/settings#data" 
+                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    Settings
+                  </Link>
+                </>
+              )
             )}
           </nav>
           
@@ -243,7 +274,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         
         <main className="p-4 md:p-8 bg-gray-50 dark:bg-gray-900 overflow-auto">
           <div className="max-w-7xl mx-auto">
-            {isAuthed && <CanvasSetupGate />}
+            {isAuthed && !isWaitlisted && <CanvasSetupGate />}
             {children}
           </div>
         </main>

@@ -166,6 +166,102 @@ export function useAdmin() {
     },
   });
 
+  // Get waitlist users
+  const useWaitlistUsers = (filters?: { converted?: boolean; limit?: number; offset?: number }) => {
+    return useQuery({
+      queryKey: ["admin", "waitlist", "users", filters],
+      queryFn: async () => {
+        const params = new URLSearchParams();
+        if (filters?.converted !== undefined) params.append("converted", filters.converted.toString());
+        if (filters?.limit) params.append("limit", filters.limit.toString());
+        if (filters?.offset) params.append("offset", filters.offset.toString());
+
+        const response = await fetch(`/api/admin/waitlist?${params}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch waitlist users");
+        }
+        return response.json();
+      },
+      enabled: isAdmin,
+      staleTime: 30 * 1000, // 30 seconds
+    });
+  };
+
+  // Get waitlist stats
+  const useWaitlistStats = () => {
+    return useQuery({
+      queryKey: ["admin", "waitlist", "stats"],
+      queryFn: async () => {
+        const response = await fetch("/api/admin/waitlist/stats");
+        if (!response.ok) {
+          throw new Error("Failed to fetch waitlist stats");
+        }
+        return response.json();
+      },
+      enabled: isAdmin,
+      staleTime: 60 * 1000, // 1 minute
+    });
+  };
+
+  // Convert waitlist user
+  const convertWaitlistUserMutation = useMutation({
+    mutationFn: async (data: { waitlistId?: string; convertAll?: boolean }) => {
+      const response = await fetch("/api/admin/waitlist/convert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to convert user");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "waitlist"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] });
+    },
+  });
+
+  // Get system settings
+  const useSystemSettings = () => {
+    return useQuery({
+      queryKey: ["admin", "settings"],
+      queryFn: async () => {
+        const response = await fetch("/api/admin/settings");
+        if (!response.ok) {
+          throw new Error("Failed to fetch settings");
+        }
+        return response.json();
+      },
+      enabled: isAdmin,
+      staleTime: 60 * 1000, // 1 minute
+    });
+  };
+
+  // Update system settings
+  const updateSystemSettingsMutation = useMutation({
+    mutationFn: async (settings: { maxUsers: number }) => {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update settings");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+    },
+  });
+
   return {
     isAdmin,
     isAdminLoading,
@@ -175,6 +271,13 @@ export function useAdmin() {
     useErrorLogs,
     useAnalytics,
     useUsers,
+    useWaitlistUsers,
+    useWaitlistStats,
+    convertWaitlistUser: convertWaitlistUserMutation.mutateAsync,
+    isConvertingWaitlistUser: convertWaitlistUserMutation.isPending,
+    useSystemSettings,
+    updateSystemSettings: updateSystemSettingsMutation.mutateAsync,
+    isUpdatingSettings: updateSystemSettingsMutation.isPending,
     resolveError: resolveErrorMutation.mutateAsync,
     isResolvingError: resolveErrorMutation.isPending,
   };

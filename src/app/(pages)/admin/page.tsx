@@ -9,23 +9,28 @@ import { Card } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
-import { 
-  AlertCircle, 
-  Users, 
-  Activity, 
-  TrendingUp, 
+import {
+  AlertCircle,
+  Users,
+  Activity,
+  TrendingUp,
   Database,
   Shield,
   Clock,
-  CheckCircle
+  CheckCircle,
+  UserCheck,
+  UserPlus
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const { isAdmin, isAdminLoading } = useAdmin();
   const { resolveError, isResolvingError } = useAdmin();
+  const { convertWaitlistUser, isConvertingWaitlistUser } = useAdmin();
+  const { updateSystemSettings, isUpdatingSettings } = useAdmin();
   const router = useRouter();
   const [selectedTimeRange, setSelectedTimeRange] = useState<"day" | "week" | "month">("day");
+  const [newMaxUsers, setNewMaxUsers] = useState<string>("");
 
   // Analytics queries
   const { data: systemMetrics, isLoading: systemLoading } = useAdmin().useAnalytics({
@@ -45,6 +50,16 @@ export default function AdminDashboard() {
   const { data: users, isLoading: usersLoading } = useAdmin().useUsers({
     limit: 10,
   });
+
+  // Waitlist queries
+  const { data: waitlistStats, isLoading: waitlistStatsLoading } = useAdmin().useWaitlistStats();
+  const { data: waitlistUsers, isLoading: waitlistUsersLoading } = useAdmin().useWaitlistUsers({
+    converted: false,
+    limit: 20,
+  });
+
+  // System settings query
+  const { data: systemSettings, isLoading: settingsLoading } = useAdmin().useSystemSettings();
 
   // Handle redirects in useEffect to avoid setState during render
   useEffect(() => {
@@ -150,8 +165,10 @@ export default function AdminDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
           <TabsTrigger value="errors">Error Logs</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -172,7 +189,7 @@ export default function AdminDashboard() {
                 </div>
               ) : errorLogs && errorLogs.length > 0 ? (
                 <div className="space-y-3">
-                  {errorLogs.slice(0, 5).map((error: any) => (
+                  {errorLogs.slice(0, 5).map((error: { id: string; message: string; level: string; timestamp: string; user?: { email?: string } }) => (
                     <div key={error.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -237,6 +254,228 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
 
+        <TabsContent value="waitlist" className="space-y-6">
+          {/* Waitlist Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Total Waitlist
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {waitlistStatsLoading ? "..." : waitlistStats?.total || 0}
+                  </p>
+                </div>
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Pending
+                  </p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {waitlistStatsLoading ? "..." : waitlistStats?.unconverted || 0}
+                  </p>
+                </div>
+                <Clock className="h-8 w-8 text-orange-600" />
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Converted
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {waitlistStatsLoading ? "..." : waitlistStats?.converted || 0}
+                  </p>
+                </div>
+                <UserCheck className="h-8 w-8 text-green-600" />
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Recent Joins
+                  </p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {waitlistStatsLoading ? "..." : waitlistStats?.recentJoins || 0}
+                  </p>
+                </div>
+                <UserPlus className="h-8 w-8 text-purple-600" />
+              </div>
+            </Card>
+          </div>
+
+          {/* Waitlist Actions */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Waitlist Management
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Convert waitlisted users to full users
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => convertWaitlistUser({ convertAll: true })}
+                  disabled={isConvertingWaitlistUser || (waitlistStats?.unconverted || 0) === 0}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isConvertingWaitlistUser ? "Converting..." : `Convert All (${waitlistStats?.unconverted || 0})`}
+                </Button>
+              </div>
+            </div>
+
+            {/* Waitlist Users */}
+            {waitlistUsersLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : waitlistUsers?.users && waitlistUsers.users.length > 0 ? (
+              <div className="space-y-3">
+                {waitlistUsers.users.map((user: { id: string; name?: string; email: string; joinedAt: string }) => (
+                  <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          {user.name?.[0] || user.email?.[0] || "U"}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {user.name || "No name"}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {user.email}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Joined {new Date(user.joinedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => convertWaitlistUser({ waitlistId: user.id })}
+                      disabled={isConvertingWaitlistUser}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {isConvertingWaitlistUser ? "Converting..." : "Convert"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <UserCheck className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">No users on the waitlist</p>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  System Settings
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Configure system-wide settings and limits
+                </p>
+              </div>
+            </div>
+
+            {settingsLoading ? (
+              <div className="space-y-4">
+                <div className="h-20 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Max Users Setting */}
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-md font-medium text-gray-900 dark:text-white">
+                        Maximum Users
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Set the maximum number of registered users allowed in the system
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {systemSettings?.currentUsers || 0} / {systemSettings?.maxUsers || 50}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Current / Maximum
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        value={newMaxUsers}
+                        onChange={(e) => setNewMaxUsers(e.target.value)}
+                        placeholder={systemSettings?.maxUsers?.toString() || "50"}
+                        min={systemSettings?.minAllowed || 0}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Minimum allowed: {systemSettings?.minAllowed || 0} (current user count)
+                      </p>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        if (!newMaxUsers || parseInt(newMaxUsers) < (systemSettings?.minAllowed || 0)) {
+                          alert(`Maximum users must be at least ${systemSettings?.minAllowed || 0}`);
+                          return;
+                        }
+
+                        try {
+                          await updateSystemSettings({ maxUsers: parseInt(newMaxUsers) });
+                          setNewMaxUsers("");
+                          alert("Settings updated successfully!");
+                        } catch (error) {
+                          alert("Failed to update settings: " + (error instanceof Error ? error.message : "Unknown error"));
+                        }
+                      }}
+                      disabled={isUpdatingSettings || !newMaxUsers}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {isUpdatingSettings ? "Updating..." : "Update"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Additional Settings Placeholder */}
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-2">
+                    Additional Settings
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    More system settings will be available here in future updates.
+                  </p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
         <TabsContent value="errors">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
@@ -256,7 +495,7 @@ export default function AdminDashboard() {
               </div>
             ) : errorLogs && errorLogs.length > 0 ? (
               <div className="space-y-3">
-                {errorLogs.map((error: any) => (
+                {errorLogs.map((error: { id: string; message: string; level: string; timestamp: string; user?: { email?: string }; endpoint?: string }) => (
                   <div key={error.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -311,7 +550,7 @@ export default function AdminDashboard() {
               </div>
             ) : users && users.length > 0 ? (
               <div className="space-y-3">
-                {users.map((user: any) => (
+                {users.map((user: { id: string; name?: string; email: string; isAdmin: boolean; _count: { courses: number } }) => (
                   <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">

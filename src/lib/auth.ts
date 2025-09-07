@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, type Session, type User as NextAuthUser } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 import CredentialsProvider from "next-auth/providers/credentials";
 
@@ -50,12 +50,36 @@ export async function getAuth() {
     ],
     session: { strategy: "jwt" },
     callbacks: {
-      async session({ session, token, user }) {
-        if (session.user) {
-          const id = (user as any)?.id || token?.sub || (token as any)?.id;
-          if (id) session.user.id = id as string;
+      async jwt({ token, user }): Promise<Record<string, unknown>> {
+        try {
+          // On first sign in, user will be present; otherwise rely on token.sub
+          const userId = (user as NextAuthUser | undefined)?.id || token?.sub || (token as Record<string, unknown>)?.id;
+          if (userId) {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: String(userId) },
+              select: { isWaitlisted: true, isAdmin: true },
+            });
+            (token as Record<string, unknown>).isWaitlisted = dbUser?.isWaitlisted ?? false;
+            (token as Record<string, unknown>).isAdmin = dbUser?.isAdmin ?? false;
+          }
+        } catch {
+          // If DB lookup fails, default to non-waitlisted, non-admin
+          const t = token as Record<string, unknown>;
+          t.isWaitlisted = t.isWaitlisted ?? false;
+          t.isAdmin = t.isAdmin ?? false;
         }
-        return session;
+        return token;
+      },
+      async session({ session, token, user }): Promise<Session> {
+        if (session.user) {
+          const id = (user as NextAuthUser | undefined)?.id || token?.sub || (token as Record<string, unknown>)?.id;
+          if (id) session.user.id = String(id);
+          // Propagate flags from token
+          const t = token as Record<string, unknown>;
+          (session.user as Record<string, unknown>).isWaitlisted = Boolean(t?.isWaitlisted);
+          (session.user as Record<string, unknown>).isAdmin = Boolean(t?.isAdmin);
+        }
+        return session as Session;
       },
     },
     pages: { signIn: "/auth/signin", error: "/auth/signin" },

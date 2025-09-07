@@ -3,9 +3,11 @@ import { Logo } from "./components/ui/Logo";
 import AppShell from "./components/layout/AppShell";
 import { useSession } from "next-auth/react";
 import { Spinner } from "./components/ui/spinner";
+import WaitlistNotice from "./components/waitlist/WaitlistNotice";
 
 export default function IndexPage() {
   const { data: session, status } = useSession();
+  const isWaitlisted = Boolean((session?.user as { isWaitlisted?: boolean } | undefined)?.isWaitlisted);
 
   if (status === "loading") {
     return (
@@ -30,6 +32,9 @@ export default function IndexPage() {
               Connect your Canvas account, track deadlines, and stay on top of your semester with a clear, focused dashboard.
             </p>
           </div>
+          {isAuthed && isWaitlisted ? (
+            <WaitlistNotice />
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
             <div className="rounded-lg border bg-white dark:bg-gray-800 p-4">
               <div className="font-semibold mb-1">Canvas sync</div>
@@ -44,6 +49,7 @@ export default function IndexPage() {
               <div className="text-sm text-gray-600 dark:text-gray-400">Your token is encrypted; delete or export your data anytime.</div>
             </div>
           </div>
+          )}
           {isAuthed && (
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Signed in as {session?.user?.email}

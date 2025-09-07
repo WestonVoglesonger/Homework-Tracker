@@ -9,12 +9,17 @@ import CanvasImportPanel from "@components/canvas/CanvasImportPanel";
 import DangerZone from "@components/settings/DangerZone";
 import Link from "next/link";
 import { Download } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useAdmin } from "@/app/hooks/useAdmin";
 
 import { toast } from "sonner";
 import { CanvasSetupWizard } from "@/app/components/canvas/CanvasSetupWizard";
 import { QuickCanvasSetup } from "@/app/components/canvas/QuickCanvasSetup";
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
+  const { isAdmin } = useAdmin();
+  const isWaitlisted = Boolean((session?.user as { isWaitlisted?: boolean } | undefined)?.isWaitlisted);
   const { listCanvasCourses } = useCanvasImport();
   const [connected, setConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
@@ -24,6 +29,7 @@ export default function SettingsPage() {
   const [highlightImport, setHighlightImport] = useState(false);
   useEffect(() => {
     let mounted = true;
+    if (isWaitlisted) { setLoading(false); return; }
     listCanvasCourses()
       .then((d) => {
         if (!mounted) return;
@@ -36,10 +42,13 @@ export default function SettingsPage() {
         setLoading(false);
       });
     return () => { mounted = false; };
-  }, [listCanvasCourses]);
+  }, [listCanvasCourses, isWaitlisted]);
+
+  // Waitlisted users skip Canvas-related setup entirely
 
   // Check for canvas-import URL parameter
   useEffect(() => {
+    if (isWaitlisted) return;
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('canvas-import') === 'true') {
@@ -52,7 +61,7 @@ export default function SettingsPage() {
         toast.success("Canvas connected! Choose which courses to import below.");
       }
     }
-  }, []);
+  }, [isWaitlisted]);
 
   const handleCanvasConnectionSuccess = () => {
     setConnected(true);
@@ -88,6 +97,42 @@ export default function SettingsPage() {
       setExportLoading(false);
     }
   };
+  // Show limited settings for waitlisted users (Delete account only)
+  if (isWaitlisted) {
+    return (
+      <AppShell>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h1 className="text-2xl font-semibold">Settings</h1>
+          <Card>
+            <CardHeader>
+              <CardTitle>Account</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                While on the waitlist, the only available action is deleting your account and all data.
+              </p>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  if (!confirm("Delete your account and all data? This cannot be undone.")) return;
+                  const res = await fetch("/api/account/delete", { method: "DELETE" });
+                  if (res.ok) {
+                    toast.success("Account deleted");
+                    try { window.location.href = "/"; } catch {}
+                  } else {
+                    toast.error("Failed to delete account");
+                  }
+                }}
+              >
+                Delete account
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <h1 className="text-2xl font-semibold mb-4">Settings</h1>
@@ -203,6 +248,33 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Account deletion available to all users */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!confirm("Delete your account and all data? This cannot be undone.")) return;
+                const res = await fetch("/api/account/delete", { method: "DELETE" });
+                if (res.ok) {
+                  toast.success("Account deleted");
+                  try { window.location.href = "/"; } catch {}
+                } else {
+                  toast.error("Failed to delete account");
+                }
+              }}
+            >
+              Delete account
+            </Button>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Data Retention & Security</CardTitle>
@@ -229,7 +301,7 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
-        <DangerZone />
+        {isAdmin && <DangerZone />}
       </div>
 
       {/* Canvas Setup Wizard */}

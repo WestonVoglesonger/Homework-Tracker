@@ -66,8 +66,8 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
-  // Public paths
-  const publicPaths = ["/", "/auth/signin", "/auth/register", "/api/auth", "/api/canvas/oauth"];
+  // Public paths (accessible to everyone)
+  const publicPaths = ["/", "/auth/signin", "/auth/register", "/auth/waitlist", "/privacy", "/terms", "/api/auth", "/api/user-limit"];
   if (publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return response;
   }
@@ -78,8 +78,44 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/";
     url.searchParams.set("from", pathname);
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    // Store intended destination for Canvas setup later
+    response.cookies.set('canvasSetupRedirect', pathname, {
+      path: '/',
+      maxAge: 60 * 60, // 1 hour
+      httpOnly: false // Allow client-side access
+    });
+    return response;
   }
-  
+
+  // Check if user is waitlisted and restrict access
+  try {
+    const { PrismaClient } = await import("@prisma/client");
+    const prisma = new PrismaClient();
+
+    const user = await prisma.user.findUnique({
+      where: { id: token.sub },
+      select: { isWaitlisted: true, isAdmin: true },
+    });
+
+    await prisma.$disconnect();
+
+    // If user is waitlisted (and not admin), allow only landing page and settings
+    if (user?.isWaitlisted && !user?.isAdmin) {
+      const allowedWhileWaitlisted = ["/", "/settings"];
+      const isAllowed = allowedWhileWaitlisted.some(
+        (p) => pathname === p || pathname.startsWith(p + "/")
+      );
+      if (!isAllowed) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
+    }
+  } catch (error) {
+    console.error("Error checking user waitlist status:", error);
+    // If error occurs, allow access to be safe
+  }
+
   return response;
 }
