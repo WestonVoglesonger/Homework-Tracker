@@ -93,7 +93,7 @@ export function UserActions({ mobile = false }: { mobile?: boolean }) {
           </div>
         )}
 
-        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="pt-2">
           {availableActions.includes("signin") && (
             <div className="flex gap-2">
               <Link href="/auth/signin" className="flex-1">
@@ -139,7 +139,7 @@ export function UserActions({ mobile = false }: { mobile?: boolean }) {
   }
 
   return (
-    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+    <div className="mt-6 pt-4">
       {/* Status card displayed by UserStatus above; avoid duplicating here on desktop */}
       <div className="space-y-3">
         {(availableActions.includes("all_features") || availableActions.includes("settings")) && (
