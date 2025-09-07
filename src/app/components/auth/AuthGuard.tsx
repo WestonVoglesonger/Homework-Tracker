@@ -208,27 +208,14 @@ export function PublicOnlyGuard({
   }, [userState.isLoading, userState.isAuthenticated, router, redirectTo]);
 
   if (userState.isLoading) {
-    return (
-      <div className="min-h-screen grid place-items-center">
-        <div className="flex flex-col items-center gap-2">
-          <LoadingSpinner size={48} className="text-gray-500" />
-          <div className="text-xs text-gray-500">
-            Auth Debug: loading=true, authenticated={String(userState.isAuthenticated)}, state={userState.state}
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size={48} className="text-gray-500" fullScreen />;
+  }
+  if (userState.isLoading) {
+    return <LoadingSpinner size={48} className="text-gray-500" fullScreen />;
   }
 
   if (userState.isAuthenticated) {
-    return (
-      <div className="min-h-screen grid place-items-center">
-        <div className="flex flex-col items-center gap-2">
-          <LoadingSpinner size={48} className="text-gray-500" />
-          <div className="text-xs text-gray-500">Auth Debug: redirecting to {redirectTo}</div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size={48} className="text-gray-500" fullScreen />;
   }
 
   return <>{children}</>;
