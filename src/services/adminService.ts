@@ -10,6 +10,17 @@ export interface AdminActionData {
 }
 
 export const adminService = {
+  async setSystemSetting(key: string, value: string, updatedBy?: string) {
+    return prisma.systemSettings.upsert({
+      where: { key },
+      update: { value, updatedBy },
+      create: { key, value, updatedBy },
+    });
+  },
+  async getSystemSetting(key: string): Promise<string | null> {
+    const s = await prisma.systemSettings.findUnique({ where: { key } });
+    return s?.value ?? null;
+  },
   async promoteToAdmin(userId: string, adminPassword: string, promotedBy: string) {
     const rawHash = process.env.ADMIN_PASSWORD_HASH;
 

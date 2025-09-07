@@ -2,6 +2,7 @@ import { canvasService, canvasTokenService } from "@/services/canvasService";
 import { courseInterface } from "@/interfaces/course";
 import { assignmentInterface, AssignmentType } from "@/interfaces/assignment";
 import { accountService } from "@/services/accountService";
+import { adminService } from "@/services/adminService";
 
 export async function syncUser(userId: string) {
   const accessToken = await canvasTokenService.getAccessTokenForUser(userId);
@@ -61,6 +62,8 @@ export async function syncUser(userId: string) {
       results.assignments++;
     }
   }
+  // Persist per-user last sync timestamp
+  try { await adminService.setSystemSetting(`last_canvas_sync_${userId}`, new Date().toISOString(), userId); } catch {}
   return { ok: true, results } as const;
 }
 
@@ -165,6 +168,8 @@ export const canvasAdminInterface = {
             results.errors.push(`Course ${canvasCourse.name}: ${error.message}`);
           }
         }
+        // Update this user's last sync timestamp after successful loop
+        try { await adminService.setSystemSetting(`last_canvas_sync_${account.userId}`, new Date().toISOString(), account.userId); } catch {}
       } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error(String(err));
         results.errors.push(`User ${account.userId}: ${error.message}`);

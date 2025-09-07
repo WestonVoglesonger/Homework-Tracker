@@ -13,7 +13,7 @@ import { DataCard, StatCardsGrid } from "@components/ui/DataCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { PageHeader } from "@components/navigation/EnhancedNavigation";
 import { RefreshCw, BarChart2, CheckCircle2, UploadCloud, Gauge } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import WaitlistNotice from "@components/waitlist/WaitlistNotice";
 
@@ -28,6 +28,19 @@ export default function DashboardPage() {
   // State for refresh functionality
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  // Fetch persisted last sync on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/canvas/last-sync');
+        if (!res.ok) return;
+        const { lastSyncedAt } = await res.json();
+        if (!cancelled && lastSyncedAt) setLastSyncTime(new Date(lastSyncedAt));
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Waitlist status now comes from the session; no client-side Prisma calls
