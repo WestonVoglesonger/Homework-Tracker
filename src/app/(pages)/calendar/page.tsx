@@ -5,7 +5,10 @@ import { useCourses } from "@/app/hooks/useCourses";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { format, addDays, startOfDay, isSameDay, parseISO, isToday, isPast } from "date-fns";
 import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
+import { SkeletonGrid } from "@components/ui/LoadingState";
 import { Skeleton } from "@components/ui/skeleton";
+import { InteractiveCard } from "@components/ui/DataCard";
+import { PageHeader } from "@components/navigation/EnhancedNavigation";
 import { AssignmentDetailDialog } from "@components/assignments/AssignmentDetailDialog";
 import { AssignmentDTO } from "@/interfaces/assignment";
 import { useState } from "react";
@@ -44,21 +47,17 @@ export default function CalendarPage() {
   return (
     <AppShell>
       <div className="space-y-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Calendar</h1>
-          <p className="text-gray-600 dark:text-gray-400">View your assignments for the next 3 weeks</p>
-        </div>
+        <PageHeader
+          title="Calendar"
+          description="View your assignments for the next 3 weeks"
+        />
 
         {isLoading ? (
           <div className="space-y-8">
             {[...Array(3)].map((_, weekIndex) => (
               <div key={weekIndex}>
                 <Skeleton className="h-6 w-48 mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
-                  {[...Array(7)].map((_, i) => (
-                    <Skeleton key={i} className="h-32" />
-                  ))}
-                </div>
+                <SkeletonGrid rows={7} height="h-32" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3" />
               </div>
             ))}
           </div>
@@ -129,14 +128,9 @@ export default function CalendarPage() {
                           ) : (
                             <div className="space-y-2">
                               {dayData.items.map((a) => (
-                                <div
+                                <InteractiveCard
                                   key={a.id}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleAssignmentClick(a);
-                                  }}
-                                  className="group/item text-xs p-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200 cursor-pointer hover:shadow-sm"
+                                  onClick={() => handleAssignmentClick(a)}
                                 >
                                   <div className="font-medium text-gray-900 dark:text-white truncate group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">
                                     {a.title}
@@ -144,7 +138,7 @@ export default function CalendarPage() {
                                   <div className="text-gray-500 dark:text-gray-400 mt-1">
                                     {a.dueAt && format(parseISO(a.dueAt), "h:mm a")}
                                   </div>
-                                </div>
+                                </InteractiveCard>
                               ))}
                             </div>
                           )}

@@ -1,18 +1,21 @@
 "use client";
 import AppShell from "@components/layout/AppShell";
 import { useAssignments } from "@/app/hooks/useAssignments";
-import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
-import { StatusPill } from "@components/ui/status";
+ 
 import { normalizeStatus } from "@/lib/status";
 import { AssignmentRow } from "@components/assignments/AssignmentRow";
-import EmptyState from "@components/common/EmptyState";
+import { NoAssignmentsEmptyState } from "@components/ui/EmptyState";
 import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
 import type { AssignmentDTO } from "@/interfaces/assignment";
+import { SkeletonCard, LoadingButton } from "@components/ui/LoadingState";
 import { Skeleton } from "@components/ui/skeleton";
-import { Button } from "@components/ui/button";
-import { RefreshCw, Clock, Users } from "lucide-react";
+import { DataCard, StatCardsGrid } from "@components/ui/DataCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
+import { PageHeader } from "@components/navigation/EnhancedNavigation";
+import { RefreshCw, BarChart2, CheckCircle2, UploadCloud, Gauge } from "lucide-react";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import WaitlistNotice from "@components/waitlist/WaitlistNotice";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -106,79 +109,7 @@ export default function DashboardPage() {
   if (isWaitlisted) {
     return (
       <AppShell>
-        <div className="max-w-4xl mx-auto space-y-8 p-4 md:p-6">
-          <div className="text-center">
-            <div className="mx-auto w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-              <Clock className="w-12 h-12 text-blue-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              You&apos;re on the Waitlist!
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-              Thank you for your interest in DueNorth. We&apos;ve reached our current user limit, but you&apos;re on the list to get access as soon as space becomes available.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 text-center">
-              <Users className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Stay Tuned</h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                We&apos;ll notify you via email when your account becomes active.
-              </p>
-            </Card>
-
-            <Card className="p-6 text-center">
-              <Clock className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Limited Access</h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                For now, you can access your settings and this dashboard.
-              </p>
-            </Card>
-
-            <Card className="p-6 text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-purple-600 font-bold text-xl">#</span>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Queue Position</h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                You&apos;re in line and will be activated based on signup order.
-              </p>
-            </Card>
-          </div>
-
-          <Card className="p-8 text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
-              What happens next?
-            </h3>
-            <div className="space-y-3 text-left max-w-2xl mx-auto">
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-sm font-bold">1</span>
-                </div>
-                <p className="text-gray-700 dark:text-gray-300">
-                  We&apos;ll continue adding users from the waitlist as space becomes available.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-sm font-bold">2</span>
-                </div>
-                <p className="text-gray-700 dark:text-gray-300">
-                  You&apos;ll receive an email notification when your account is activated.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-sm font-bold">3</span>
-                </div>
-                <p className="text-gray-700 dark:text-gray-300">
-                  Once activated, you&apos;ll have full access to all DueNorth features.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
+        <WaitlistNotice />
       </AppShell>
     );
   }
@@ -186,25 +117,21 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6 overflow-hidden">
-        {/* Header Section with more breathing room */}
-        <div className="text-center lg:text-left">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">Dashboard</h1>
-              <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
-                Track your assignments and stay on top of deadlines
-              </p>
-            </div>
-            <div className="flex flex-col items-center lg:items-end gap-2">
-              <Button
-                onClick={handleCanvasSync}
-                disabled={isRefreshing}
-                className="flex items-center gap-2 min-w-[140px]"
-                variant="outline"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Syncing...' : 'Sync Canvas'}
-              </Button>
+        {/* Header Section with centralized navigation */}
+        <PageHeader
+          title="Dashboard"
+          description="Track your assignments and stay on top of deadlines"
+          actions={
+            <div className="flex flex-col items-end gap-2">
+               <LoadingButton
+                 onClick={handleCanvasSync}
+                 loading={isRefreshing}
+                 loadingText="Syncing..."
+                 className="flex items-center gap-2 min-w-[140px] px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+               >
+                 <RefreshCw className="h-4 w-4" />
+                 Sync Canvas
+               </LoadingButton>
               {lastSyncTime && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Last synced: {lastSyncTime.toLocaleString()}
@@ -216,96 +143,54 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Stats Cards with improved spacing */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-8">
+        <StatCardsGrid>
           {isLoading ? (
             <>
-              <Skeleton className="h-36" />
-              <Skeleton className="h-36" />
-              <Skeleton className="h-36" />
-              <Skeleton className="h-36" />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
             </>
           ) : (
             <>
-              <Card className="stat-card hover:shadow-lg transition-all duration-300 border-l-4 border-l-gray-400">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-                    Total Assignments
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-5xl font-bold text-gray-900 dark:text-white mb-3">
-                    {totalAssignments}
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Across all courses
-                  </div>
-                </CardContent>
-              </Card>
+              <DataCard
+                title="Total Assignments"
+                value={totalAssignments}
+                subtitle="Across all courses"
+                icon={<BarChart2 className="w-4 h-4" />}
+                color="gray"
+              />
 
-              <Card className="stat-card hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Graded</CardTitle>
-                    <StatusPill status="GRADED" size="sm" variant="dot" />
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-5xl font-bold text-green-600 mb-3">
-                    {completedAssignments}
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Great progress!
-                  </div>
-                </CardContent>
-              </Card>
+              <DataCard
+                title="Graded"
+                value={completedAssignments}
+                subtitle="Great progress!"
+                icon={<CheckCircle2 className="w-4 h-4" />}
+                color="green"
+              />
 
-              <Card className="stat-card hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Submitted</CardTitle>
-                    <StatusPill status="SUBMITTED" size="sm" variant="dot" />
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-5xl font-bold text-blue-600 mb-3">
-                    {assignments?.filter(a => a.status === "SUBMITTED").length || 0}
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Keep going!
-                  </div>
-                </CardContent>
-              </Card>
+              <DataCard
+                title="Submitted"
+                value={assignments?.filter(a => a.status === "SUBMITTED").length || 0}
+                subtitle="Keep going!"
+                icon={<UploadCloud className="w-4 h-4" />}
+                color="blue"
+              />
 
-              <Card className="stat-card hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                    Completion Rate
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-5xl font-bold text-purple-600 mb-4">
-                    {completionRate.toFixed(0)}%
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-3">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-700 shadow-sm"
-                      style={{ width: `${completionRate}%` }}
-                    />
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {completionRate < 25 ? "Getting started" : completionRate < 50 ? "Making progress" : completionRate < 75 ? "Almost there" : "Excellent work!"}
-                  </div>
-                </CardContent>
-              </Card>
+              <DataCard
+                title="Completion Rate"
+                value={`${completionRate.toFixed(0)}%`}
+                subtitle={completionRate < 25 ? "Getting started" : completionRate < 50 ? "Making progress" : completionRate < 75 ? "Almost there" : "Excellent work!"}
+                icon={<Gauge className="w-4 h-4" />}
+                color="purple"
+              />
             </>
           )}
-        </div>
+        </StatCardsGrid>
 
         {/* Assignment Groups with better spacing */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 overflow-hidden">
@@ -331,7 +216,7 @@ export default function DashboardPage() {
                   </div>
                 ) : groups[s.key].length === 0 ? (
                   <div className="py-8">
-                    <EmptyState title={`No ${s.key} assignments`} />
+                    <NoAssignmentsEmptyState title={`No ${s.key} assignments`} showCanvasCta={false} />
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-[16rem] overflow-y-auto">

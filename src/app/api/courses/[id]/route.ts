@@ -4,13 +4,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
-  const { authOptions } = await getAuth();
+  const { auth } = await import("../../../../lib/auth");
   const { updateCourseSchema } = await import("../../../../lib/validators");
   const { courseInterface } = await import("../../../../interfaces/course");
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const json = await req.json();
   const parsed = updateCourseSchema.safeParse(json);
@@ -20,12 +18,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
-  const { authOptions } = await getAuth();
+  const { auth } = await import("../../../../lib/auth");
   const { courseInterface } = await import("../../../../interfaces/course");
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await courseInterface.delete(session.user.id, params.id);
   return NextResponse.json({ ok: true });

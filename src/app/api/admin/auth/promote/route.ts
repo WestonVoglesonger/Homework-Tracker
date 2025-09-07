@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
 import type { Session } from "next-auth";
-import { getAuth } from "@/lib/auth";
 import { adminInterface } from "@/interfaces/admin";
 import { userInterface } from "@/interfaces/user";
 import { analyticsInterface } from "@/interfaces/analyticsInterface";
@@ -30,8 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get current session
-    const { authOptions } = await getAuth();
-    session = await getServerSession(authOptions);
+    session = await auth();
     
     // Do not hard-reject when there's no session. We'll rely on provided
     // email/password to prove identity for self-promotion path.

@@ -72,19 +72,34 @@ export const canvasInterface = {
   async listCanvasCourses(userId: string) {
     const accessToken = await canvasTokenService.getAccessTokenForUser(userId);
     if (!accessToken) return [];
-    return canvasService.listCanvasCourses(accessToken);
+    try {
+      return await canvasService.listCanvasCourses(accessToken);
+    } catch (error) {
+      console.warn("Canvas API error, returning empty array:", error);
+      return [];
+    }
   },
 
   async listCanvasAssignments(userId: string, courseId: string) {
     const accessToken = await canvasTokenService.getAccessTokenForUser(userId);
     if (!accessToken) return [];
-    return canvasService.listCanvasAssignments(accessToken, courseId);
+    try {
+      return await canvasService.listCanvasAssignments(accessToken, courseId);
+    } catch (error) {
+      console.warn("Canvas API error, returning empty array:", error);
+      return [];
+    }
   },
 
   async getSubmissionForSelf(userId: string, courseId: string, assignmentId: string) {
     const accessToken = await canvasTokenService.getAccessTokenForUser(userId);
     if (!accessToken) return null;
-    return canvasService.getSubmissionForSelf(accessToken, courseId, assignmentId);
+    try {
+      return await canvasService.getSubmissionForSelf(accessToken, courseId, assignmentId);
+    } catch (error) {
+      console.warn("Canvas API error, returning null:", error);
+      return null;
+    }
   },
 
   async upsertCanvasAccount(userId: string, tokenJson: { access_token: string; refresh_token?: string; expires_in?: number; token_type?: string; scope?: string }) {

@@ -4,13 +4,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
-  const { authOptions } = await getAuth();
+  const { auth } = await import("../../../../lib/auth");
   const { canvasInterface } = await import("../../../../interfaces/canvasInterface");
   const { prisma } = await import("../../../../db/client");
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   
   // Verify the user exists in the database
@@ -33,13 +31,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../../lib/auth");
-  const { authOptions } = await getAuth();
+  const { auth } = await import("../../../../lib/auth");
   const { canvasInterface } = await import("../../../../interfaces/canvasInterface");
   const { prisma } = await import("../../../../db/client");
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   
   // Verify the user exists in the database

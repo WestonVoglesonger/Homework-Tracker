@@ -1,13 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAdmin } from "@/app/hooks/useAdmin";
 import AppShell from "@/app/components/layout/AppShell";
 import { Card } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
+import {
+  AdminMetricCard,
+  AdminStatusCard,
+  AdminListCard,
+  AdminUserCard,
+  AdminErrorCard,
+  AdminStatsGrid,
+  AdminDashboardLayout
+} from "@/app/components/admin/AdminComponents";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
 import {
   AlertCircle,
@@ -17,18 +24,14 @@ import {
   Database,
   Shield,
   Clock,
-  CheckCircle,
   UserCheck,
   UserPlus
 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
-  const { isAdmin, isAdminLoading } = useAdmin();
   const { resolveError, isResolvingError } = useAdmin();
   const { convertWaitlistUser, isConvertingWaitlistUser } = useAdmin();
   const { updateSystemSettings, isUpdatingSettings } = useAdmin();
-  const router = useRouter();
   const [selectedTimeRange, setSelectedTimeRange] = useState<"day" | "week" | "month">("day");
   const [newMaxUsers, setNewMaxUsers] = useState<string>("");
 
@@ -61,107 +64,55 @@ export default function AdminDashboard() {
   // System settings query
   const { data: systemSettings, isLoading: settingsLoading } = useAdmin().useSystemSettings();
 
-  // Handle redirects in useEffect to avoid setState during render
-  useEffect(() => {
-    if (status !== "loading" && !isAdminLoading) {
-      if (!session) {
-        router.push("/auth/signin");
-      } else if (!isAdmin) {
-        router.push("/admin/auth");
-      }
-    }
-  }, [session, isAdmin, status, isAdminLoading, router]);
-
-  if (status === "loading" || isAdminLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!session || !isAdmin) {
-    return null;
-  }
 
   return (
     <AppShell>
-      <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Admin Dashboard
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Monitor system health, user activity, and error logs
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-green-600" />
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            Admin Access
-          </Badge>
-        </div>
-      </div>
+      <AdminDashboardLayout
+        title="Admin Dashboard"
+        description="Monitor system health, user activity, and error logs"
+        actions={
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-green-600" />
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Admin Access
+            </Badge>
+          </div>
+        }
+      >
 
       {/* System Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Users
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {systemLoading ? "..." : systemMetrics?.totalUsers || 0}
-              </p>
-            </div>
-            <Users className="h-8 w-8 text-blue-600" />
-          </div>
-        </Card>
+      <AdminStatsGrid>
+        <AdminMetricCard
+          title="Total Users"
+          value={systemLoading ? "..." : systemMetrics?.totalUsers || 0}
+          icon={<Users className="h-8 w-8" />}
+          loading={systemLoading}
+        />
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Active Today
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {systemLoading ? "..." : systemMetrics?.activeUsersToday || 0}
-              </p>
-            </div>
-            <Activity className="h-8 w-8 text-green-600" />
-          </div>
-        </Card>
+        <AdminMetricCard
+          title="Active Today"
+          value={systemLoading ? "..." : systemMetrics?.activeUsersToday || 0}
+          icon={<Activity className="h-8 w-8" />}
+          loading={systemLoading}
+          status="success"
+        />
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Courses
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {systemLoading ? "..." : systemMetrics?.totalCourses || 0}
-              </p>
-            </div>
-            <Database className="h-8 w-8 text-purple-600" />
-          </div>
-        </Card>
+        <AdminMetricCard
+          title="Total Courses"
+          value={systemLoading ? "..." : systemMetrics?.totalCourses || 0}
+          icon={<Database className="h-8 w-8" />}
+          loading={systemLoading}
+          status="warning"
+        />
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Errors (24h)
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {systemLoading ? "..." : systemMetrics?.errorCount || 0}
-              </p>
-            </div>
-            <AlertCircle className={`h-8 w-8 ${(systemMetrics?.errorCount || 0) > 10 ? 'text-red-600' : 'text-yellow-600'}`} />
-          </div>
-        </Card>
-      </div>
+        <AdminMetricCard
+          title="Errors (24h)"
+          value={systemLoading ? "..." : systemMetrics?.errorCount || 0}
+          icon={<AlertCircle className="h-8 w-8" />}
+          loading={systemLoading}
+          status={(systemMetrics?.errorCount || 0) > 10 ? "error" : "warning"}
+        />
+      </AdminStatsGrid>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -177,80 +128,45 @@ export default function AdminDashboard() {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Errors */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recent Errors
-              </h3>
-              {errorsLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
-                  ))}
-                </div>
-              ) : errorLogs && errorLogs.length > 0 ? (
-                <div className="space-y-3">
-                  {errorLogs.slice(0, 5).map((error: { id: string; message: string; level: string; timestamp: string; user?: { email?: string } }) => (
-                    <div key={error.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {error.message}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {error.user?.email || "Unknown user"} • {new Date(error.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                      <Badge variant={error.level === "ERROR" ? "destructive" : "secondary"}>
-                        {error.level}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                  No recent errors
-                </p>
+            <AdminListCard
+              title="Recent Errors"
+              items={errorLogs?.slice(0, 5)}
+              loading={errorsLoading}
+              emptyMessage="No recent errors"
+              renderItem={(error: { id: string; message: string; level: string; timestamp: string; user?: { email?: string }; endpoint?: string }) => (
+                <AdminErrorCard
+                  key={error.id}
+                  error={error}
+                  onResolve={resolveError}
+                />
               )}
-            </Card>
+            />
 
             {/* System Health */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                System Health
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Database</span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Healthy
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">API Response</span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Normal
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Error Rate</span>
-                  <Badge variant={
-                    (systemMetrics?.errorCount || 0) > 10 ? "destructive" : 
-                    (systemMetrics?.errorCount || 0) > 5 ? "secondary" : "outline"
-                  } className={
-                    (systemMetrics?.errorCount || 0) <= 5 ? "bg-green-50 text-green-700 border-green-200" : ""
-                  }>
-                    {(systemMetrics?.errorCount || 0) <= 5 ? (
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                    ) : (
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                    )}
-                    {(systemMetrics?.errorCount || 0) <= 5 ? "Low" : 
-                     (systemMetrics?.errorCount || 0) <= 10 ? "Medium" : "High"}
-                  </Badge>
-                </div>
-              </div>
-            </Card>
+            <AdminStatusCard
+              title="System Health"
+              status={(systemMetrics?.errorCount || 0) > 10 ? "error" : (systemMetrics?.errorCount || 0) > 5 ? "warning" : "healthy"}
+              description="Current status of system components and performance metrics"
+              metrics={[
+                {
+                  label: "Database",
+                  value: "Healthy",
+                  status: "healthy"
+                },
+                {
+                  label: "API Response",
+                  value: "Normal",
+                  status: "healthy"
+                },
+                {
+                  label: "Error Rate",
+                  value: (systemMetrics?.errorCount || 0) <= 5 ? "Low" :
+                         (systemMetrics?.errorCount || 0) <= 10 ? "Medium" : "High",
+                  status: (systemMetrics?.errorCount || 0) <= 5 ? "healthy" :
+                         (systemMetrics?.errorCount || 0) <= 10 ? "warning" : "error"
+                }
+              ]}
+            />
           </div>
         </TabsContent>
 
@@ -477,115 +393,43 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="errors">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Error Logs
-              </h3>
+          <AdminListCard
+            title="Error Logs"
+            items={errorLogs}
+            loading={errorsLoading}
+            emptyMessage="No error logs found"
+            actions={
               <Button variant="outline" size="sm">
                 Export Logs
               </Button>
-            </div>
-            
-            {errorsLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : errorLogs && errorLogs.length > 0 ? (
-              <div className="space-y-3">
-                {errorLogs.map((error: { id: string; message: string; level: string; timestamp: string; user?: { email?: string }; endpoint?: string }) => (
-                  <div key={error.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant={error.level === "ERROR" ? "destructive" : "secondary"}>
-                            {error.level}
-                          </Badge>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {new Date(error.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                          {error.message}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          User: {error.user?.email || "Unknown"} • 
-                          Endpoint: {error.endpoint || "N/A"}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => resolveError(error.id)}
-                        disabled={isResolvingError}
-                      >
-                        {isResolvingError ? "Resolving..." : "Resolve"}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">No error logs found</p>
-              </div>
+            }
+            renderItem={(error: { id: string; message: string; level: string; timestamp: string; user?: { email?: string }; endpoint?: string }) => (
+              <AdminErrorCard
+                key={error.id}
+                error={error}
+                onResolve={isResolvingError ? undefined : resolveError}
+              />
             )}
-          </Card>
+          />
         </TabsContent>
 
         <TabsContent value="users">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-              User Management
-            </h3>
-            
-            {usersLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : users && users.length > 0 ? (
-              <div className="space-y-3">
-                {users.map((user: { id: string; name?: string; email: string; isAdmin: boolean; _count: { courses: number } }) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          {user.name?.[0] || user.email?.[0] || "U"}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {user.name || "No name"}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {user.isAdmin && (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          Admin
-                        </Badge>
-                      )}
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {user._count.courses} courses
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                No users found
-              </p>
+          <AdminListCard
+            title="User Management"
+            items={users}
+            loading={usersLoading}
+            emptyMessage="No users found"
+            renderItem={(user: { id: string; name?: string; email: string; isAdmin: boolean; _count: { courses: number } }) => (
+              <AdminUserCard
+                key={user.id}
+                user={user}
+                onAction={(action, userId) => {
+                  // Handle user actions (view, edit, etc.)
+                  console.log(`${action} user ${userId}`);
+                }}
+              />
             )}
-          </Card>
+          />
         </TabsContent>
 
         <TabsContent value="analytics">
@@ -665,7 +509,7 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </AdminDashboardLayout>
     </AppShell>
   );
 }

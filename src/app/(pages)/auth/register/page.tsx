@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Spinner } from "@/app/components/ui/spinner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/app/components/ui/dialog";
+import { LoadingSpinner } from "@/app/components/ui/LoadingState";
 import Link from "next/link";
-import { Spinner } from "@components/ui/spinner";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog";
 
 type RegisterResponse = {
   id: string;
@@ -99,26 +100,9 @@ export default function RegisterPage() {
   // Show loading state while checking limit
   if (checkingLimit) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-md w-full space-y-6">
-            <div className="text-center">
-              <Image
-                src="/logo/due-north-logo.png"
-                alt="DueNorth Logo"
-                width={80}
-                height={80}
-                className="mx-auto w-20 h-20 mb-4"
-                priority
-              />
-            </div>
-            <div className="space-y-4 p-6 rounded-xl border bg-white">
-              <div className="text-center">
-                <Spinner size={32} />
-                <p className="mt-4 text-gray-600">Checking availability...</p>
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <LoadingSpinner size={48} text="Checking availability..." />
         </div>
       </div>
     );

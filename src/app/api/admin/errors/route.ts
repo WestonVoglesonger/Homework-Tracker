@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
 import type { Session } from "next-auth";
-import { getAuth } from "@/lib/auth";
 import { errorLogInterface } from "@/interfaces/errorLogInterface";
 import { analyticsInterface } from "@/interfaces/analyticsInterface";
 import { z } from "zod";
@@ -22,8 +21,7 @@ export async function GET(req: NextRequest) {
   let session: Session | null = null;
   
   try {
-    const { authOptions } = await getAuth();
-    session = await getServerSession(authOptions);
+    session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -98,8 +96,7 @@ export async function POST(req: NextRequest) {
   let session: Session | null = null;
   
   try {
-    const { authOptions } = await getAuth();
-    session = await getServerSession(authOptions);
+    session = await auth();
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

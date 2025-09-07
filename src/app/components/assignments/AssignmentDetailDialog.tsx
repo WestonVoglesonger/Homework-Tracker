@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@components/ui/badge";
 import { format, parseISO, isPast } from "date-fns";
 import { Calendar, Clock, BookOpen, ExternalLink, FileText, AlertCircle } from "lucide-react";
+import { InfoCard } from "@components/ui/DataCard";
 
 interface AssignmentDetailDialogProps {
   assignment: AssignmentDTO | null;
@@ -78,8 +79,7 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
 
           {/* Course Information */}
           {course && (
-            <div className="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <BookOpen className="h-4 w-4 text-gray-500" />
+            <InfoCard icon={<BookOpen className="h-4 w-4 text-gray-500" />}>
               <div>
                 <div className="font-medium text-gray-900 dark:text-white">
                   {course.name}
@@ -90,13 +90,15 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
                   </div>
                 )}
               </div>
-            </div>
+            </InfoCard>
           )}
 
           {/* Due Date */}
           {assignment.dueAt && (
-            <div className="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Calendar className={`h-4 w-4 ${shouldShowRed ? 'text-red-500' : 'text-gray-500'}`} />
+            <InfoCard
+              icon={<Calendar className={`h-4 w-4 ${shouldShowRed ? 'text-red-500' : 'text-gray-500'}`} />}
+              variant={shouldShowRed ? "error" : "default"}
+            >
               <div>
                 <div className={`font-medium ${shouldShowRed ? 'text-red-700 dark:text-red-300' : 'text-gray-900 dark:text-white'}`}>
                   Due: {(() => {
@@ -122,19 +124,18 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
                   </div>
                 )}
               </div>
-            </div>
+            </InfoCard>
           )}
 
           {/* Estimated Hours */}
           {assignment.estimatedHours && (
-            <div className="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Clock className="h-4 w-4 text-gray-500" />
+            <InfoCard icon={<Clock className="h-4 w-4 text-gray-500" />}>
               <div>
                 <div className="font-medium text-gray-900 dark:text-white">
                   Estimated Time: {assignment.estimatedHours} hours
                 </div>
               </div>
-            </div>
+            </InfoCard>
           )}
 
           {/* Description */}

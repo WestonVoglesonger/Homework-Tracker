@@ -4,10 +4,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("@/lib/auth");
-  const { authOptions } = await getAuth();
-  const session = await getServerSession(authOptions);
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { userInterface } = await import("@/interfaces/user");
@@ -16,10 +14,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("@/lib/auth");
-  const { authOptions } = await getAuth();
-  const session = await getServerSession(authOptions);
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));

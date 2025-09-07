@@ -3,6 +3,12 @@ const nextConfig = {
   experimental: {
     typedRoutes: false
   },
+  // Silence dev cross-origin warnings for 0.0.0.0
+  // https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  allowedDevOrigins: [
+    "0.0.0.0",
+    "localhost",
+  ],
   async redirects() {
     return [
       { source: "/data", destination: "/settings#data", permanent: true },

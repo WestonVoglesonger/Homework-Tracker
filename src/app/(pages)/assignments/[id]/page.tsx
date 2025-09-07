@@ -6,12 +6,15 @@ import { AssignmentDTO, AssignmentStatus } from "@/interfaces/assignment";
 import { AppStatus } from "@/lib/status";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
+import { SkeletonGrid } from "@components/ui/LoadingState";
 import { Skeleton } from "@components/ui/skeleton";
+import { DeleteAssignmentConfirmation } from "@components/ui/DeleteConfirmation";
+import { SectionCard } from "@components/ui/DataCard";
 import { formatDate } from "@/lib/date";
 import { useUpdateAssignment, useDeleteAssignment } from "@/app/hooks/useAssignments";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
 import { StatusPill, statusMeta } from "@components/ui/status";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/app/hooks/useErrorHandler";
 import Link from "next/link";
 
 async function getAssignment(id: string): Promise<AssignmentDTO> {
@@ -23,6 +26,7 @@ async function getAssignment(id: string): Promise<AssignmentDTO> {
 export default function AssignmentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { handleError, handleSuccess } = useErrorHandler();
   const id = params?.id as string;
   
   const { data: assignment, isLoading } = useQuery({
@@ -34,14 +38,15 @@ export default function AssignmentDetailPage() {
   const deleteAssignment = useDeleteAssignment();
   
   const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this assignment?")) {
-      try {
-        await deleteAssignment.mutateAsync(id);
-        toast.success("Assignment deleted");
-        router.push("/dashboard");
-      } catch {
-        toast.error("Failed to delete assignment");
-      }
+    try {
+      await deleteAssignment.mutateAsync(id);
+      handleSuccess("Assignment deleted successfully!", { operation: "delete_assignment" });
+      router.push("/dashboard");
+    } catch (err) {
+      handleError(err instanceof Error ? err : new Error("Failed to delete assignment"), {
+        operation: "delete_assignment",
+        resourceId: id
+      });
     }
   };
   
@@ -52,11 +57,7 @@ export default function AssignmentDetailPage() {
         {isLoading ? (
           <div className="space-y-6">
             <Skeleton className="h-16 w-3/4" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
+            <SkeletonGrid rows={3} height="h-32" className="grid grid-cols-1 md:grid-cols-3 gap-6" />
             <Skeleton className="h-64" />
           </div>
         ) : assignment ? (
@@ -80,13 +81,17 @@ export default function AssignmentDetailPage() {
                   )}
                 </div>
               </div>
-              <Button 
-                variant="destructive" 
-                onClick={handleDelete}
-                className="px-6"
+              <DeleteAssignmentConfirmation
+                assignmentTitle={assignment.title}
+                onConfirm={handleDelete}
               >
-                Delete
-              </Button>
+                <Button
+                  variant="destructive"
+                  className="px-6"
+                >
+                  Delete
+                </Button>
+              </DeleteAssignmentConfirmation>
             </div>
             
             {/* Status Cards */}
@@ -156,24 +161,20 @@ export default function AssignmentDetailPage() {
             )}
             
             {/* Notes */}
-            <Card className="card-hover">
-              <CardHeader>
-                <CardTitle className="text-gray-900 dark:text-white">Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <textarea
-                  className="w-full h-32 p-4 rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500/20 transition-colors text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 resize-none"
-                  placeholder="Add your notes here..."
-                  value={assignment.notes || ""}
-                  onChange={(e) => 
-                    updateAssignment.mutate({ 
-                      id, 
-                      patch: { notes: e.target.value } 
-                    })
-                  }
-                />
-              </CardContent>
-            </Card>
+            <SectionCard>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notes</h3>
+              <textarea
+                className="w-full h-32 p-4 rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500/20 transition-colors text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 resize-none"
+                placeholder="Add your notes here..."
+                value={assignment.notes || ""}
+                onChange={(e) =>
+                  updateAssignment.mutate({
+                    id,
+                    patch: { notes: e.target.value }
+                  })
+                }
+              />
+            </SectionCard>
             
             {/* Canvas Link */}
             {assignment.canvasUrl && (

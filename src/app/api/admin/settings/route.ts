@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { getAuth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const { authOptions } = await getAuth();
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -28,8 +26,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { authOptions } = await getAuth();
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

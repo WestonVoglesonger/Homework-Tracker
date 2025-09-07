@@ -15,6 +15,7 @@ import { useAdmin } from "@/app/hooks/useAdmin";
 import { toast } from "sonner";
 import { CanvasSetupWizard } from "@/app/components/canvas/CanvasSetupWizard";
 import { QuickCanvasSetup } from "@/app/components/canvas/QuickCanvasSetup";
+import { DeleteAccountConfirmation } from "@/app/components/ui/DeleteConfirmation";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -97,6 +98,16 @@ export default function SettingsPage() {
       setExportLoading(false);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    const res = await fetch("/api/account/delete", { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Account deleted");
+      try { window.location.href = "/"; } catch {}
+    } else {
+      toast.error("Failed to delete account");
+    }
+  };
   // Show limited settings for waitlisted users (Delete account only)
   if (isWaitlisted) {
     return (
@@ -111,21 +122,11 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 While on the waitlist, the only available action is deleting your account and all data.
               </p>
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  if (!confirm("Delete your account and all data? This cannot be undone.")) return;
-                  const res = await fetch("/api/account/delete", { method: "DELETE" });
-                  if (res.ok) {
-                    toast.success("Account deleted");
-                    try { window.location.href = "/"; } catch {}
-                  } else {
-                    toast.error("Failed to delete account");
-                  }
-                }}
-              >
-                Delete account
-              </Button>
+              <DeleteAccountConfirmation onConfirm={handleDeleteAccount}>
+                <Button variant="destructive">
+                  Delete account
+                </Button>
+              </DeleteAccountConfirmation>
             </CardContent>
           </Card>
         </div>
@@ -258,21 +259,11 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Permanently delete your account and all associated data. This action cannot be undone.
             </p>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                if (!confirm("Delete your account and all data? This cannot be undone.")) return;
-                const res = await fetch("/api/account/delete", { method: "DELETE" });
-                if (res.ok) {
-                  toast.success("Account deleted");
-                  try { window.location.href = "/"; } catch {}
-                } else {
-                  toast.error("Failed to delete account");
-                }
-              }}
-            >
-              Delete account
-            </Button>
+            <DeleteAccountConfirmation onConfirm={handleDeleteAccount}>
+              <Button variant="destructive">
+                Delete account
+              </Button>
+            </DeleteAccountConfirmation>
           </CardContent>
         </Card>
         <Card>

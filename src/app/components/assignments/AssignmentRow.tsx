@@ -5,10 +5,13 @@ import { formatDate } from "@/lib/date";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
 import { statusMeta } from "@components/ui/status";
 import Link from "next/link";
+import { DeleteAssignmentConfirmation } from "@components/ui/DeleteConfirmation";
+import { useErrorHandler } from "@/app/hooks/useErrorHandler";
 
 export function AssignmentRow({ a }: { a: AssignmentDTO }) {
   const update = useUpdateAssignment();
   const del = useDeleteAssignment();
+  const { handleError, handleSuccess } = useErrorHandler();
   
 
   
@@ -92,17 +95,28 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
           </Link>
-          <button
-            className="p-1 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex-shrink-0"
-            title="Delete assignment"
-            disabled={del.isPending}
-            onClick={async () => {
-              if (!confirm("Delete this assignment?")) return;
-              await del.mutateAsync(a.id);
+          <DeleteAssignmentConfirmation
+            assignmentTitle={a.title || "this assignment"}
+            onConfirm={async () => {
+              try {
+                await del.mutateAsync(a.id);
+                handleSuccess("Assignment deleted successfully!", { operation: "delete_assignment", resourceId: a.id });
+              } catch (error) {
+                handleError(error instanceof Error ? error : new Error("Failed to delete assignment"), {
+                  operation: "delete_assignment",
+                  resourceId: a.id
+                });
+              }
             }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a2 2 0 012 2v1H8V6a2 2 0 012-2z"/></svg>
-          </button>
+            <button
+              className="p-1 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex-shrink-0"
+              title="Delete assignment"
+              disabled={del.isPending}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a2 2 0 012 2v1H8V6a2 2 0 012-2z"/></svg>
+            </button>
+          </DeleteAssignmentConfirmation>
         </div>
       </div>
     </div>

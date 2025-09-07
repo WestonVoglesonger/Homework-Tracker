@@ -14,7 +14,7 @@
     "admin:setup": "tsx scripts/setup-admin.ts"
   },
   "dependencies": {
-    "@next-auth/prisma-adapter": "^1.0.7",
+    "@auth/prisma-adapter": "^2.10.0",
     "@prisma/client": "^5.18.0",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-select": "^2.0.0",
@@ -32,7 +32,7 @@
     "isomorphic-dompurify": "^2.26.0",
     "lucide-react": "^0.540.0",
     "next": "^14.2.5",
-    "next-auth": "^4.24.7",
+    "next-auth": "^5.0.0-beta.29",
     "nodemailer": "^6.10.1",
     "postcss": "^8.4.39",
     "react": "^18.2.0",

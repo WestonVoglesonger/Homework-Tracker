@@ -3,15 +3,18 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useDeleteCourse } from "@/app/hooks/useCourses";
 import { Spinner } from "@components/ui/spinner";
+import { DeleteCourseConfirmation } from "@components/ui/DeleteConfirmation";
+import { useErrorHandler } from "@/app/hooks/useErrorHandler";
 
-export function CourseCard({ id, name, code, term, color }: { 
-  id: string; 
-  name: string; 
-  code?: string; 
-  term?: string; 
-  color?: string 
+export function CourseCard({ id, name, code, term, color }: {
+  id: string;
+  name: string;
+  code?: string;
+  term?: string;
+  color?: string
 }) {
   const del = useDeleteCourse();
+  const { handleError, handleSuccess } = useErrorHandler();
   const colors = [
     "from-blue-500 to-blue-600",
     "from-green-500 to-green-600", 
@@ -68,19 +71,32 @@ export function CourseCard({ id, name, code, term, color }: {
 
           {/* Delete button - bottom right */}
           <div className="absolute right-3 bottom-3 z-10">
-            <button
-              className="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              title="Delete course"
-              disabled={del.isPending}
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!confirm("Delete this course and its assignments?")) return;
-                await del.mutateAsync(id);
+            <DeleteCourseConfirmation
+              courseName={name}
+              onConfirm={async () => {
+                try {
+                  await del.mutateAsync(id);
+                  handleSuccess("Course deleted successfully!", { operation: "delete_course", resourceId: id });
+                } catch (error) {
+                  handleError(error instanceof Error ? error : new Error("Failed to delete course"), {
+                    operation: "delete_course",
+                    resourceId: id
+                  });
+                }
               }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a2 2 0 012 2v1H8V6a2 2 0 012-2z"/></svg>
-            </button>
+              <button
+                className="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title="Delete course"
+                disabled={del.isPending}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a2 2 0 012 2v1H8V6a2 2 0 012-2z"/></svg>
+              </button>
+            </DeleteCourseConfirmation>
           </div>
         </CardContent>
       </Card>

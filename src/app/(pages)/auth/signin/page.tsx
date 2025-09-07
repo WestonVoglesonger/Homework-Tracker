@@ -1,27 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { getSignInErrorMessage } from "@/lib/authErrors";
 import Link from "next/link";
 import Image from "next/image";
-import { Spinner } from "@components/ui/spinner";
+import { LoadingButton } from "@/app/components/ui/LoadingState";
 
 export default function SignInPage() {
-  const { status } = useSession();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
 
-  // If already authenticated (valid session cookie), skip this page
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.replace("/dashboard");
-    }
-  }, [status, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,14 +42,6 @@ export default function SignInPage() {
     }
   }
 
-  if (status === "authenticated") {
-    return (
-      <div className="min-h-screen grid place-items-center">
-        <Spinner size={24} />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 flex items-center justify-center p-6">
@@ -84,9 +67,13 @@ export default function SignInPage() {
               <label className="text-sm">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded p-2" required />
             </div>
-            <button type="submit" disabled={loading} className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70">
-              {loading ? (<span className="inline-flex items-center gap-2"><Spinner size={16} /> Signing in…</span>) : "Sign in"}
-            </button>
+            <LoadingButton
+              loading={loading}
+              loadingText="Signing in..."
+              className="w-full px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-70"
+            >
+              Sign in
+            </LoadingButton>
             <div className="text-sm text-center space-y-1">
               <div>
                 No account? <Link href="/auth/register" className="text-blue-600">Register</Link>

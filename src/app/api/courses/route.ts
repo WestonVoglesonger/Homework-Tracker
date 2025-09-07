@@ -4,25 +4,21 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../lib/auth");
-  const { authOptions } = await getAuth();
+  const { auth } = await import("../../../lib/auth");
   const { courseInterface } = await import("../../../interfaces/course");
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const courses = await courseInterface.listForUser(session.user.id);
   return NextResponse.json(courses);
 }
 
 export async function POST(req: NextRequest) {
-  const { getServerSession } = await import("next-auth");
-  const { getAuth } = await import("../../../lib/auth");
-  const { authOptions } = await getAuth();
+  const { auth } = await import("../../../lib/auth");
   const { createCourseSchema } = await import("../../../lib/validators");
   const { courseInterface } = await import("../../../interfaces/course");
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const json = await req.json();

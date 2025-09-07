@@ -1,18 +1,17 @@
 "use client";
 import Link from "next/link";
 import { ReactNode, useEffect, useMemo, useState } from "react";
-import { signOut, useSession } from "next-auth/react";
-import { Button } from "../ui/button";
+import { useSession } from "next-auth/react";
 import { Logo } from "../ui/Logo";
-import { Spinner } from "@components/ui/spinner";
-import { useAdmin } from "@/app/hooks/useAdmin";
+import { LoadingSpinner } from "../ui/LoadingState";
 import { setupGlobalErrorHandler } from "@/lib/errorLogger";
 import { CanvasSetupGate } from "@/app/components/canvas/CanvasSetupGate";
 import { usePathname, useRouter } from "next/navigation";
+import { EnhancedNavigation } from "@/app/components/navigation/EnhancedNavigation";
+import { UserActions, UserStatus } from "@/app/components/navigation/UserNavigation";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const { isAdmin } = useAdmin();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -86,11 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [status, isProtectedPath, isWaitlisted]);
 
   if (status === "loading" || checkingToken) {
-    return (
-      <div className="min-h-screen grid place-items-center">
-        <Spinner size={48} className="text-gray-500" />
-      </div>
-    );
+    return <LoadingSpinner size={48} className="text-gray-500" fullScreen />;
   }
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -114,49 +109,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <div className="text-lg font-semibold">Menu</div>
                 <button className="px-2 py-1 text-sm border rounded" onClick={() => setMobileNavOpen(false)}>Close</button>
               </div>
-              {status === "authenticated" && (
-                <>
-                  {!isWaitlisted ? (
-                    <>
-                      <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Dashboard</Link>
-                      <Link href="/courses" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Courses</Link>
-                      <Link href="/calendar" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Calendar</Link>
-                      <Link href="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Settings</Link>
-                      {isAdmin && (
-                        <Link href="/admin" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Admin Panel</Link>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Link href="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setMobileNavOpen(false)}>Settings</Link>
-                    </>
-                  )}
-                </>
-              )}
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                {status === "authenticated" ? (
-                  <button
-                    className="w-full px-3 py-2 rounded-md border text-left"
-                    onClick={async () => {
-                      setMobileNavOpen(false);
-                      await signOut({ redirect: false });
-                      router.push("/");
-                      router.refresh();
-                    }}
-                  >
-                    Sign out
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <Link href="/auth/signin" className="flex-1">
-                      <button className="w-full px-3 py-2 rounded-md border">Sign in</button>
-                    </Link>
-                    <Link href="/auth/register" className="flex-1">
-                      <button className="w-full px-3 py-2 rounded-md border">Register</button>
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <EnhancedNavigation mobile />
+              <UserActions mobile />
             </div>
           </>
         )}
@@ -165,97 +119,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between">
             <Logo size="lg" />
           </div>
-          <nav className="flex flex-col gap-2 mt-6">
-            {status === "authenticated" && (
-              !isWaitlisted ? (
-                <>
-                  <Link 
-                    href="/dashboard" 
-                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    Dashboard
-                  </Link>
-                  <Link 
-                    href="/courses" 
-                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    Courses
-                  </Link>
-                  <Link 
-                    href="/calendar" 
-                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-purple-500" />
-                    Calendar
-                  </Link>
-                  <Link 
-                    href="/settings#data" 
-                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-orange-500" />
-                    Settings
-                  </Link>
-                  {isAdmin && (
-                    <Link 
-                      href="/admin" 
-                      className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      Admin Panel
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Link 
-                    href="/settings#data" 
-                    className="group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-orange-500" />
-                    Settings
-                  </Link>
-                </>
-              )
-            )}
-          </nav>
+          <EnhancedNavigation />
           
           {/* Account/CTA section positioned above footer */}
-          {isAuthed ? (
-            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="space-y-3">
-                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Signed in as</div>
-                  <div className="text-sm font-medium truncate text-gray-900 dark:text-white" title={session.user?.email || undefined}>
-                    {session.user?.email}
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={async () => { await signOut({ redirect: false }); router.push("/"); router.refresh(); }}
-                  className="w-full"
-                >
-                  Sign out
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-gray-900 dark:text-white">Welcome to DueNorth</div>
-                <div className="space-y-2">
-                  <Link href="/auth/signin" className="block">
-                    <Button size="sm" className="w-full">Sign in</Button>
-                  </Link>
-                  <Link href="/auth/register" className="block">
-                    <Button size="sm" variant="outline" className="w-full">Create account</Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <UserStatus />
+            <UserActions />
+          </div>
 
           {/* Compact legal footer pinned to bottom */}
           <div className="mt-auto pt-3 text-[11px] text-gray-500 dark:text-gray-400">
