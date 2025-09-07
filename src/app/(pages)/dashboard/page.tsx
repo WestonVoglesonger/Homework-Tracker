@@ -199,7 +199,7 @@ export default function DashboardPage() {
               key={s.key} 
               className={`assignment-card ${s.cardClass} ${s.bgColor} ${s.borderColor} border-2 hover:shadow-lg transition-all duration-300`}
             >
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between">
                   <span className={`text-2xl font-bold ${s.color}`}>{s.title}</span>
                   <span className={`px-4 py-2 rounded-full ${s.badgeColor} ${s.color} border ${s.borderColor} font-bold text-lg min-w-[3rem] text-center shadow-sm`}>
@@ -215,11 +215,11 @@ export default function DashboardPage() {
                     <Skeleton className="h-24" />
                   </div>
                 ) : groups[s.key].length === 0 ? (
-                  <div className="py-8">
+                  <div className="py-4">
                     <NoAssignmentsEmptyState title={`No ${s.key} assignments`} showCanvasCta={false} />
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[20rem] md:max-h-[24rem] overflow-y-auto">
+                  <div className="space-y-2 h-[13rem] md:h-[19rem] overflow-y-auto">
                     {groups[s.key].map((a) => (
                       <AssignmentRow key={a.id} a={a} />
                     ))}
