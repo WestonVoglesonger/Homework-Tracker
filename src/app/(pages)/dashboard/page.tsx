@@ -219,7 +219,7 @@ export default function DashboardPage() {
                     <NoAssignmentsEmptyState title={`No ${s.key} assignments`} showCanvasCta={false} />
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[22rem] md:max-h-[26rem] overflow-y-auto">
+                  <div className="space-y-2 max-h-[18rem] md:max-h-[20rem] overflow-y-auto">
                     {groups[s.key].map((a) => (
                       <AssignmentRow key={a.id} a={a} />
                     ))}

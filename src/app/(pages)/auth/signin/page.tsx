@@ -20,7 +20,11 @@ export default function SignInPage() {
     setLoading(true);
     const res = await signIn("credentials", { email, password, redirect: false });
     if (res?.error) {
-      setError(getSignInErrorMessage(res.error));
+      let code = res.error;
+      if (code.startsWith("Error:")) {
+        code = code.replace(/^Error:\\s*/, "");
+      }
+      setError(getSignInErrorMessage(code));
     } else if (res?.ok) {
       window.location.href = "/dashboard";
     }

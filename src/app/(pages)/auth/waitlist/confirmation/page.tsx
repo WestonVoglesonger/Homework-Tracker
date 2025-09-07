@@ -42,6 +42,7 @@ export default function WaitlistConfirmationPage() {
               </h1>
               <p className="text-gray-600">
                 Thank you for your interest in DueNorth. We&apos;ve added you to our waitlist and sent you a confirmation email.
+                Please verify your email address to ensure you receive your invitation when space opens.
               </p>
             </div>
 
@@ -52,6 +53,7 @@ export default function WaitlistConfirmationPage() {
                   <h3 className="font-medium text-blue-900 mb-1">What happens next?</h3>
                   <ul className="text-sm text-blue-800 space-y-1">
                     <li>• Check your email for a welcome message</li>
+                    <li>• Click the verification link to confirm your email</li>
                     <li>• We&apos;ll notify you when space becomes available</li>
                     <li>• You can access our public pages in the meantime</li>
                   </ul>
