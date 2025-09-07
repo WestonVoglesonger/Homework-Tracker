@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   // Verify this is an authorized request (e.g., from a cron job)
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  const isAuthorized = cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   

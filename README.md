@@ -74,19 +74,19 @@ pnpm dev
 
 ## Vercel Cron for Canvas Sync
 
-1. Set environment variable in Vercel:
+1. Set environment variables in Vercel:
    - `CRON_SECRET` = a strong random string (used to authorize the cron request)
 
 2. Ensure `vercel.json` contains:
    ```json
    {
      "crons": [
-       { "path": "/api/canvas/sync", "schedule": "0 * * * *" }
+       { "path": "/api/canvas/sync", "schedule": "*/30 * * * *" }
      ]
    }
    ```
 
-Vercel will POST to `/api/canvas/sync` hourly with your project token; the route validates `Authorization: Bearer ${CRON_SECRET}`.
+Vercel will GET `/api/canvas/sync` every 30 minutes and include `Authorization: Bearer ${CRON_SECRET}`. The route validates this header.
 
 ## Dev Container
 

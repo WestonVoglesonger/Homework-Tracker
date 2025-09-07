@@ -101,7 +101,16 @@ export const canvasService = {
 };
 
 export async function getAccessTokenForUser(userId: string) {
-  const account = await prisma.account.findFirst({ where: { userId, provider: "canvas" } });
+  const account = await prisma.account.findFirst({
+    where: {
+      userId,
+      provider: "canvas",
+      OR: [
+        { expires_at: null }, // Tokens without expiration
+        { expires_at: { gt: Math.floor(Date.now() / 1000) } } // Tokens that haven't expired
+      ]
+    }
+  });
   const stored = account?.access_token ?? null;
   return stored ? decryptText(stored) : null;
 }
