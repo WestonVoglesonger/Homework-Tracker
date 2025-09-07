@@ -138,6 +138,7 @@ export function useRouteAccess(requiredState?: UserState | UserState[]) {
  */
 export function useUserStateUI() {
   const userState = useUserState();
+  const showMessages = process.env.NODE_ENV !== "production";
 
   const getNavigationItems = () => {
     switch (userState.state) {
@@ -163,6 +164,8 @@ export function useUserStateUI() {
   };
 
   const getUserMessage = () => {
+    // Hide status messages during loading and in production to avoid debug leakage
+    if (userState.isLoading || !showMessages) return null;
     switch (userState.state) {
       case "authenticated_waitlisted":
         return {

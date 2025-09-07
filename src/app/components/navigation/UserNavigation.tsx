@@ -71,6 +71,7 @@ export function UserNavigation({ mobile = false }: { mobile?: boolean }) {
  */
 export function UserActions({ mobile = false }: { mobile?: boolean }) {
   const { availableActions, userMessage } = useUserStateUI();
+  const isProd = process.env.NODE_ENV === "production";
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -82,7 +83,7 @@ export function UserActions({ mobile = false }: { mobile?: boolean }) {
   if (mobile) {
     return (
       <div className="space-y-3">
-        {userMessage && (
+        {userMessage && !isProd && (
           <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700">
             <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
               {userMessage.title}
@@ -175,8 +176,9 @@ export function UserActions({ mobile = false }: { mobile?: boolean }) {
  */
 export function UserStatus() {
   const { userMessage } = useUserStateUI();
+  const isProd = process.env.NODE_ENV === "production";
 
-  if (!userMessage) return null;
+  if (!userMessage || isProd) return null;
 
   return (
     <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700">
