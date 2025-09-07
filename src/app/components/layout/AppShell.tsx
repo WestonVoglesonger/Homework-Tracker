@@ -121,8 +121,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <EnhancedNavigation />
           
-          {/* Account/CTA section positioned above footer (no divider for cleaner look) */}
-          <div className="mt-6 pt-4">
+          {/* Account/CTA section positioned above footer with a single divider */}
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
             <UserStatus />
             <UserActions />
           </div>
