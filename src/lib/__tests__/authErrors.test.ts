@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getSignInErrorMessage } from "../authErrors";
+import { z } from "zod";
 
 describe("getSignInErrorMessage", () => {
   it("returns empty string for empty code", () => {
@@ -39,8 +40,6 @@ describe("getSignInErrorMessage", () => {
 
 // Test for email domain validation
 describe("Email Domain Validation", () => {
-  const { z } = require("zod");
-
   const emailSchema = z.string()
     .email()
     .refine((email) => !email.toLowerCase().endsWith('.edu'), {
