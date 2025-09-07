@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Spinner } from "@components/ui/spinner";
 
@@ -42,14 +43,16 @@ function VerifyConfirmContent() {
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <Image 
-            src="/logo/due-north-logo.png" 
-            alt="DueNorth Logo" 
-            width={80} 
-            height={80} 
-            className="mx-auto w-20 h-20 mb-4"
-            priority
-          />
+          <Link href="/">
+            <Image
+              src="/logo/due-north-logo.png"
+              alt="DueNorth Logo"
+              width={80}
+              height={80}
+              className="mx-auto w-20 h-20 mb-4 cursor-pointer"
+              priority
+            />
+          </Link>
         </div>
         <div className="space-y-4 p-6 rounded-xl border bg-white text-center">
           <h1 className="text-xl font-semibold">Confirm email verification</h1>
@@ -80,14 +83,16 @@ export default function VerifyConfirmPage() {
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
-            <Image 
-              src="/logo/due-north-logo.png" 
-              alt="DueNorth Logo" 
-              width={80} 
-              height={80} 
-              className="mx-auto w-20 h-20 mb-4"
-              priority
-            />
+            <Link href="/">
+              <Image
+                src="/logo/due-north-logo.png"
+                alt="DueNorth Logo"
+                width={80}
+                height={80}
+                className="mx-auto w-20 h-20 mb-4 cursor-pointer"
+                priority
+              />
+            </Link>
           </div>
           <div className="space-y-4 p-6 rounded-xl border bg-white text-center">
             <h1 className="text-xl font-semibold">Loading...</h1>

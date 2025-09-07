@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Spinner } from "@components/ui/spinner";
 
@@ -47,14 +48,16 @@ function ResetPasswordContent() {
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <Image 
-            src="/logo/due-north-logo.png" 
-            alt="DueNorth Logo" 
-            width={80} 
-            height={80} 
-            className="mx-auto w-20 h-20 mb-4"
-            priority
-          />
+          <Link href="/">
+            <Image
+              src="/logo/due-north-logo.png"
+              alt="DueNorth Logo"
+              width={80}
+              height={80}
+              className="mx-auto w-20 h-20 mb-4 cursor-pointer"
+              priority
+            />
+          </Link>
         </div>
         <form onSubmit={onSubmit} className="space-y-4 p-6 rounded-xl border bg-white">
           <h1 className="text-xl font-semibold">Reset password</h1>

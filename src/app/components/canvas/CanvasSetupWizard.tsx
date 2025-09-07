@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   Dialog,
@@ -98,7 +98,6 @@ const setupSteps: SetupStep[] = [
 ];
 
 export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWizardProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [token, setToken] = useState("");
@@ -411,9 +410,9 @@ export function CanvasSetupWizard({ isOpen, onClose, onSuccess }: CanvasSetupWiz
                         toast.success("Canvas connected! Redirecting...");
                         onSuccess();
                         setTimeout(() => {
-                          // Redirect to intended destination or settings
+                          // Redirect to intended destination or settings using hard redirect for reliability
                           const destination = intendedDestination || "/settings?canvas-import=true";
-                          router.push(destination);
+                          window.location.href = destination;
                         }, 500);
                       } else {
                         const error = await res.text();

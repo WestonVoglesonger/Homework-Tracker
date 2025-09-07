@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { cn } from "./cn";
 
 interface LogoProps {
@@ -27,7 +28,7 @@ export function Logo({ size = "md", className, showText = true }: LogoProps) {
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <Link href="/" className={cn("flex items-center gap-2", className)}>
       <Image
         src="/logo/due-north-logo.png"
         alt="DueNorth Logo"
@@ -41,6 +42,6 @@ export function Logo({ size = "md", className, showText = true }: LogoProps) {
           DueNorth
         </span>
       )}
-    </div>
+    </Link>
   );
 }

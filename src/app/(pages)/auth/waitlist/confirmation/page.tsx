@@ -22,14 +22,16 @@ export default function WaitlistConfirmationPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
-            <Image
-              src="/logo/due-north-logo.png"
-              alt="DueNorth Logo"
-              width={80}
-              height={80}
-              className="mx-auto w-20 h-20 mb-4"
-              priority
-            />
+            <Link href="/">
+              <Image
+                src="/logo/due-north-logo.png"
+                alt="DueNorth Logo"
+                width={80}
+                height={80}
+                className="mx-auto w-20 h-20 mb-4 cursor-pointer"
+                priority
+              />
+            </Link>
           </div>
 
           <div className="space-y-6 p-6 rounded-xl border bg-white">
