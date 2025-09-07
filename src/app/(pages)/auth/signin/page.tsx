@@ -24,8 +24,18 @@ export default function SignInPage() {
       if (code.startsWith("Error:")) {
         code = code.replace(/^Error:\\s*/, "");
       }
-      // If callback wraps codes (e.g., CallbackRouteError), we still map via getSignInErrorMessage
-      setError(getSignInErrorMessage(code));
+      // Diagnose underlying cause server-side to disambiguate CallbackRouteError
+      try {
+        const diag = await fetch("/api/auth/diagnose", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+        const mapped = getSignInErrorMessage(diag?.code || code);
+        setError(mapped);
+      } catch {
+        setError(getSignInErrorMessage(code));
+      }
     } else if (res?.ok) {
       window.location.href = "/dashboard";
     }
