@@ -1,6 +1,6 @@
 import { canvasService, canvasTokenService } from "@/services/canvasService";
 import { courseInterface } from "@/interfaces/course";
-import { assignmentInterface } from "@/interfaces/assignment";
+import { assignmentInterface, AssignmentType } from "@/interfaces/assignment";
 import { accountService } from "@/services/accountService";
 
 export async function syncUser(userId: string) {
@@ -33,7 +33,7 @@ export async function syncUser(userId: string) {
             courseId: localCourse.id,
             title: ca.title,
             description: ca.description,
-            type: ca.type as any,
+            type: ca.type as AssignmentType,
             dueAt: ca.dueAt,
             source: "canvas",
             canvasId: ca.canvasId,
@@ -47,7 +47,7 @@ export async function syncUser(userId: string) {
             courseId: localCourse.id,
             title: ca.title,
             description: ca.description,
-            type: ca.type as any,
+            type: ca.type as AssignmentType,
             dueAt: ca.dueAt,
             source: "canvas",
             canvasId: ca.canvasId,
@@ -135,7 +135,7 @@ export const canvasAdminInterface = {
                     courseId: localCourse.id,
                     title: canvasAssignment.title,
                     description: canvasAssignment.description,
-                    type: canvasAssignment.type as any,
+                    type: canvasAssignment.type as AssignmentType,
                     dueAt: canvasAssignment.dueAt,
                     source: "canvas",
                     canvasId: canvasAssignment.canvasId,
@@ -143,16 +143,19 @@ export const canvasAdminInterface = {
                   });
                 }
                 results.assignments++;
-              } catch (err: any) {
-                results.errors.push(`Assignment ${canvasAssignment.title}: ${err?.message || String(err)}`);
+              } catch (err: unknown) {
+                const error = err instanceof Error ? err : new Error(String(err));
+                results.errors.push(`Assignment ${canvasAssignment.title}: ${error.message}`);
               }
             }
-          } catch (err: any) {
-            results.errors.push(`Course ${canvasCourse.name}: ${err?.message || String(err)}`);
+          } catch (err: unknown) {
+            const error = err instanceof Error ? err : new Error(String(err));
+            results.errors.push(`Course ${canvasCourse.name}: ${error.message}`);
           }
         }
-      } catch (err: any) {
-        results.errors.push(`User ${account.userId}: ${err?.message || String(err)}`);
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        results.errors.push(`User ${account.userId}: ${error.message}`);
       }
     }
     return results;

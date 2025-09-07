@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CanvasSubmission } from "../../../../services/canvasService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,8 +24,8 @@ export async function GET(req: NextRequest) {
     items.map(async (a) => {
       try {
         if (!session.user?.id) return a;
-        const sub = await canvasInterface.getSubmissionForSelf(session.user.id, courseId, a.canvasId!);
-        const wf = (sub as any)?.workflow_state as string | undefined;
+        const sub = await canvasInterface.getSubmissionForSelf(session.user.id, courseId, a.canvasId!) as CanvasSubmission | null;
+        const wf = sub?.workflow_state;
         const status = wf === "graded" ? "GRADED" : wf === "submitted" || wf === "pending_review" ? "SUBMITTED" : "NOT_SUBMITTED";
         return { ...a, status };
       } catch {

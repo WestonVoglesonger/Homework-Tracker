@@ -12,7 +12,7 @@ async function getJSON<T>(url: string): Promise<T> {
 }
 
 export function useCanvasImport() {
-  const { status } = useSession();
+  useSession(); // Ensure we have session context
   const listCanvasCourses = () => getJSON<CourseDTO[]>("/api/canvas/courses");
   const listCanvasAssignments = (courseId: string) => getJSON<AssignmentDTO[]>(`/api/canvas/assignments?courseId=${courseId}`);
 
@@ -56,11 +56,11 @@ export function useCanvasImport() {
             const existingRes = await fetch(`/api/assignments?canvasId=${a.canvasId}`);
             if (existingRes.ok) {
               const existingData = await existingRes.json();
-              existingAssignment = existingData.find((assignment: any) =>
+              existingAssignment = existingData.find((assignment: AssignmentDTO) =>
                 assignment.canvasId === a.canvasId && assignment.source === "canvas"
               );
             }
-          } catch (error) {
+          } catch {
             // Ignore errors when checking for existing assignments
           }
         }

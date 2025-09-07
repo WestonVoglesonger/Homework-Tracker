@@ -45,7 +45,7 @@ export function QuickCanvasSetup({ onSuccess, onShowWizard }: QuickCanvasSetupPr
         const error = await res.text();
         toast.error(error || "Invalid token. Please check and try again.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to connect to Canvas. Please try again.");
     } finally {
       setIsValidating(false);
@@ -113,7 +113,7 @@ export function QuickCanvasSetup({ onSuccess, onShowWizard }: QuickCanvasSetupPr
           <div className="flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p className="font-medium mb-1">Don't have a token yet?</p>
+              <p className="font-medium mb-1">Don&apos;t have a token yet?</p>
               <p>Generate one in Canvas: Account → Settings → Approved Integrations → New Access Token</p>
             </div>
           </div>

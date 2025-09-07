@@ -112,10 +112,10 @@ export default function DashboardPage() {
               <Clock className="w-12 h-12 text-blue-600" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              You're on the Waitlist!
+              You&apos;re on the Waitlist!
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-              Thank you for your interest in DueNorth. We've reached our current user limit, but you're on the list to get access as soon as space becomes available.
+              Thank you for your interest in DueNorth. We&apos;ve reached our current user limit, but you&apos;re on the list to get access as soon as space becomes available.
             </p>
           </div>
 
@@ -124,7 +124,7 @@ export default function DashboardPage() {
               <Users className="w-12 h-12 text-blue-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Stay Tuned</h3>
               <p className="text-gray-600 dark:text-gray-400">
-                We'll notify you via email when your account becomes active.
+                We&apos;ll notify you via email when your account becomes active.
               </p>
             </Card>
 
@@ -142,7 +142,7 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Queue Position</h3>
               <p className="text-gray-600 dark:text-gray-400">
-                You're in line and will be activated based on signup order.
+                You&apos;re in line and will be activated based on signup order.
               </p>
             </Card>
           </div>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
                   <span className="text-white text-sm font-bold">1</span>
                 </div>
                 <p className="text-gray-700 dark:text-gray-300">
-                  We'll continue adding users from the waitlist as space becomes available.
+                  We&apos;ll continue adding users from the waitlist as space becomes available.
                 </p>
               </div>
               <div className="flex items-start gap-3">
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                   <span className="text-white text-sm font-bold">2</span>
                 </div>
                 <p className="text-gray-700 dark:text-gray-300">
-                  You'll receive an email notification when your account is activated.
+                  You&apos;ll receive an email notification when your account is activated.
                 </p>
               </div>
               <div className="flex items-start gap-3">
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                   <span className="text-white text-sm font-bold">3</span>
                 </div>
                 <p className="text-gray-700 dark:text-gray-300">
-                  Once activated, you'll have full access to all DueNorth features.
+                  Once activated, you&apos;ll have full access to all DueNorth features.
                 </p>
               </div>
             </div>

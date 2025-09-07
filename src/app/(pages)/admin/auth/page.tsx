@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 export default function AdminAuthPage() {
   const { data: session, status } = useSession();
-  const { promoteToAdmin, isPromoting, promoteError, isAdmin } = useAdmin();
+  const { promoteToAdmin, isPromoting, isAdmin } = useAdmin();
   const router = useRouter();
   
   const [formData, setFormData] = useState({

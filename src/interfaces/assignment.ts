@@ -49,19 +49,19 @@ export interface UpdateAssignmentInput {
 export const assignmentInterface = {
   async listForUser(userId: string, filters?: { status?: AssignmentStatus; from?: string; to?: string }): Promise<AssignmentDTO[]> {
     const { assignmentService } = await import("@/services/assignmentService");
-    const items = await assignmentService.list(userId, filters as any);
+    const items = await assignmentService.list(userId, filters);
     return items.map((a) => ({
       id: a.id,
       courseId: a.courseId ?? undefined,
       title: a.title,
       description: a.description ?? undefined,
-      type: a.type as any,
+      type: a.type as AssignmentType,
       dueAt: a.dueAt ? a.dueAt.toISOString() : undefined,
       estimatedHours: a.estimatedHours ?? undefined,
-      status: a.status as any,
+      status: a.status as AssignmentStatus,
       priority: a.priority,
       notes: a.notes ?? undefined,
-      source: (a.source as any) ?? "manual",
+      source: (a.source ?? "manual") as "manual" | "canvas",
       canvasId: a.canvasId ?? undefined,
       canvasUrl: a.canvasUrl ?? undefined,
       createdAt: a.createdAt.toISOString(),
@@ -77,13 +77,13 @@ export const assignmentInterface = {
       courseId: a.courseId ?? undefined,
       title: a.title,
       description: a.description ?? undefined,
-      type: a.type as any,
+      type: a.type as AssignmentType,
       dueAt: a.dueAt ? a.dueAt.toISOString() : undefined,
       estimatedHours: a.estimatedHours ?? undefined,
-      status: a.status as any,
+      status: a.status as AssignmentStatus,
       priority: a.priority,
       notes: a.notes ?? undefined,
-      source: (a.source as any) ?? "manual",
+      source: (a.source ?? "manual") as "manual" | "canvas",
       canvasId: a.canvasId ?? undefined,
       canvasUrl: a.canvasUrl ?? undefined,
       createdAt: a.createdAt.toISOString(),
@@ -93,19 +93,19 @@ export const assignmentInterface = {
 
   async create(userId: string, input: CreateAssignmentInput): Promise<AssignmentDTO> {
     const { assignmentService } = await import("@/services/assignmentService");
-    const created = await assignmentService.create(userId, input as any);
+    const created = await assignmentService.create(userId, input);
     return {
       id: created.id,
       courseId: created.courseId ?? undefined,
       title: created.title,
       description: created.description ?? undefined,
-      type: created.type as any,
+      type: created.type as AssignmentType,
       dueAt: created.dueAt ? created.dueAt.toISOString() : undefined,
       estimatedHours: created.estimatedHours ?? undefined,
-      status: created.status as any,
+      status: created.status as AssignmentStatus,
       priority: created.priority,
       notes: created.notes ?? undefined,
-      source: (created.source as any) ?? "manual",
+      source: (created.source ?? "manual") as "manual" | "canvas",
       canvasId: created.canvasId ?? undefined,
       canvasUrl: created.canvasUrl ?? undefined,
       createdAt: created.createdAt.toISOString(),
@@ -115,19 +115,19 @@ export const assignmentInterface = {
 
   async update(userId: string, id: string, patch: UpdateAssignmentInput): Promise<AssignmentDTO> {
     const { assignmentService } = await import("@/services/assignmentService");
-    const updated = await assignmentService.update(userId, id, patch as any);
+    const updated = await assignmentService.update(userId, id, patch);
     return {
       id: updated.id,
       courseId: updated.courseId ?? undefined,
       title: updated.title,
       description: updated.description ?? undefined,
-      type: updated.type as any,
+      type: updated.type as AssignmentType,
       dueAt: updated.dueAt ? updated.dueAt.toISOString() : undefined,
       estimatedHours: updated.estimatedHours ?? undefined,
-      status: updated.status as any,
+      status: updated.status as AssignmentStatus,
       priority: updated.priority,
       notes: updated.notes ?? undefined,
-      source: (updated.source as any) ?? "manual",
+      source: (updated.source ?? "manual") as "manual" | "canvas",
       canvasId: updated.canvasId ?? undefined,
       canvasUrl: updated.canvasUrl ?? undefined,
       createdAt: updated.createdAt.toISOString(),
@@ -149,13 +149,13 @@ export const assignmentInterface = {
       courseId: assignment.courseId ?? undefined,
       title: assignment.title,
       description: assignment.description ?? undefined,
-      type: assignment.type as any,
+      type: assignment.type as AssignmentType,
       dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : undefined,
       estimatedHours: assignment.estimatedHours ?? undefined,
-      status: assignment.status as any,
+      status: assignment.status as AssignmentStatus,
       priority: assignment.priority,
       notes: assignment.notes ?? undefined,
-      source: (assignment.source as any) ?? "manual",
+      source: (assignment.source ?? "manual") as "manual" | "canvas",
       canvasId: assignment.canvasId ?? undefined,
       canvasUrl: assignment.canvasUrl ?? undefined,
       createdAt: assignment.createdAt.toISOString(),

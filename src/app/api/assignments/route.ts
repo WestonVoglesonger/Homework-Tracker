@@ -38,6 +38,20 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(items);
 }
 
+type AssignmentInput = {
+  courseId?: string;
+  title: string;
+  type?: string;
+  dueAt?: string;
+  estimatedHours?: number;
+  priority?: number;
+  notes?: string;
+  source?: string;
+  canvasId?: string;
+  description?: string;
+  canvasUrl?: string;
+};
+
 export async function POST(req: NextRequest) {
   const { getServerSession } = await import("next-auth");
   const { getAuth } = await import("../../../lib/auth");
@@ -47,16 +61,16 @@ export async function POST(req: NextRequest) {
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const json = await req.json();
+  const json = await req.json() as AssignmentInput;
   const parsed = createAssignmentSchema.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
   const created = await assignmentInterface.create(session.user.id, {
     ...parsed.data,
-    source: (json as any)?.source === "canvas" ? "canvas" : "manual",
-    canvasId: (json as any)?.canvasId ?? undefined,
-    description: (json as any)?.description ?? undefined,
-    canvasUrl: (json as any)?.canvasUrl ?? undefined,
+    source: json.source === "canvas" ? "canvas" : "manual",
+    canvasId: json.canvasId ?? undefined,
+    description: json.description ?? undefined,
+    canvasUrl: json.canvasUrl ?? undefined,
   });
 
   return NextResponse.json(created);

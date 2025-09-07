@@ -4,7 +4,7 @@ import  { Prisma } from "@prisma/client";
 
 export interface AnalyticsEvent {
   event: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
   ip?: string;
@@ -40,7 +40,14 @@ export const analyticsService = {
     limit?: number;
     offset?: number;
   }) {
-    const where: any = {};
+    const where: {
+      event?: string;
+      userId?: string;
+      timestamp?: {
+        gte?: Date;
+        lte?: Date;
+      };
+    } = {};
     
     if (filters?.event) where.event = filters.event;
     if (filters?.userId) where.userId = filters.userId;
@@ -106,7 +113,7 @@ export const analyticsService = {
       }),
 
       // User activity over time (hourly for day, daily for week/month)
-      this.getUserActivityOverTime(startDate, timeRange),
+      this.getUserActivityOverTime(startDate),
 
       // Page views
       prisma.analytics.count({
@@ -129,7 +136,7 @@ export const analyticsService = {
     };
   },
 
-  async getUserActivityOverTime(startDate: Date, timeRange: "day" | "week" | "month") {
+  async getUserActivityOverTime(startDate: Date) {
     // This would be more complex in a real implementation
     // For now, we'll do a simple grouping by date
     const rawData = await prisma.$queryRaw(
@@ -216,7 +223,7 @@ export async function trackEvent(
   event: string,
   req?: NextRequest,
   userId?: string,
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ) {
   const analyticsData: AnalyticsEvent = {
     event,
@@ -237,7 +244,7 @@ export async function trackEvent(
 export const trackPageView = (page: string, req?: NextRequest, userId?: string) =>
   trackEvent("page_view", req, userId, { page });
 
-export const trackUserAction = (action: string, req?: NextRequest, userId?: string, data?: Record<string, any>) =>
+export const trackUserAction = (action: string, req?: NextRequest, userId?: string, data?: Record<string, unknown>) =>
   trackEvent("user_action", req, userId, { action, ...data });
 
 export const trackApiCall = (endpoint: string, method: string, req?: NextRequest, userId?: string) =>

@@ -2,8 +2,6 @@ import { CanvasAssignment, CanvasCourse } from "../interfaces/canvas";
 import prisma from "../db/client";
 import { encryptText, decryptText } from "../lib/crypto";
 
-const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "";
-
 export async function fetchCanvas<T>(
   path: string,
   accessToken: string,

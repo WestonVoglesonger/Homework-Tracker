@@ -31,7 +31,7 @@ function VerifyConfirmContent() {
       } else {
         router.replace("/auth/verify/sent");
       }
-    } catch (e: any) {
+    } catch {
       setError("Verification failed. Please try again.");
     } finally {
       setSubmitting(false);

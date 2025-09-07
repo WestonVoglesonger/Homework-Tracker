@@ -26,7 +26,7 @@ export function getSignInErrorMessage(code?: string | null): string {
     case "TooManyRequests":
       return "Too many attempts. Please try again later.";
     case "":
-    case undefined as any:
+    case undefined:
       return "";
     default:
       return "Unable to sign in. Please try again.";

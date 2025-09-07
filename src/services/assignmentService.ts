@@ -8,12 +8,19 @@ interface ListFilters {
 }
 
 export async function list(userId: string, filters: ListFilters = {}) {
-  const where: any = { userId };
+  const where: {
+    userId: string;
+    status?: string;
+    dueAt?: {
+      gte?: Date;
+      lte?: Date;
+    };
+  } = { userId };
   if (filters.status) where.status = filters.status;
   if (filters.from || filters.to) {
-    where.dueAt = {} as any;
-    if (filters.from) (where.dueAt as any).gte = new Date(filters.from);
-    if (filters.to) (where.dueAt as any).lte = new Date(filters.to);
+    where.dueAt = {};
+    if (filters.from) where.dueAt.gte = new Date(filters.from);
+    if (filters.to) where.dueAt.lte = new Date(filters.to);
   }
 
   const assignments = await prisma.assignment.findMany({
@@ -72,6 +79,7 @@ export async function update(
     status: "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
     priority: number;
     notes?: string;
+    description?: string;
   }>
 ) {
   const exists = await prisma.assignment.findFirst({ where: { id, userId } });
@@ -82,9 +90,9 @@ export async function update(
       ...patch,
       dueAt: patch.dueAt ? new Date(patch.dueAt) : undefined,
       ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
-      ...(patch as any).description !== undefined
-        ? { description: (patch as any).description ? DOMPurify.sanitize((patch as any).description, { USE_PROFILES: { html: true } }) : null }
-        : {},
+      ...(patch.description !== undefined
+        ? { description: patch.description ? DOMPurify.sanitize(patch.description, { USE_PROFILES: { html: true } }) : null }
+        : {}),
     },
   });
   return record;

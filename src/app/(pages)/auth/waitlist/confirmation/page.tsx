@@ -38,10 +38,10 @@ export default function WaitlistConfirmationPage() {
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                You're on the waitlist!
+                You&apos;re on the waitlist!
               </h1>
               <p className="text-gray-600">
-                Thank you for your interest in DueNorth. We've added you to our waitlist and sent you a confirmation email.
+                Thank you for your interest in DueNorth. We&apos;ve added you to our waitlist and sent you a confirmation email.
               </p>
             </div>
 
@@ -52,7 +52,7 @@ export default function WaitlistConfirmationPage() {
                   <h3 className="font-medium text-blue-900 mb-1">What happens next?</h3>
                   <ul className="text-sm text-blue-800 space-y-1">
                     <li>• Check your email for a welcome message</li>
-                    <li>• We'll notify you when space becomes available</li>
+                    <li>• We&apos;ll notify you when space becomes available</li>
                     <li>• You can access our public pages in the meantime</li>
                   </ul>
                 </div>
@@ -60,7 +60,7 @@ export default function WaitlistConfirmationPage() {
 
               <div className="text-center space-y-3">
                 <p className="text-sm text-gray-500">
-                  You'll be automatically redirected to the home page in a few seconds...
+                  You&apos;ll be automatically redirected to the home page in a few seconds...
                 </p>
 
                 <div className="flex gap-3">

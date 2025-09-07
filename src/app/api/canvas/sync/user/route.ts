@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(_req: NextRequest) {
+export async function POST() {
   const { getServerSession } = await import("next-auth");
   const { getAuth } = await import("../../../../../lib/auth");
   const { authOptions } = await getAuth();

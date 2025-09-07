@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { getAuth } from "@/lib/auth";
 import { adminInterface } from "../../../../interfaces/admin";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const { authOptions } = await getAuth();

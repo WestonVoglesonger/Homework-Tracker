@@ -1,10 +1,9 @@
 "use client";
-import { AssignmentDTO } from "@/interfaces/assignment";
+import { AssignmentDTO, AssignmentStatus } from "@/interfaces/assignment";
 import { useUpdateAssignment, useDeleteAssignment } from "@/app/hooks/useAssignments";
 import { formatDate } from "@/lib/date";
-import { Button } from "@components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
-import { StatusPill, statusMeta } from "@components/ui/status";
+import { statusMeta } from "@components/ui/status";
 import Link from "next/link";
 
 export function AssignmentRow({ a }: { a: AssignmentDTO }) {
@@ -60,7 +59,7 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
         <div className="flex items-center gap-1 sm:gap-2 min-w-0 shrink">
           <Select
             value={a.status}
-            onValueChange={(value) => update.mutate({ id: a.id, patch: { status: value as any } })}
+            onValueChange={(value) => update.mutate({ id: a.id, patch: { status: value as AssignmentStatus } })}
           >
             <SelectTrigger className="h-8 w-auto min-w-0 px-1 sm:px-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
               <SelectValue>

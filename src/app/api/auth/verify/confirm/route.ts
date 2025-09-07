@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     // Origin + rate limit guards
-    if (!isValidOrigin(req as any)) {
+    if (!isValidOrigin(req)) {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
     const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "")

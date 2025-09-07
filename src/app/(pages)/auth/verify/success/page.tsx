@@ -20,7 +20,7 @@ export default function VerifySuccessPage() {
           <h1 className="text-xl font-semibold">Email verified</h1>
           <p className="text-sm text-gray-700">Your email has been verified. You can now sign in.</p>
           <div className="pt-2">
-            <Link href={"/auth/signin" as any} className="text-blue-600">Go to sign in</Link>
+            <Link href="/auth/signin" className="text-blue-600">Go to sign in</Link>
           </div>
         </div>
       </div>

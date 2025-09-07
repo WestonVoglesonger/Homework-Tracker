@@ -19,7 +19,7 @@ export default function CanvasImportPanel() {
         // Preselect already-imported courses
         const pre: Record<string, boolean> = {};
         cs.forEach((c) => {
-          if ((c as any).isImported && (c.canvasId || c.id)) pre[c.canvasId || c.id] = true;
+          if (c.isImported && (c.canvasId || c.id)) pre[c.canvasId || c.id] = true;
         });
         if (Object.keys(pre).length) setSelectedCourses(pre);
       })
@@ -30,7 +30,7 @@ export default function CanvasImportPanel() {
           setCourses(cs);
           const pre: Record<string, boolean> = {};
           cs.forEach((c) => {
-            if ((c as any).isImported && (c.canvasId || c.id)) pre[c.canvasId || c.id] = true;
+            if (c.isImported && (c.canvasId || c.id)) pre[c.canvasId || c.id] = true;
           });
           setSelectedCourses(pre);
         })
@@ -38,7 +38,7 @@ export default function CanvasImportPanel() {
     };
     window.addEventListener("purge:done", onPurge);
     return () => window.removeEventListener("purge:done", onPurge);
-  }, []);
+  }, [listCanvasCourses]);
 
   async function handleImport() {
     setImporting(true);
@@ -95,7 +95,7 @@ export default function CanvasImportPanel() {
                 <div className="font-medium">{c.name}</div>
                 <div className="text-sm text-muted-foreground">{[c.code, c.term].filter(Boolean).join(" • ")}</div>
               </div>
-              {((c as any).isImported) && (
+              {(c.isImported) && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Imported</span>
               )}
               {c.color && <div className="w-4 h-4 rounded" style={{ backgroundColor: c.color }} />}
@@ -110,7 +110,7 @@ export default function CanvasImportPanel() {
                   <div className="text-sm text-blue-800 dark:text-blue-200">
                     <strong>Importing courses...</strong><br />
                     This may take a minute or two depending on how many assignments your courses have.
-                    Please don't close this page while the import is in progress.
+                    Please don&apos;t close this page while the import is in progress.
                   </div>
                 </div>
               </div>

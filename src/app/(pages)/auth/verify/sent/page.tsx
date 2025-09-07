@@ -22,7 +22,7 @@ export default function VerifySentPage() {
             If an account exists for the provided email, we sent a link to verify your address.
           </p>
           <div className="pt-2">
-            <Link href={"/auth/signin" as any} className="text-blue-600">Back to sign in</Link>
+            <Link href="/auth/signin" className="text-blue-600">Back to sign in</Link>
           </div>
         </div>
       </div>

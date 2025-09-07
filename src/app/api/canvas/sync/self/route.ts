@@ -11,8 +11,7 @@ export async function POST(req: NextRequest) {
   }
   const sync = await import("../../sync/route");
   // Delegate to the main sync route (reuse logic)
-  // @ts-ignore
-  return (sync as any).POST?.(req) || NextResponse.json({ ok: true });
+  return sync.POST?.(req) || NextResponse.json({ ok: true });
 }
 
 

@@ -45,7 +45,7 @@ export default function CourseDetailPage() {
               <CardTitle>Assignments</CardTitle>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">Sort by</span>
-                <Select value={sort} onValueChange={(v) => setSort(v as any)}>
+                <Select value={sort} onValueChange={(v) => setSort(v as "earliest" | "latest")}>
                   <SelectTrigger className="w-44 h-9">
                     <SelectValue />
                   </SelectTrigger>

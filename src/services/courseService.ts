@@ -1,5 +1,4 @@
 import prisma from "../db/client";
-import { Prisma } from "@prisma/client";
 
 export async function list(userId: string) {
   const courses = await prisma.course.findMany({

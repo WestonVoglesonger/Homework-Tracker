@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    if (!isValidOrigin(req as any)) return NextResponse.json({ ok: true });
+    if (!isValidOrigin(req)) return NextResponse.json({ ok: true });
     const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "")
       .split(",")[0]
       .trim() || "unknown";

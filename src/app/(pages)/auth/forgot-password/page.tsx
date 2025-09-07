@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
             </>
           )}
           <div className="text-sm text-center">
-            <Link href={"/auth/signin" as any} className="text-blue-600">Back to sign in</Link>
+            <Link href="/auth/signin" className="text-blue-600">Back to sign in</Link>
           </div>
         </form>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useCreateAssignment } from "@/app/hooks/useAssignments";
+import { AssignmentType } from "@/interfaces/assignment";
 import { assignmentTypeEnum } from "@/lib/validators";
 import { Input } from "@components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
@@ -11,7 +12,7 @@ import { Label } from "@components/ui/label";
 export function AssignmentForm({ courseId, onCreated }: { courseId?: string; onCreated?: () => void }) {
   const create = useCreateAssignment();
   const [title, setTitle] = useState("");
-  const [type, setType] = useState("OTHER");
+  const [type, setType] = useState<AssignmentType>("OTHER");
   const [dueAt, setDueAt] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,7 +36,7 @@ export function AssignmentForm({ courseId, onCreated }: { courseId?: string; onC
       <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-end">
         <div className="grid gap-2 min-w-0 md:w-[200px]">
           <Label>Type</Label>
-          <Select value={type} onValueChange={setType}>
+          <Select value={type} onValueChange={(value) => setType(value as AssignmentType)}>
             <SelectTrigger className="w-full h-10 text-sm px-3 overflow-hidden text-ellipsis">
               <SelectValue placeholder="Type" />
             </SelectTrigger>

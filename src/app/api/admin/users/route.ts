@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { getAuth } from "@/lib/auth";
 import { adminInterface } from "@/interfaces/admin";
 import { z } from "zod";
@@ -15,7 +16,7 @@ const getUsersSchema = z.object({
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  let session: any = null;
+  let session: Session | null = null;
   
   try {
     const { authOptions } = await getAuth();

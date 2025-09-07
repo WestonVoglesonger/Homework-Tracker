@@ -65,23 +65,23 @@ export function sanitizeString(input: string): string {
     .trim();
 }
 
-export function sanitizeObject(obj: any): any {
+export function sanitizeObject<T>(obj: T): T {
   if (typeof obj === "string") {
-    return sanitizeString(obj);
+    return sanitizeString(obj) as T;
   }
-  
+
   if (Array.isArray(obj)) {
-    return obj.map(sanitizeObject);
+    return (obj as unknown[]).map(sanitizeObject) as T;
   }
-  
+
   if (obj && typeof obj === "object") {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       sanitized[sanitizeString(key)] = sanitizeObject(value);
     }
-    return sanitized;
+    return sanitized as T;
   }
-  
+
   return obj;
 }
 

@@ -23,7 +23,7 @@ export async function getAuth() {
           const { prisma: directPrisma } = await import("../db/client");
           // Normalize email for case-insensitive lookup
           const normalizedEmail = credentials.email.toLowerCase().trim();
-          const user = await directPrisma.user.findUnique({ where: { email: normalizedEmail } }) as any;
+          const user = await directPrisma.user.findUnique({ where: { email: normalizedEmail } });
           if (!user?.passwordHash) {
             throw new Error("UserNotFound");
           }
@@ -36,7 +36,7 @@ export async function getAuth() {
           if (!user.emailVerified) {
             throw new Error("EmailNotVerified");
           }
-          return { id: user.id, email: user.email || undefined, name: user.name || undefined } as any;
+          return { id: user.id, email: user.email || undefined, name: user.name || undefined } as NextAuthUser;
         },
       }),
       ...(process.env.EMAIL_SERVER && process.env.EMAIL_FROM

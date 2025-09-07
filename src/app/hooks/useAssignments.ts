@@ -1,7 +1,7 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { AssignmentDTO, AssignmentStatus } from "@/interfaces/assignment";
+import { AssignmentDTO, AssignmentStatus, CreateAssignmentInput, UpdateAssignmentInput } from "@/interfaces/assignment";
 
 async function getJSON<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers || {}) } });
@@ -23,7 +23,7 @@ export function useAssignments(params?: { status?: AssignmentStatus; from?: stri
 export function useCreateAssignment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: any) => getJSON<AssignmentDTO>("/api/assignments", { method: "POST", body: JSON.stringify(input) }),
+    mutationFn: (input: CreateAssignmentInput) => getJSON<AssignmentDTO>("/api/assignments", { method: "POST", body: JSON.stringify(input) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["assignments"] }),
   });
 }
@@ -31,7 +31,7 @@ export function useCreateAssignment() {
 export function useUpdateAssignment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: any }) => getJSON<AssignmentDTO>(`/api/assignments/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateAssignmentInput }) => getJSON<AssignmentDTO>(`/api/assignments/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["assignments"] }),
   });
 }

@@ -4,8 +4,8 @@ import { getSignInErrorMessage } from "../authErrors";
 describe("getSignInErrorMessage", () => {
   it("returns empty string for empty code", () => {
     expect(getSignInErrorMessage("")).toBe("");
-    expect(getSignInErrorMessage(null as any)).toBe("");
-    expect(getSignInErrorMessage(undefined as any)).toBe("");
+    expect(getSignInErrorMessage(null as string | null)).toBe("");
+    expect(getSignInErrorMessage(undefined as string | undefined)).toBe("");
   });
 
   it("handles MissingCredentials", () => {

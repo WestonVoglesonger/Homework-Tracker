@@ -4,7 +4,7 @@ import { CourseDTO } from "@/interfaces/course";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@components/ui/dialog";
 import { Badge } from "@components/ui/badge";
 import { format, parseISO, isPast } from "date-fns";
-import { Calendar, Clock, BookOpen, ExternalLink, FileText, AlertCircle, CheckCircle } from "lucide-react";
+import { Calendar, Clock, BookOpen, ExternalLink, FileText, AlertCircle } from "lucide-react";
 
 interface AssignmentDetailDialogProps {
   assignment: AssignmentDTO | null;
@@ -25,7 +25,7 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
       // Only show red if overdue AND not submitted/graded
       shouldShowRed = isOverdue && assignment.status === "NOT_SUBMITTED";
     }
-  } catch (error) {
+  } catch {
     // Error parsing due date - using default value
     isOverdue = false;
     shouldShowRed = false;
@@ -102,7 +102,7 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
                   Due: {(() => {
                     try {
                       return format(parseISO(assignment.dueAt), "EEEE, MMMM d, yyyy");
-                    } catch (error) {
+                    } catch {
                       return assignment.dueAt;
                     }
                   })()}
@@ -111,7 +111,7 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
                   {(() => {
                     try {
                       return format(parseISO(assignment.dueAt), "h:mm a");
-                    } catch (error) {
+                    } catch {
                       return '';
                     }
                   })()}
@@ -185,7 +185,7 @@ export function AssignmentDetailDialog({ assignment, course, isOpen, onClose }: 
               Last Updated: {(() => {
                 try {
                   return format(parseISO(assignment.updatedAt), "MMM d, yyyy 'at' h:mm a");
-                } catch (error) {
+                } catch {
                   return assignment.updatedAt;
                 }
               })()}

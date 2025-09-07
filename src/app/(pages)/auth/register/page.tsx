@@ -6,6 +6,14 @@ import Link from "next/link";
 import { Spinner } from "@components/ui/spinner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog";
 
+type RegisterResponse = {
+  id: string;
+  email: string;
+  name?: string;
+  waitlisted?: boolean;
+  error?: string;
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -37,37 +45,20 @@ export default function RegisterPage() {
     checkUserLimit();
   }, []);
 
-  // Validate email for .edu restriction
-  const validateEmail = (emailValue: string) => {
-    // if (emailValue.toLowerCase().includes('.edu')) {
-    //   setEmailError("Personal email addresses only, .edu emails are not allowed.");
-    //   return false;
-    // } else {
-    //   setEmailError(null);
-    //   return true;
-    // }
-    return true;
-  };
+  // Email validation is currently disabled
 
   // Handle email input change
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEmail = e.target.value;
     setEmail(newEmail);
-    if (newEmail) {
-      validateEmail(newEmail);
-    } else {
-      setEmailError(null);
-    }
+    setEmailError(null); // Clear any previous errors
   };
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    // Validate email before submission
-    if (!validateEmail(email)) {
-      return;
-    }
+    // Email validation is disabled
     if (!accepted) {
       setError("You must accept the Terms of Service and Privacy Policy.");
       return;
@@ -81,7 +72,7 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, password, name, termsAccepted: true, privacyAccepted: true }),
       });
       const bodyText = await res.text();
-      let data: any = null;
+      let data: RegisterResponse | null = null;
       try {
         data = bodyText ? JSON.parse(bodyText) : null;
       } catch {
@@ -90,15 +81,16 @@ export default function RegisterPage() {
       if (!res.ok) throw new Error(data?.error || "Failed to register");
 
       // Check if user was added to waitlist
-      if (data.waitlisted) {
+      if (data?.waitlisted) {
         // Redirect to waitlist confirmation page
         router.push("/auth/waitlist/confirmation");
       } else {
         // Normal registration flow
         router.push("/auth/verify/sent");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to register");
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error("Failed to register");
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -153,7 +145,7 @@ export default function RegisterPage() {
               </h1>
               {limitReached && (
                 <p className="text-sm text-gray-600 mt-2">
-                  We've reached our current user limit. Join our waitlist and we'll notify you when space becomes available.
+                  We&apos;ve reached our current user limit. Join our waitlist and we&apos;ll notify you when space becomes available.
                 </p>
               )}
             </div>
@@ -208,7 +200,7 @@ export default function RegisterPage() {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  {' '}and acknowledge the{' '}
+                  {' '}and acknowledge the Privacy{' '}
                   <Dialog>
                     <DialogTrigger asChild>
                       <button type="button" className="text-blue-600 hover:underline">Privacy Policy</button>

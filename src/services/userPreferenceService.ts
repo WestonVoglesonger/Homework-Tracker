@@ -8,11 +8,11 @@ export type UserPreferences = {
 export const userPreferenceService = {
   async get(userId: string): Promise<UserPreferences> {
     try {
-      const user = (await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: userId },
-      })) as any;
+      });
       return { canvasSetupDismissed: user?.canvasSetupDismissed ?? false };
-    } catch (error: any) {
+    } catch {
       // If column doesn't exist (migration not applied), default to false
       return { canvasSetupDismissed: false };
     }
@@ -28,8 +28,8 @@ export const userPreferenceService = {
         return { canvasSetupDismissed: prefs.canvasSetupDismissed };
       }
       const current = await prisma.user.findUnique({ where: { id: userId } });
-      return { canvasSetupDismissed: (current as any)?.canvasSetupDismissed ?? false };
-    } catch (error: any) {
+      return { canvasSetupDismissed: current?.canvasSetupDismissed ?? false };
+    } catch {
       // If update fails (e.g., column missing), return default and let caller handle UI fallback
       return { canvasSetupDismissed: false };
     }

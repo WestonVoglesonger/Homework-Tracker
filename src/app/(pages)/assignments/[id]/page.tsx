@@ -2,7 +2,8 @@
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "@components/layout/AppShell";
 import { useQuery } from "@tanstack/react-query";
-import { AssignmentDTO } from "@/interfaces/assignment";
+import { AssignmentDTO, AssignmentStatus } from "@/interfaces/assignment";
+import { AppStatus } from "@/lib/status";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Skeleton } from "@components/ui/skeleton";
@@ -38,23 +39,12 @@ export default function AssignmentDetailPage() {
         await deleteAssignment.mutateAsync(id);
         toast.success("Assignment deleted");
         router.push("/dashboard");
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete assignment");
       }
     }
   };
   
-  const statusColors = {
-    NOT_SUBMITTED: "status-todo",
-    SUBMITTED: "status-in-progress",
-    GRADED: "status-done"
-  };
-  
-  const statusLabels = {
-    NOT_SUBMITTED: "Not submitted",
-    SUBMITTED: "Submitted, waiting for grade",
-    GRADED: "Submitted and graded"
-  };
 
   return (
     <AppShell>
@@ -108,17 +98,17 @@ export default function AssignmentDetailPage() {
                 <CardContent>
                   <Select
                     value={assignment.status}
-                    onValueChange={(value) => updateAssignment.mutate({ id, patch: { status: value as any } })}
+                    onValueChange={(value) => updateAssignment.mutate({ id, patch: { status: value as AssignmentStatus } })}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue>
-                        <StatusPill status={assignment.status as any} />
+                        <StatusPill status={assignment.status} />
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {Object.keys(statusMeta).map((value) => (
                         <SelectItem key={value} value={value}>
-                          <StatusPill status={value as any} />
+                          <StatusPill status={value as AppStatus} />
                         </SelectItem>
                       ))}
                     </SelectContent>

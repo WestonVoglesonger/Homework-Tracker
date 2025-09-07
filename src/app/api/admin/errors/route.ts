@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { getAuth } from "@/lib/auth";
 import { errorLogInterface } from "@/interfaces/errorLogInterface";
 import { analyticsInterface } from "@/interfaces/analyticsInterface";
@@ -18,7 +19,7 @@ const getErrorsSchema = z.object({
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  let session: any = null;
+  let session: Session | null = null;
   
   try {
     const { authOptions } = await getAuth();
@@ -94,7 +95,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  let session: any = null;
+  let session: Session | null = null;
   
   try {
     const { authOptions } = await getAuth();

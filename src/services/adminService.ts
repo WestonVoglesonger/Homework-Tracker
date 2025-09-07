@@ -5,7 +5,7 @@ export interface AdminActionData {
   action: string;
   targetId?: string;
   targetType?: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   adminId: string;
 }
 
@@ -79,7 +79,7 @@ export const adminService = {
     limit?: number;
     offset?: number;
   }) {
-    const where: any = {};
+    const where: { isAdmin?: boolean } = {};
     if (filters?.isAdmin !== undefined) {
       where.isAdmin = filters.isAdmin;
     }
@@ -156,8 +156,13 @@ export const adminService = {
     limit?: number;
     offset?: number;
   }) {
-    const where: any = {};
-    
+    const where: {
+      adminId?: string;
+      action?: string;
+      targetType?: string;
+      timestamp?: { gte?: Date; lte?: Date };
+    } = {};
+
     if (filters?.adminId) where.adminId = filters.adminId;
     if (filters?.action) where.action = filters.action;
     if (filters?.targetType) where.targetType = filters.targetType;

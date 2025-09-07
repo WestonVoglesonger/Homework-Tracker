@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { getAuth } from "@/lib/auth";
 import { adminInterface } from "@/interfaces/admin";
 import { userInterface } from "@/interfaces/user";
@@ -17,7 +18,7 @@ const promoteAdminSchema = z.object({
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  let session: any = null;
+  let session: Session | null = null;
   
   try {
     // Rate limiting
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
     await analyticsInterface.trackEvent({
       event: "api_call",
       data: { endpoint: "/api/admin/auth/promote", method: "POST" },
-      userId: session.user.id,
+      userId: session?.user?.id,
       ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
       userAgent: req.headers.get("user-agent") || undefined,
     });

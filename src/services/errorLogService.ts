@@ -10,8 +10,8 @@ export interface ErrorContext {
   method?: string;
   userAgent?: string;
   ip?: string;
-  requestBody?: any;
-  additionalData?: Record<string, any>;
+  requestBody?: unknown;
+  additionalData?: Record<string, unknown>;
 }
 
 export interface CreateErrorLogInput {
@@ -55,8 +55,13 @@ export const errorLogService = {
     limit?: number;
     offset?: number;
   }) {
-    const where: any = {};
-    
+    const where: {
+      level?: ErrorLevel;
+      userId?: string;
+      resolved?: boolean;
+      timestamp?: { gte?: Date; lte?: Date };
+    } = {};
+
     if (filters?.level) where.level = filters.level;
     if (filters?.userId) where.userId = filters.userId;
     if (filters?.resolved !== undefined) where.resolved = filters.resolved;
@@ -113,7 +118,7 @@ export const errorLogService = {
     startDate?: Date;
     endDate?: Date;
   }) {
-    const where: any = {};
+    const where: { timestamp?: { gte?: Date; lte?: Date } } = {};
     if (filters?.startDate || filters?.endDate) {
       where.timestamp = {};
       if (filters.startDate) where.timestamp.gte = filters.startDate;
@@ -194,7 +199,7 @@ export async function logApiError(
   req: NextRequest,
   error: Error,
   userId?: string,
-  additionalContext?: Record<string, any>
+  additionalContext?: Record<string, unknown>
 ) {
   // Skip routine/client-side errors to avoid noisy logs
   const msg = (error?.message || "").toLowerCase();
@@ -209,7 +214,7 @@ export async function logApiError(
     "too many requests",
     "csrf"
   ];
-  if ((error as any)?.name === "ZodError" || routine.some(s => msg.includes(s))) {
+  if ((error as { name?: string })?.name === "ZodError" || routine.some(s => msg.includes(s))) {
     return;
   }
 
