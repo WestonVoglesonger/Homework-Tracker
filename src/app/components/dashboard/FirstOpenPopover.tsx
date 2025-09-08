@@ -55,7 +55,7 @@ export function FirstOpenPopover({ currentStreak, isVisible, onDismiss }: FirstO
             Nice!
           </h2>
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
-            Day {currentStreak} of your planning streak.
+            Day {currentStreak} of your study streak.
           </p>
 
           {/* CTA Button */}

@@ -9,12 +9,15 @@ import { useEnsureCanvasCoursesPrefetched } from "@/app/hooks/useCanvasImport";
 import type { AssignmentDTO } from "@/interfaces/assignment";
 import { SkeletonCard, LoadingButton } from "@components/ui/LoadingState";
 import { Skeleton } from "@components/ui/skeleton";
-import { DataCard, StatCardsGrid } from "@components/ui/DataCard";
+import { StatCardsGrid } from "@components/ui/DataCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { PageHeader } from "@components/navigation/EnhancedNavigation";
 import { CheckInStreakCard } from "@components/dashboard/CheckInStreakCard";
+import { TodayAtGlanceCard } from "@components/dashboard/TodayAtGlanceCard";
+import { ThisWeekProgressCard } from "@components/dashboard/ThisWeekProgressCard";
+import { QuickActionsCard } from "@components/dashboard/QuickActionsCard";
 import { FirstOpenPopover } from "@components/dashboard/FirstOpenPopover";
-import { RefreshCw, BarChart2, CheckCircle2, UploadCloud } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import WaitlistNotice from "@components/waitlist/WaitlistNotice";
@@ -25,6 +28,10 @@ export default function DashboardPage() {
 
   useEnsureCanvasCoursesPrefetched();
   const { data: assignments, isLoading, refetch } = useAssignments();
+  
+  // State to track if any stat card is still loading
+  const [statCardsLoading, setStatCardsLoading] = useState(true);
+  
   const nowTs = Date.now();
 
   // State for refresh functionality
@@ -49,7 +56,7 @@ export default function DashboardPage() {
   const [showFirstOpenPopover, setShowFirstOpenPopover] = useState(false);
   const [currentStreakForPopover, setCurrentStreakForPopover] = useState(0);
 
-  // Check if we should show first-open popover
+  // Check if we should show first-open popover and track stat cards loading
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -58,12 +65,15 @@ export default function DashboardPage() {
         const response = await fetch('/api/streak');
         if (response.ok) {
           const streakData = await response.json();
+          
+          // Mark stat cards as loaded (streak data is the last piece needed)
+          setStatCardsLoading(false);
 
           // Show popover if:
           // 1. User has a streak > 1
-          // 2. Hasn't checked in today yet
+          // 2. Hasn't studied today yet
           // 3. We haven't shown the popover today
-          if (streakData.currentStreak > 1 && !streakData.hasCheckedInToday) {
+          if (streakData.currentStreak > 1 && !streakData.hasStudiedToday) {
             const lastShownKey = `firstOpenPopoverShown_${new Date().toDateString()}`;
             const hasBeenShownToday = localStorage.getItem(lastShownKey);
 
@@ -73,9 +83,14 @@ export default function DashboardPage() {
               localStorage.setItem(lastShownKey, 'true');
             }
           }
+        } else {
+          // Even if streak API fails, mark stat cards as loaded
+          setStatCardsLoading(false);
         }
       } catch (error) {
         console.error('Failed to check first-open conditions:', error);
+        // Mark stat cards as loaded even on error
+        setStatCardsLoading(false);
       }
     };
 
@@ -133,10 +148,6 @@ export default function DashboardPage() {
     })
     .sort((a, b) => Date.parse(a.dueAt as string) - Date.parse(b.dueAt as string));
   const groups: Record<string, AssignmentDTO[]> = { overdue, upcoming };
-  
-  const totalAssignments = assignments?.length || 0;
-  const completedAssignments = assignments?.filter(a => a.status === "GRADED").length || 0;
-  const completionRate = totalAssignments > 0 ? (completedAssignments / totalAssignments) * 100 : 0;
   
   const sections = [
     { 
@@ -207,7 +218,7 @@ export default function DashboardPage() {
 
         {/* Stats Cards with improved spacing */}
         <StatCardsGrid>
-          {isLoading ? (
+          {isLoading || statCardsLoading ? (
             <>
               <SkeletonCard />
               <SkeletonCard />
@@ -216,31 +227,10 @@ export default function DashboardPage() {
             </>
           ) : (
             <>
-              <DataCard
-                title="Total Assignments"
-                value={totalAssignments}
-                subtitle="Across all courses"
-                icon={<BarChart2 className="w-4 h-4" />}
-                color="gray"
-              />
-
-              <DataCard
-                title="Graded"
-                value={completedAssignments}
-                subtitle="Great progress!"
-                icon={<CheckCircle2 className="w-4 h-4" />}
-                color="green"
-              />
-
-              <DataCard
-                title="Submitted"
-                value={assignments?.filter(a => a.status === "SUBMITTED").length || 0}
-                subtitle="Keep going!"
-                icon={<UploadCloud className="w-4 h-4" />}
-                color="blue"
-              />
-
+              <TodayAtGlanceCard />
+              <ThisWeekProgressCard />
               <CheckInStreakCard />
+              <QuickActionsCard />
             </>
           )}
         </StatCardsGrid>

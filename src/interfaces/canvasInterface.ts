@@ -1,6 +1,6 @@
 import { canvasService, canvasTokenService } from "@/services/canvasService";
 import { courseInterface } from "@/interfaces/course";
-import { assignmentInterface, AssignmentType } from "@/interfaces/assignment";
+import { assignmentInterface, AssignmentType, AssignmentStatus } from "@/interfaces/assignment";
 import { accountService } from "@/services/accountService";
 import { adminService } from "@/services/adminService";
 
@@ -134,7 +134,7 @@ export const canvasAdminInterface = {
               try {
                 const existing = await assignmentInterface.findByUserCanvasId(account.userId, canvasAssignment.canvasId!);
                 // Status is already included via include=submission; only update if it changed
-                const newStatus = canvasAssignment.status as any;
+                const newStatus = canvasAssignment.status as AssignmentStatus;
                 if (existing && newStatus && existing.status !== newStatus) {
                   await assignmentInterface.update(account.userId, existing.id, { status: newStatus });
                 }

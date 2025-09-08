@@ -4,6 +4,7 @@ import { useUpdateAssignment, useDeleteAssignment } from "@/app/hooks/useAssignm
 import { formatDate } from "@/lib/date";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
 import { statusMeta } from "@components/ui/status";
+import { normalizeStatus } from "@/lib/status";
 import Link from "next/link";
 import { DeleteAssignmentConfirmation } from "@components/ui/DeleteConfirmation";
 import { useErrorHandler } from "@/app/hooks/useErrorHandler";
@@ -67,8 +68,8 @@ export function AssignmentRow({ a }: { a: AssignmentDTO }) {
             <SelectTrigger className="h-8 w-auto min-w-0 px-1 sm:px-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
               <SelectValue>
                 <div className="flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${statusMeta[a.status]?.dot || statusMeta.NOT_SUBMITTED.dot}`} />
-                  <span className="hidden sm:inline text-xs">{statusMeta[a.status]?.short || statusMeta.NOT_SUBMITTED.short}</span>
+                  <span className={`w-2 h-2 rounded-full ${statusMeta[normalizeStatus(a.status)].dot}`} />
+                  <span className="hidden sm:inline text-xs">{statusMeta[normalizeStatus(a.status)].short}</span>
                 </div>
               </SelectValue>
             </SelectTrigger>

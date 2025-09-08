@@ -155,8 +155,28 @@ export async function hasActionToday(userId: string): Promise<boolean> {
   return !!existingCheckIn;
 }
 
+/**
+ * List recent daily check-ins for history rendering
+ */
+export async function listRecentDailyCheckIns(
+  userId: string,
+  days: number = 30
+): Promise<Array<{ date: Date; streakCount: number }>> {
+  const today = startOfDay(new Date());
+  const from = new Date(today);
+  from.setDate(today.getDate() - days);
+  const rows = await prisma.dailyCheckIn.findMany({
+    where: { userId, date: { gte: from } },
+    orderBy: { date: 'desc' },
+    take: days,
+    select: { date: true, streakCount: true },
+  });
+  return rows;
+}
+
 export const streakService = {
   recordMeaningfulAction,
   getCurrentStreak,
   hasActionToday,
+  listRecentDailyCheckIns,
 };
