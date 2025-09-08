@@ -32,24 +32,9 @@ export function useAdmin() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
 
-  // Check if current user is admin
-  const { data: isAdmin, isLoading: isAdminLoading } = useQuery({
-    queryKey: ["admin", "status", session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return false;
-      
-      const response = await fetch("/api/admin/status");
-      if (!response.ok) return false;
-      
-      const data = await response.json();
-      return data.isAdmin;
-    },
-    enabled: !!session?.user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-  });
+  // Get admin status from session (no additional API call needed)
+  const isAdmin = Boolean((session?.user as { isAdmin?: boolean } | undefined)?.isAdmin);
+  const isAdminLoading = false; // Admin status comes from session, so no loading state
 
   // Promote user to admin
   const promoteToAdminMutation = useMutation({
@@ -68,8 +53,7 @@ export function useAdmin() {
       return response.json();
     },
     onSuccess: () => {
-      // Invalidate admin status query
-      queryClient.invalidateQueries({ queryKey: ["admin", "status"] });
+      // Admin status is derived from session, so no invalidation needed
     },
   });
 
@@ -93,7 +77,7 @@ export function useAdmin() {
         }
         return response.json();
       },
-      enabled: isAdmin,
+      enabled: isAdmin && !!session?.user?.id,
       staleTime: 30 * 1000, // 30 seconds
     });
   };
@@ -119,7 +103,7 @@ export function useAdmin() {
         }
         return response.json();
       },
-      enabled: isAdmin,
+      enabled: isAdmin && !!session?.user?.id,
       staleTime: 60 * 1000, // 1 minute
     });
   };
@@ -140,7 +124,7 @@ export function useAdmin() {
         }
         return response.json();
       },
-      enabled: isAdmin,
+      enabled: isAdmin && !!session?.user?.id,
       staleTime: 60 * 1000, // 1 minute
     });
   };
@@ -182,7 +166,7 @@ export function useAdmin() {
         }
         return response.json();
       },
-      enabled: isAdmin,
+      enabled: isAdmin && !!session?.user?.id,
       staleTime: 30 * 1000, // 30 seconds
     });
   };
@@ -198,7 +182,7 @@ export function useAdmin() {
         }
         return response.json();
       },
-      enabled: isAdmin,
+      enabled: isAdmin && !!session?.user?.id,
       staleTime: 60 * 1000, // 1 minute
     });
   };
@@ -236,7 +220,7 @@ export function useAdmin() {
         }
         return response.json();
       },
-      enabled: isAdmin,
+      enabled: isAdmin && !!session?.user?.id,
       staleTime: 60 * 1000, // 1 minute
     });
   };

@@ -1,5 +1,4 @@
 import { useSession } from "next-auth/react";
-import { useAdmin } from "./useAdmin";
 
 /**
  * User State Management Hook
@@ -38,11 +37,11 @@ export interface UserStateInfo {
 
 export function useUserState(): UserStateInfo {
   const { data: session, status } = useSession();
-  const { isAdmin, isAdminLoading } = useAdmin();
 
-  const isLoading = status === "loading" || (status === "authenticated" && isAdminLoading);
+  const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated";
   const isWaitlisted = Boolean((session?.user as { isWaitlisted?: boolean } | undefined)?.isWaitlisted);
+  const isAdmin = Boolean((session?.user as { isAdmin?: boolean } | undefined)?.isAdmin);
 
   // Determine the current user state
   let state: UserState;
@@ -66,7 +65,7 @@ export function useUserState(): UserStateInfo {
     isLoading,
     isAuthenticated,
     isWaitlisted,
-    isAdmin: Boolean(isAdmin),
+    isAdmin,
     user: session?.user ?? null,
     canAccessProtectedRoutes,
     canAccessAdminRoutes,

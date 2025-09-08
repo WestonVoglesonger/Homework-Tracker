@@ -1,8 +1,9 @@
 import prisma from "../db/client";
 import DOMPurify from "isomorphic-dompurify";
+import { streakService } from "./streakService";
 
 interface ListFilters {
-  status?: "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
+  status?: "NOT_SUBMITTED" | "PLANNED" | "SUBMITTED" | "GRADED";
   from?: string;
   to?: string;
 }
@@ -76,7 +77,7 @@ export async function update(
     type: "HOMEWORK" | "QUIZ" | "EXAM" | "PROJECT" | "OTHER";
     dueAt?: string;
     estimatedHours?: number;
-    status: "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
+    status: "NOT_SUBMITTED" | "PLANNED" | "SUBMITTED" | "GRADED";
     priority: number;
     notes?: string;
     description?: string;
@@ -84,6 +85,7 @@ export async function update(
 ) {
   const exists = await prisma.assignment.findFirst({ where: { id, userId } });
   if (!exists) throw new Error("Not found");
+
   const record = await prisma.assignment.update({
     where: { id },
     data: {
@@ -95,6 +97,17 @@ export async function update(
         : {}),
     },
   });
+
+  // Record meaningful action for streak if status changed to PLANNED or GRADED
+  if (patch.status && (patch.status === "PLANNED" || patch.status === "GRADED")) {
+    try {
+      await streakService.recordMeaningfulAction(userId);
+    } catch (error) {
+      console.error('Failed to record streak action:', error);
+      // Don't fail the assignment update if streak recording fails
+    }
+  }
+
   return record;
 }
 

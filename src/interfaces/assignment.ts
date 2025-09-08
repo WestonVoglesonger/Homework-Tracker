@@ -1,4 +1,4 @@
-export type AssignmentStatus = "NOT_SUBMITTED" | "SUBMITTED" | "GRADED";
+export type AssignmentStatus = "NOT_SUBMITTED" | "PLANNED" | "SUBMITTED" | "GRADED";
 export type AssignmentType = "HOMEWORK" | "QUIZ" | "EXAM" | "PROJECT" | "OTHER";
 
 export interface AssignmentDTO {
@@ -39,7 +39,7 @@ export interface UpdateAssignmentInput {
   type?: AssignmentType;
   dueAt?: string;
   estimatedHours?: number;
-  status?: AssignmentStatus;
+  status?: "NOT_SUBMITTED" | "PLANNED" | "SUBMITTED" | "GRADED";
   priority?: number;
   notes?: string;
   description?: string;

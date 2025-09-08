@@ -12,7 +12,9 @@ import { Skeleton } from "@components/ui/skeleton";
 import { DataCard, StatCardsGrid } from "@components/ui/DataCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { PageHeader } from "@components/navigation/EnhancedNavigation";
-import { RefreshCw, BarChart2, CheckCircle2, UploadCloud, Gauge } from "lucide-react";
+import { CheckInStreakCard } from "@components/dashboard/CheckInStreakCard";
+import { FirstOpenPopover } from "@components/dashboard/FirstOpenPopover";
+import { RefreshCw, BarChart2, CheckCircle2, UploadCloud } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import WaitlistNotice from "@components/waitlist/WaitlistNotice";
@@ -42,6 +44,45 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, []);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  // State for first-open popover
+  const [showFirstOpenPopover, setShowFirstOpenPopover] = useState(false);
+  const [currentStreakForPopover, setCurrentStreakForPopover] = useState(0);
+
+  // Check if we should show first-open popover
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const checkFirstOpen = async () => {
+      try {
+        const response = await fetch('/api/streak');
+        if (response.ok) {
+          const streakData = await response.json();
+
+          // Show popover if:
+          // 1. User has a streak > 1
+          // 2. Hasn't checked in today yet
+          // 3. We haven't shown the popover today
+          if (streakData.currentStreak > 1 && !streakData.hasCheckedInToday) {
+            const lastShownKey = `firstOpenPopoverShown_${new Date().toDateString()}`;
+            const hasBeenShownToday = localStorage.getItem(lastShownKey);
+
+            if (!hasBeenShownToday) {
+              setCurrentStreakForPopover(streakData.currentStreak);
+              setShowFirstOpenPopover(true);
+              localStorage.setItem(lastShownKey, 'true');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check first-open conditions:', error);
+      }
+    };
+
+    // Small delay to ensure page is fully loaded
+    const timer = setTimeout(checkFirstOpen, 1000);
+    return () => clearTimeout(timer);
+  }, [session?.user?.id]);
 
   // Waitlist status now comes from the session; no client-side Prisma calls
 
@@ -129,6 +170,13 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
+      {/* First Open Popover */}
+      <FirstOpenPopover
+        currentStreak={currentStreakForPopover}
+        isVisible={showFirstOpenPopover}
+        onDismiss={() => setShowFirstOpenPopover(false)}
+      />
+
       <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6 overflow-visible">
         {/* Header Section with centralized navigation */}
         <PageHeader
@@ -192,13 +240,7 @@ export default function DashboardPage() {
                 color="blue"
               />
 
-              <DataCard
-                title="Completion Rate"
-                value={`${completionRate.toFixed(0)}%`}
-                subtitle={completionRate < 25 ? "Getting started" : completionRate < 50 ? "Making progress" : completionRate < 75 ? "Almost there" : "Excellent work!"}
-                icon={<Gauge className="w-4 h-4" />}
-                color="purple"
-              />
+              <CheckInStreakCard />
             </>
           )}
         </StatCardsGrid>

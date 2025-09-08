@@ -29,40 +29,54 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { resolveError, isResolvingError } = useAdmin();
-  const { convertWaitlistUser, isConvertingWaitlistUser } = useAdmin();
-  const { updateSystemSettings, isUpdatingSettings } = useAdmin();
+  const admin = useAdmin();
   const [selectedTimeRange, setSelectedTimeRange] = useState<"day" | "week" | "month">("day");
   const [newMaxUsers, setNewMaxUsers] = useState<string>("");
 
+  // Destructure all needed properties from the single useAdmin() call
+  const {
+    resolveError,
+    isResolvingError,
+    convertWaitlistUser,
+    isConvertingWaitlistUser,
+    updateSystemSettings,
+    isUpdatingSettings,
+    useAnalytics,
+    useErrorLogs,
+    useUsers,
+    useWaitlistStats,
+    useWaitlistUsers,
+    useSystemSettings
+  } = admin;
+
   // Analytics queries
-  const { data: systemMetrics, isLoading: systemLoading } = useAdmin().useAnalytics({
+  const { data: systemMetrics, isLoading: systemLoading } = useAnalytics({
     type: "system",
   });
 
-  const { data: dashboardMetrics, isLoading: dashboardLoading } = useAdmin().useAnalytics({
+  const { data: dashboardMetrics, isLoading: dashboardLoading } = useAnalytics({
     type: "dashboard",
     timeRange: selectedTimeRange,
   });
 
-  const { data: errorLogs, isLoading: errorsLoading } = useAdmin().useErrorLogs({
+  const { data: errorLogs, isLoading: errorsLoading } = useErrorLogs({
     limit: 10,
     resolved: false,
   });
 
-  const { data: users, isLoading: usersLoading } = useAdmin().useUsers({
+  const { data: users, isLoading: usersLoading } = useUsers({
     limit: 10,
   });
 
   // Waitlist queries
-  const { data: waitlistStats, isLoading: waitlistStatsLoading } = useAdmin().useWaitlistStats();
-  const { data: waitlistUsers, isLoading: waitlistUsersLoading } = useAdmin().useWaitlistUsers({
+  const { data: waitlistStats, isLoading: waitlistStatsLoading } = useWaitlistStats();
+  const { data: waitlistUsers, isLoading: waitlistUsersLoading } = useWaitlistUsers({
     converted: false,
     limit: 20,
   });
 
   // System settings query
-  const { data: systemSettings, isLoading: settingsLoading } = useAdmin().useSystemSettings();
+  const { data: systemSettings, isLoading: settingsLoading } = useSystemSettings();
 
 
   return (
