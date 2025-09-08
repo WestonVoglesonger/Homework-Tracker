@@ -4,7 +4,7 @@ import { LoadingOverlay } from "./LoadingState";
 
 interface DataCardProps {
   title: string;
-  value?: string | number;
+  value?: string | number | ReactNode;
   subtitle?: string;
   icon?: ReactNode;
   trend?: {
